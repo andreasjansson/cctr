@@ -1,0 +1,31 @@
+[package]
+name = "cctr"
+version = "0.1.0"
+edition = "2021"
+authors = ["Andreas Jansson"]
+description = "CLI Corpus Test Runner - Named after the Corpus Christi Terminal Railroad"
+license = "MIT"
+repository = "https://github.com/ajansson/cctr"
+
+[dependencies]
+clap = { version = "4", features = ["derive", "wrap_help", "color"] }
+thiserror = "1"
+anyhow = "1"
+termcolor = "1"
+similar = "2"
+rayon = "1"
+walkdir = "2"
+tempfile = "3"
+regex = "1"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+
+[[bin]]
+name = "cctr"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+strip = true
