@@ -262,7 +262,7 @@ impl Output {
             }
 
             for op in group {
-                for change in diff.iter_inline_changes(op) {
+                for change in diff.iter_changes(op) {
                     let (sign, color) = match change.tag() {
                         ChangeTag::Delete => ("-", Color::Red),
                         ChangeTag::Insert => ("+", Color::Green),
@@ -270,18 +270,7 @@ impl Output {
                     };
 
                     self.set_color(color);
-                    write!(self.stdout, "{}", sign).unwrap();
-                    for (emphasized, value) in change.iter_strings_lossy() {
-                        if emphasized {
-                            let _ = self
-                                .stdout
-                                .set_color(ColorSpec::new().set_fg(Some(color)).set_bold(true));
-                            write!(self.stdout, "{}", value).unwrap();
-                            self.set_color(color);
-                        } else {
-                            write!(self.stdout, "{}", value).unwrap();
-                        }
-                    }
+                    write!(self.stdout, "{}{}", sign, change.value()).unwrap();
                     self.reset();
                     if change.missing_newline() {
                         writeln!(self.stdout).unwrap();
