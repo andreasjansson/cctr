@@ -1,7 +1,5 @@
 use crate::error::{Error, Result};
-use regex::Regex;
 use std::path::Path;
-use std::sync::LazyLock;
 
 #[derive(Debug, Clone)]
 pub struct TestCase {
@@ -13,41 +11,68 @@ pub struct TestCase {
     pub end_line: usize,
 }
 
-static CORPUS_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r"(?ms)^(={3,})\n(.+?)\n\1\n(.+?)\n(-{3,})\n(.*?)(?=\n={3,}\n|\z)",
-    )
-    .unwrap()
-});
-
 pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
     let content = std::fs::read_to_string(path).map_err(|e| Error::ReadCorpus {
         path: path.to_path_buf(),
         source: e,
     })?;
 
+    parse_corpus_content(&content, path)
+}
+
+fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
     let mut tests = Vec::new();
+    let lines: Vec<&str> = content.lines().collect();
+    let mut i = 0;
 
-    for caps in CORPUS_PATTERN.captures_iter(&content) {
-        let name = caps.get(2).unwrap().as_str().trim().to_string();
-        let command = caps.get(3).unwrap().as_str().trim().to_string();
-        let expected = caps
-            .get(5)
-            .unwrap()
-            .as_str()
-            .trim_end_matches('\n')
-            .to_string();
+    while i < lines.len() {
+        if !is_header_separator(lines[i]) {
+            i += 1;
+            continue;
+        }
 
-        let match_start = caps.get(0).unwrap().start();
-        let match_end = caps.get(0).unwrap().end();
+        let start_line = i + 1;
+        let header_sep = lines[i];
 
-        let start_line = content[..match_start].matches('\n').count() + 1;
-        let end_line = content[..match_end].matches('\n').count() + 1;
+        i += 1;
+        if i >= lines.len() {
+            break;
+        }
+        let name = lines[i].trim().to_string();
+
+        i += 1;
+        if i >= lines.len() || lines[i] != header_sep {
+            continue;
+        }
+
+        i += 1;
+        if i >= lines.len() {
+            break;
+        }
+        let command = lines[i].trim().to_string();
+
+        i += 1;
+        if i >= lines.len() || !is_dash_separator(lines[i]) {
+            continue;
+        }
+
+        i += 1;
+        let mut expected_lines = Vec::new();
+        while i < lines.len() && !is_header_separator(lines[i]) {
+            expected_lines.push(lines[i]);
+            i += 1;
+        }
+
+        while expected_lines.last() == Some(&"") {
+            expected_lines.pop();
+        }
+
+        let end_line = i;
 
         tests.push(TestCase {
             name,
             command,
-            expected_output: expected,
+            expected_output: expected_lines.join("\n"),
             file_path: path.to_path_buf(),
             start_line,
             end_line,
@@ -55,6 +80,14 @@ pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
     }
 
     Ok(tests)
+}
+
+fn is_header_separator(line: &str) -> bool {
+    line.len() >= 3 && line.chars().all(|c| c == '=')
+}
+
+fn is_dash_separator(line: &str) -> bool {
+    line.len() >= 3 && line.chars().all(|c| c == '-')
 }
 
 #[cfg(test)]
