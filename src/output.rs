@@ -1,6 +1,6 @@
 use crate::runner::{ProgressEvent, SuiteResult, TestResult};
 use similar::{ChangeTag, TextDiff};
-use std::io::{self, Write};
+use std::io::Write;
 use std::time::Duration;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
