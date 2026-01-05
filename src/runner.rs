@@ -316,7 +316,7 @@ mod tests {
         let suite = create_suite(tmp.path(), "template");
         create_test_file(
             &suite.path.join("test.txt"),
-            "===\ntemplate test\n===\npwd\n---\n{{ WORK_DIR }}\n",
+            "===\ntemplate test\n===\necho {{ WORK_DIR }}\n---\n{{ WORK_DIR }}\n",
         );
 
         let result = run_suite(&suite, None, None);
