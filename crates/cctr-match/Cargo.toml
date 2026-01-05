@@ -9,3 +9,4 @@ license.workspace = true
 [dependencies]
 regex = "1"
 thiserror = "1"
+winnow = "0.6"
