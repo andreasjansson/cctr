@@ -1,0 +1,34 @@
+===
+run passing tests
+===
+cctr -C {{ FIXTURE_DIR }}/passing --no-color
+---
+...
+
+✓ passing: 3/3 tests passed in
+
+===
+run passing tests verbose
+===
+cctr -C {{ FIXTURE_DIR }}/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
+---
+✓ passing/simple: echo test
+✓ passing/simple: true returns success
+✓ passing/simple: multiline output
+
+===
+run tests with fixture support
+===
+cctr -C {{ FIXTURE_DIR }}/with_fixture --no-color
+---
+.
+
+✓ with_fixture: 1/1 tests passed in
+
+===
+run tests with setup
+===
+cctr -C {{ FIXTURE_DIR }}/with_setup --no-color -v 2>&1 | grep -E '^[✓✗]'
+---
+✓ with_setup/_setup: create marker file
+✓ with_setup/uses_setup: marker file exists from setup
