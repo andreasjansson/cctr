@@ -1,0 +1,16 @@
+===
+list tests in passing suite
+===
+cctr -C {{ FIXTURE_DIR }}/passing --list
+---
+passing/simple: echo test
+passing/simple: true returns success
+passing/simple: multiline output
+
+===
+list tests in with_setup suite
+===
+cctr -C {{ FIXTURE_DIR }}/with_setup --list
+---
+with_setup/_setup: create marker file
+with_setup/uses_setup: marker file exists from setup
