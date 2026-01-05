@@ -1,0 +1,28 @@
+[package]
+name = "cctr"
+description = "CLI Corpus Test Runner - Named after the Corpus Christi Terminal Railroad"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+cctr-match = { path = "../cctr-match" }
+clap = { version = "4", features = ["derive", "wrap_help", "color"] }
+thiserror = "1"
+anyhow = "1"
+termcolor = "1"
+similar = "2"
+rayon = "1"
+walkdir = "2"
+tempfile = "3"
+regex = "1"
+atty = "0.2"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+
+[[bin]]
+name = "cctr"
+path = "src/main.rs"
