@@ -3,6 +3,7 @@ use winnow::ascii::{digit1, multispace0};
 use winnow::combinator::{alt, delimited, opt, separated};
 use winnow::prelude::*;
 use winnow::token::{any, take_while};
+use winnow::ModalResult;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
