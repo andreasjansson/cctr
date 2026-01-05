@@ -1,6 +1,18 @@
 use crate::error::{Error, Result};
 use std::path::Path;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum VarType {
+    Number,
+    String,
+}
+
+#[derive(Debug, Clone)]
+pub struct VariableDecl {
+    pub name: String,
+    pub var_type: VarType,
+}
+
 #[derive(Debug, Clone)]
 pub struct TestCase {
     pub name: String,
@@ -9,6 +21,8 @@ pub struct TestCase {
     pub file_path: std::path::PathBuf,
     pub start_line: usize,
     pub end_line: usize,
+    pub variables: Vec<VariableDecl>,
+    pub constraints: Vec<String>,
 }
 
 pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
