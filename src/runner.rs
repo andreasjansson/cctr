@@ -1,4 +1,5 @@
 use crate::discover::Suite;
+use crate::matcher::Matcher;
 use crate::parse::{parse_corpus_file, TestCase};
 use crate::template::TemplateVars;
 use std::path::{Path, PathBuf};
@@ -80,12 +81,7 @@ fn run_command(command: &str, work_dir: &Path) -> (String, i32) {
     }
 }
 
-fn run_test(
-    test: &TestCase,
-    work_dir: &Path,
-    suite_name: &str,
-    vars: &TemplateVars,
-) -> TestResult {
+fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, vars: &TemplateVars) -> TestResult {
     let start = Instant::now();
 
     let command = vars.apply(&test.command);
