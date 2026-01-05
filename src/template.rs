@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Default)]
 pub struct TemplateVars {
@@ -19,6 +19,18 @@ impl TemplateVars {
         for (key, value) in &self.vars {
             let placeholder = format!("{{{{ {} }}}}", key);
             result = result.replace(&placeholder, value);
+        }
+        result
+    }
+
+    pub fn apply_except(&self, text: &str, exclude: &[&str]) -> String {
+        let exclude_set: HashSet<&str> = exclude.iter().copied().collect();
+        let mut result = text.to_string();
+        for (key, value) in &self.vars {
+            if !exclude_set.contains(key.as_str()) {
+                let placeholder = format!("{{{{ {} }}}}", key);
+                result = result.replace(&placeholder, value);
+            }
         }
         result
     }
