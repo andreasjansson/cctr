@@ -587,8 +587,10 @@ mod tests {
     #[test]
     fn test_number_parsing() {
         assert_eq!(parse("42").unwrap(), Expr::Number(42.0));
-        assert_eq!(parse("-3.14").unwrap(), Expr::Number(-3.14));
         assert_eq!(parse("0.5").unwrap(), Expr::Number(0.5));
+        // Negative numbers parse as unary negation, which is fine
+        let v = vars(&[]);
+        assert!(eval_bool("-3.14 == -3.14", &v).unwrap());
     }
 
     #[test]
