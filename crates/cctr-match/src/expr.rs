@@ -2,6 +2,11 @@
 
 use std::collections::HashMap;
 use thiserror::Error;
+use winnow::ascii::{digit1, multispace0};
+use winnow::combinator::{alt, delimited, opt, preceded, separated};
+use winnow::error::{ContextError, ErrMode, ParserError};
+use winnow::prelude::*;
+use winnow::token::{any, take_while};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -125,492 +130,326 @@ pub enum EvalError {
     ParseError(String),
 }
 
-// ============ Tokenizer ============
-
-#[derive(Debug, Clone, PartialEq)]
-enum Token {
-    Number(f64),
-    String(String),
-    Regex(String),
-    Ident(String),
-    // Operators
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Caret,
-    Eq,
-    Ne,
-    Lt,
-    Le,
-    Gt,
-    Ge,
-    // Keywords
-    And,
-    Or,
-    Not,
-    In,
-    Contains,
-    StartsWith,
-    EndsWith,
-    Matches,
-    True,
-    False,
-    // Punctuation
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
-    Comma,
-}
-
-struct Lexer<'a> {
-    input: &'a str,
-    pos: usize,
-}
-
-impl<'a> Lexer<'a> {
-    fn new(input: &'a str) -> Self {
-        Self { input, pos: 0 }
-    }
-
-    fn peek_char(&self) -> Option<char> {
-        self.input[self.pos..].chars().next()
-    }
-
-    fn advance(&mut self) -> Option<char> {
-        let c = self.peek_char()?;
-        self.pos += c.len_utf8();
-        Some(c)
-    }
-
-    fn skip_whitespace(&mut self) {
-        while let Some(c) = self.peek_char() {
-            if c.is_whitespace() {
-                self.advance();
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn read_number(&mut self) -> Token {
-        let start = self.pos;
-        if self.peek_char() == Some('-') {
-            self.advance();
-        }
-        while let Some(c) = self.peek_char() {
-            if c.is_ascii_digit() {
-                self.advance();
-            } else {
-                break;
-            }
-        }
-        if self.peek_char() == Some('.') {
-            self.advance();
-            while let Some(c) = self.peek_char() {
-                if c.is_ascii_digit() {
-                    self.advance();
-                } else {
-                    break;
-                }
-            }
-        }
-        let s = &self.input[start..self.pos];
-        Token::Number(s.parse().unwrap())
-    }
-
-    fn read_string(&mut self) -> Result<Token, EvalError> {
-        self.advance(); // consume opening quote
-        let mut s = String::new();
-        loop {
-            match self.advance() {
-                None => return Err(EvalError::ParseError("unterminated string".to_string())),
-                Some('"') => break,
-                Some('\\') => match self.advance() {
-                    Some('n') => s.push('\n'),
-                    Some('t') => s.push('\t'),
-                    Some('r') => s.push('\r'),
-                    Some('"') => s.push('"'),
-                    Some('\\') => s.push('\\'),
-                    Some(c) => {
-                        s.push('\\');
-                        s.push(c);
-                    }
-                    None => return Err(EvalError::ParseError("unterminated escape".to_string())),
-                },
-                Some(c) => s.push(c),
-            }
-        }
-        Ok(Token::String(s))
-    }
-
-    fn read_regex(&mut self) -> Result<Token, EvalError> {
-        self.advance(); // consume opening /
-        let mut s = String::new();
-        loop {
-            match self.advance() {
-                None => return Err(EvalError::ParseError("unterminated regex".to_string())),
-                Some('/') => break,
-                Some('\\') => {
-                    s.push('\\');
-                    if let Some(c) = self.advance() {
-                        s.push(c);
-                    }
-                }
-                Some(c) => s.push(c),
-            }
-        }
-        Ok(Token::Regex(s))
-    }
-
-    fn read_ident(&mut self) -> Token {
-        let start = self.pos;
-        while let Some(c) = self.peek_char() {
-            if c.is_ascii_alphanumeric() || c == '_' {
-                self.advance();
-            } else {
-                break;
-            }
-        }
-        let s = &self.input[start..self.pos];
-        match s {
-            "and" => Token::And,
-            "or" => Token::Or,
-            "not" => Token::Not,
-            "in" => Token::In,
-            "contains" => Token::Contains,
-            "startswith" => Token::StartsWith,
-            "endswith" => Token::EndsWith,
-            "matches" => Token::Matches,
-            "true" => Token::True,
-            "false" => Token::False,
-            _ => Token::Ident(s.to_string()),
-        }
-    }
-
-    fn next_token(&mut self) -> Result<Option<Token>, EvalError> {
-        self.skip_whitespace();
-        let c = match self.peek_char() {
-            None => return Ok(None),
-            Some(c) => c,
-        };
-
-        let token = match c {
-            '0'..='9' => self.read_number(),
-            '-' => {
-                let next_pos = self.pos + 1;
-                if next_pos < self.input.len() {
-                    let next = self.input[next_pos..].chars().next();
-                    if next.map(|c| c.is_ascii_digit()).unwrap_or(false) {
-                        self.read_number()
-                    } else {
-                        self.advance();
-                        Token::Minus
-                    }
-                } else {
-                    self.advance();
-                    Token::Minus
-                }
-            }
-            '"' => self.read_string()?,
-            '/' => self.read_regex()?,
-            'a'..='z' | 'A'..='Z' | '_' => self.read_ident(),
-            '+' => {
-                self.advance();
-                Token::Plus
-            }
-            '*' => {
-                self.advance();
-                Token::Star
-            }
-            '^' => {
-                self.advance();
-                Token::Caret
-            }
-            '(' => {
-                self.advance();
-                Token::LParen
-            }
-            ')' => {
-                self.advance();
-                Token::RParen
-            }
-            '[' => {
-                self.advance();
-                Token::LBracket
-            }
-            ']' => {
-                self.advance();
-                Token::RBracket
-            }
-            ',' => {
-                self.advance();
-                Token::Comma
-            }
-            '=' => {
-                self.advance();
-                if self.peek_char() == Some('=') {
-                    self.advance();
-                    Token::Eq
-                } else {
-                    return Err(EvalError::ParseError("expected '==' ".to_string()));
-                }
-            }
-            '!' => {
-                self.advance();
-                if self.peek_char() == Some('=') {
-                    self.advance();
-                    Token::Ne
-                } else {
-                    return Err(EvalError::ParseError("expected '!='".to_string()));
-                }
-            }
-            '<' => {
-                self.advance();
-                if self.peek_char() == Some('=') {
-                    self.advance();
-                    Token::Le
-                } else {
-                    Token::Lt
-                }
-            }
-            '>' => {
-                self.advance();
-                if self.peek_char() == Some('=') {
-                    self.advance();
-                    Token::Ge
-                } else {
-                    Token::Gt
-                }
-            }
-            _ => {
-                return Err(EvalError::ParseError(format!(
-                    "unexpected character: {}",
-                    c
-                )))
-            }
-        };
-        Ok(Some(token))
-    }
-
-    fn tokenize(&mut self) -> Result<Vec<Token>, EvalError> {
-        let mut tokens = Vec::new();
-        while let Some(tok) = self.next_token()? {
-            tokens.push(tok);
-        }
-        Ok(tokens)
-    }
-}
-
 // ============ Parser ============
 
-struct Parser {
-    tokens: Vec<Token>,
-    pos: usize,
+type PResult<T> = Result<T, ErrMode<ContextError>>;
+
+fn ws<'a, P, O>(mut p: P) -> impl Parser<&'a str, O, ContextError>
+where
+    P: Parser<&'a str, O, ContextError>,
+{
+    move |input: &mut &'a str| {
+        let _ = multispace0.parse_next(input)?;
+        p.parse_next(input)
+    }
 }
 
-impl Parser {
-    fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+fn number(input: &mut &str) -> PResult<Expr> {
+    let neg = opt('-').parse_next(input)?;
+    let int_part: &str = digit1.parse_next(input)?;
+    let frac_part: Option<(char, &str)> = opt(('.', digit1)).parse_next(input)?;
+
+    let mut s = String::new();
+    if neg.is_some() {
+        s.push('-');
+    }
+    s.push_str(int_part);
+    if let Some((_, frac)) = frac_part {
+        s.push('.');
+        s.push_str(frac);
     }
 
-    fn peek(&self) -> Option<&Token> {
-        self.tokens.get(self.pos)
-    }
+    Ok(Expr::Number(s.parse().unwrap()))
+}
 
-    fn advance(&mut self) -> Option<&Token> {
-        let tok = self.tokens.get(self.pos);
-        if tok.is_some() {
-            self.pos += 1;
+fn string_literal(input: &mut &str) -> PResult<Expr> {
+    '"'.parse_next(input)?;
+    let mut s = String::new();
+    loop {
+        let c: char = any.parse_next(input)?;
+        if c == '"' {
+            break;
         }
-        tok
-    }
-
-    fn expect(&mut self, expected: &Token) -> Result<(), EvalError> {
-        match self.advance() {
-            Some(tok) if tok == expected => Ok(()),
-            Some(tok) => Err(EvalError::ParseError(format!(
-                "expected {:?}, got {:?}",
-                expected, tok
-            ))),
-            None => Err(EvalError::ParseError(format!(
-                "expected {:?}, got EOF",
-                expected
-            ))),
+        if c == '\\' {
+            let escaped: char = any.parse_next(input)?;
+            match escaped {
+                'n' => s.push('\n'),
+                't' => s.push('\t'),
+                'r' => s.push('\r'),
+                '"' => s.push('"'),
+                '\\' => s.push('\\'),
+                _ => {
+                    s.push('\\');
+                    s.push(escaped);
+                }
+            }
+        } else {
+            s.push(c);
         }
     }
+    Ok(Expr::String(s))
+}
 
-    fn parse_expr(&mut self) -> Result<Expr, EvalError> {
-        self.parse_or()
+fn regex_literal(input: &mut &str) -> PResult<Expr> {
+    '/'.parse_next(input)?;
+    let mut s = String::new();
+    loop {
+        let c: char = any.parse_next(input)?;
+        if c == '/' {
+            break;
+        }
+        if c == '\\' {
+            let escaped: char = any.parse_next(input)?;
+            s.push('\\');
+            s.push(escaped);
+        } else {
+            s.push(c);
+        }
     }
+    Ok(Expr::String(s))
+}
 
-    fn parse_or(&mut self) -> Result<Expr, EvalError> {
-        let mut left = self.parse_and()?;
-        while self.peek() == Some(&Token::Or) {
-            self.advance();
-            let right = self.parse_and()?;
-            left = Expr::BinaryOp {
-                op: BinaryOp::Or,
+fn ident(input: &mut &str) -> PResult<String> {
+    let first: &str =
+        take_while(1, |c: char| c.is_ascii_alphabetic() || c == '_').parse_next(input)?;
+    let rest: &str =
+        take_while(0.., |c: char| c.is_ascii_alphanumeric() || c == '_').parse_next(input)?;
+    Ok(format!("{}{}", first, rest))
+}
+
+fn keyword<'a>(kw: &'static str) -> impl Parser<&'a str, (), ContextError> {
+    move |input: &mut &'a str| {
+        let start = *input;
+        let id = ident.parse_next(input)?;
+        if id == kw {
+            Ok(())
+        } else {
+            *input = start;
+            Err(ErrMode::Backtrack(ContextError::new()))
+        }
+    }
+}
+
+fn var_or_keyword(input: &mut &str) -> PResult<Expr> {
+    let name = ident.parse_next(input)?;
+    match name.as_str() {
+        "true" => Ok(Expr::Bool(true)),
+        "false" => Ok(Expr::Bool(false)),
+        _ => Ok(Expr::Var(name)),
+    }
+}
+
+fn array(input: &mut &str) -> PResult<Expr> {
+    '['.parse_next(input)?;
+    let _ = multispace0.parse_next(input)?;
+    let elements: Vec<Expr> = separated(0.., ws(expr), ws(',')).parse_next(input)?;
+    let _ = multispace0.parse_next(input)?;
+    ']'.parse_next(input)?;
+    Ok(Expr::Array(elements))
+}
+
+fn atom(input: &mut &str) -> PResult<Expr> {
+    let _ = multispace0.parse_next(input)?;
+    alt((
+        delimited(('(', multispace0), expr, (multispace0, ')')),
+        array,
+        string_literal,
+        regex_literal,
+        number,
+        var_or_keyword,
+    ))
+    .parse_next(input)
+}
+
+fn unary(input: &mut &str) -> PResult<Expr> {
+    let _ = multispace0.parse_next(input)?;
+    let neg: Option<char> = opt('-').parse_next(input)?;
+    if neg.is_some() {
+        let e = unary.parse_next(input)?;
+        return Ok(Expr::UnaryOp {
+            op: UnaryOp::Neg,
+            expr: Box::new(e),
+        });
+    }
+    atom(input)
+}
+
+fn pow_expr(input: &mut &str) -> PResult<Expr> {
+    let base = unary.parse_next(input)?;
+    let _ = multispace0.parse_next(input)?;
+    let caret: Option<char> = opt('^').parse_next(input)?;
+    if caret.is_some() {
+        let _ = multispace0.parse_next(input)?;
+        let exp = pow_expr.parse_next(input)?;
+        Ok(Expr::BinaryOp {
+            op: BinaryOp::Pow,
+            left: Box::new(base),
+            right: Box::new(exp),
+        })
+    } else {
+        Ok(base)
+    }
+}
+
+fn mul_op(input: &mut &str) -> PResult<BinaryOp> {
+    alt(('*'.value(BinaryOp::Mul), '/'.value(BinaryOp::Div))).parse_next(input)
+}
+
+fn mul_expr(input: &mut &str) -> PResult<Expr> {
+    let mut left = pow_expr.parse_next(input)?;
+    loop {
+        let _ = multispace0.parse_next(input)?;
+        let op: Option<BinaryOp> = opt(mul_op).parse_next(input)?;
+        match op {
+            Some(op) => {
+                let _ = multispace0.parse_next(input)?;
+                let right = pow_expr.parse_next(input)?;
+                left = Expr::BinaryOp {
+                    op,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                };
+            }
+            None => break,
+        }
+    }
+    Ok(left)
+}
+
+fn add_op(input: &mut &str) -> PResult<BinaryOp> {
+    alt(('+'.value(BinaryOp::Add), '-'.value(BinaryOp::Sub))).parse_next(input)
+}
+
+fn add_expr(input: &mut &str) -> PResult<Expr> {
+    let mut left = mul_expr.parse_next(input)?;
+    loop {
+        let _ = multispace0.parse_next(input)?;
+        let op: Option<BinaryOp> = opt(add_op).parse_next(input)?;
+        match op {
+            Some(op) => {
+                let _ = multispace0.parse_next(input)?;
+                let right = mul_expr.parse_next(input)?;
+                left = Expr::BinaryOp {
+                    op,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                };
+            }
+            None => break,
+        }
+    }
+    Ok(left)
+}
+
+fn cmp_op(input: &mut &str) -> PResult<BinaryOp> {
+    alt((
+        "==".value(BinaryOp::Eq),
+        "!=".value(BinaryOp::Ne),
+        "<=".value(BinaryOp::Le),
+        ">=".value(BinaryOp::Ge),
+        "<".value(BinaryOp::Lt),
+        ">".value(BinaryOp::Gt),
+        keyword("in").value(BinaryOp::In),
+        keyword("contains").value(BinaryOp::Contains),
+        keyword("startswith").value(BinaryOp::StartsWith),
+        keyword("endswith").value(BinaryOp::EndsWith),
+        keyword("matches").value(BinaryOp::Matches),
+    ))
+    .parse_next(input)
+}
+
+fn cmp_expr(input: &mut &str) -> PResult<Expr> {
+    let left = add_expr.parse_next(input)?;
+    let _ = multispace0.parse_next(input)?;
+    let op: Option<BinaryOp> = opt(cmp_op).parse_next(input)?;
+    match op {
+        Some(op) => {
+            let _ = multispace0.parse_next(input)?;
+            let right = add_expr.parse_next(input)?;
+            Ok(Expr::BinaryOp {
+                op,
                 left: Box::new(left),
                 right: Box::new(right),
-            };
+            })
         }
-        Ok(left)
+        None => Ok(left),
     }
+}
 
-    fn parse_and(&mut self) -> Result<Expr, EvalError> {
-        let mut left = self.parse_not()?;
-        while self.peek() == Some(&Token::And) {
-            self.advance();
-            let right = self.parse_not()?;
+fn not_expr(input: &mut &str) -> PResult<Expr> {
+    let _ = multispace0.parse_next(input)?;
+    let not: Option<()> = opt(keyword("not")).parse_next(input)?;
+    if not.is_some() {
+        let _ = multispace0.parse_next(input)?;
+        let e = not_expr.parse_next(input)?;
+        Ok(Expr::UnaryOp {
+            op: UnaryOp::Not,
+            expr: Box::new(e),
+        })
+    } else {
+        cmp_expr(input)
+    }
+}
+
+fn and_expr(input: &mut &str) -> PResult<Expr> {
+    let mut left = not_expr.parse_next(input)?;
+    loop {
+        let _ = multispace0.parse_next(input)?;
+        let kw: Option<()> = opt(keyword("and")).parse_next(input)?;
+        if kw.is_some() {
+            let _ = multispace0.parse_next(input)?;
+            let right = not_expr.parse_next(input)?;
             left = Expr::BinaryOp {
                 op: BinaryOp::And,
                 left: Box::new(left),
                 right: Box::new(right),
             };
-        }
-        Ok(left)
-    }
-
-    fn parse_not(&mut self) -> Result<Expr, EvalError> {
-        if self.peek() == Some(&Token::Not) {
-            self.advance();
-            let expr = self.parse_not()?;
-            Ok(Expr::UnaryOp {
-                op: UnaryOp::Not,
-                expr: Box::new(expr),
-            })
         } else {
-            self.parse_comparison()
+            break;
         }
     }
+    Ok(left)
+}
 
-    fn parse_comparison(&mut self) -> Result<Expr, EvalError> {
-        let left = self.parse_additive()?;
-        let op = match self.peek() {
-            Some(Token::Eq) => BinaryOp::Eq,
-            Some(Token::Ne) => BinaryOp::Ne,
-            Some(Token::Lt) => BinaryOp::Lt,
-            Some(Token::Le) => BinaryOp::Le,
-            Some(Token::Gt) => BinaryOp::Gt,
-            Some(Token::Ge) => BinaryOp::Ge,
-            Some(Token::In) => BinaryOp::In,
-            Some(Token::Contains) => BinaryOp::Contains,
-            Some(Token::StartsWith) => BinaryOp::StartsWith,
-            Some(Token::EndsWith) => BinaryOp::EndsWith,
-            Some(Token::Matches) => BinaryOp::Matches,
-            _ => return Ok(left),
-        };
-        self.advance();
-        let right = self.parse_additive()?;
-        Ok(Expr::BinaryOp {
-            op,
-            left: Box::new(left),
-            right: Box::new(right),
-        })
-    }
-
-    fn parse_additive(&mut self) -> Result<Expr, EvalError> {
-        let mut left = self.parse_multiplicative()?;
-        loop {
-            let op = match self.peek() {
-                Some(Token::Plus) => BinaryOp::Add,
-                Some(Token::Minus) => BinaryOp::Sub,
-                _ => break,
-            };
-            self.advance();
-            let right = self.parse_multiplicative()?;
+fn or_expr(input: &mut &str) -> PResult<Expr> {
+    let mut left = and_expr.parse_next(input)?;
+    loop {
+        let _ = multispace0.parse_next(input)?;
+        let kw: Option<()> = opt(keyword("or")).parse_next(input)?;
+        if kw.is_some() {
+            let _ = multispace0.parse_next(input)?;
+            let right = and_expr.parse_next(input)?;
             left = Expr::BinaryOp {
-                op,
+                op: BinaryOp::Or,
                 left: Box::new(left),
                 right: Box::new(right),
             };
-        }
-        Ok(left)
-    }
-
-    fn parse_multiplicative(&mut self) -> Result<Expr, EvalError> {
-        let mut left = self.parse_power()?;
-        loop {
-            let op = match self.peek() {
-                Some(Token::Star) => BinaryOp::Mul,
-                Some(Token::Slash) => BinaryOp::Div,
-                _ => break,
-            };
-            self.advance();
-            let right = self.parse_power()?;
-            left = Expr::BinaryOp {
-                op,
-                left: Box::new(left),
-                right: Box::new(right),
-            };
-        }
-        Ok(left)
-    }
-
-    fn parse_power(&mut self) -> Result<Expr, EvalError> {
-        let base = self.parse_unary()?;
-        if self.peek() == Some(&Token::Caret) {
-            self.advance();
-            let exp = self.parse_power()?; // right associative
-            Ok(Expr::BinaryOp {
-                op: BinaryOp::Pow,
-                left: Box::new(base),
-                right: Box::new(exp),
-            })
         } else {
-            Ok(base)
+            break;
         }
     }
+    Ok(left)
+}
 
-    fn parse_unary(&mut self) -> Result<Expr, EvalError> {
-        if self.peek() == Some(&Token::Minus) {
-            self.advance();
-            let expr = self.parse_unary()?;
-            Ok(Expr::UnaryOp {
-                op: UnaryOp::Neg,
-                expr: Box::new(expr),
-            })
-        } else {
-            self.parse_atom()
-        }
-    }
+fn expr(input: &mut &str) -> PResult<Expr> {
+    or_expr(input)
+}
 
-    fn parse_atom(&mut self) -> Result<Expr, EvalError> {
-        match self.advance() {
-            Some(Token::Number(n)) => Ok(Expr::Number(*n)),
-            Some(Token::String(s)) => Ok(Expr::String(s.clone())),
-            Some(Token::Regex(r)) => Ok(Expr::String(r.clone())),
-            Some(Token::Ident(name)) => Ok(Expr::Var(name.clone())),
-            Some(Token::True) => Ok(Expr::Bool(true)),
-            Some(Token::False) => Ok(Expr::Bool(false)),
-            Some(Token::LParen) => {
-                let expr = self.parse_expr()?;
-                self.expect(&Token::RParen)?;
-                Ok(expr)
+pub fn parse(input: &str) -> Result<Expr, EvalError> {
+    let mut input = input.trim();
+    match expr.parse_next(&mut input) {
+        Ok(e) => {
+            let remaining = input.trim();
+            if remaining.is_empty() {
+                Ok(e)
+            } else {
+                Err(EvalError::ParseError(format!(
+                    "unexpected trailing input: {:?}",
+                    remaining
+                )))
             }
-            Some(Token::LBracket) => {
-                let mut elements = Vec::new();
-                if self.peek() != Some(&Token::RBracket) {
-                    elements.push(self.parse_expr()?);
-                    while self.peek() == Some(&Token::Comma) {
-                        self.advance();
-                        if self.peek() == Some(&Token::RBracket) {
-                            break; // trailing comma
-                        }
-                        elements.push(self.parse_expr()?);
-                    }
-                }
-                self.expect(&Token::RBracket)?;
-                Ok(Expr::Array(elements))
-            }
-            Some(tok) => Err(EvalError::ParseError(format!(
-                "unexpected token: {:?}",
-                tok
-            ))),
-            None => Err(EvalError::ParseError("unexpected end of input".to_string())),
         }
+        Err(e) => Err(EvalError::ParseError(format!("{:?}", e))),
     }
 }
 
@@ -727,20 +566,6 @@ fn values_equal(a: &Value, b: &Value) -> bool {
 }
 
 // ============ Public API ============
-
-pub fn parse(input: &str) -> Result<Expr, EvalError> {
-    let mut lexer = Lexer::new(input);
-    let tokens = lexer.tokenize()?;
-    let mut parser = Parser::new(tokens);
-    let expr = parser.parse_expr()?;
-    if parser.peek().is_some() {
-        return Err(EvalError::ParseError(format!(
-            "unexpected trailing tokens: {:?}",
-            &parser.tokens[parser.pos..]
-        )));
-    }
-    Ok(expr)
-}
 
 pub fn eval_bool(expr_str: &str, vars: &HashMap<String, Value>) -> Result<bool, EvalError> {
     let ast = parse(expr_str)?;
