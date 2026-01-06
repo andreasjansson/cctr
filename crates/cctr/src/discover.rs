@@ -19,6 +19,15 @@ impl Suite {
             .map(|p| p.to_string_lossy().into_owned())
             .unwrap_or_else(|_| path.to_string_lossy().into_owned());
 
+        // If suite is at root, use the directory name instead of empty string
+        let name = if name.is_empty() {
+            path.file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| name)
+        } else {
+            name
+        };
+
         let has_fixture = path.join("fixture").is_dir();
         let has_setup = path.join("_setup.txt").is_file();
         let has_teardown = path.join("_teardown.txt").is_file();
