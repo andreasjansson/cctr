@@ -28,11 +28,10 @@
 
 use std::path::Path;
 use thiserror::Error;
-use winnow::ascii::line_ending;
-use winnow::combinator::{alt, opt, preceded, repeat, terminated};
+use winnow::combinator::{alt, opt, repeat};
 use winnow::error::ContextError;
 use winnow::prelude::*;
-use winnow::token::{take_till, take_until, take_while};
+use winnow::token::{take_till, take_while};
 
 // ============ Data Types ============
 
