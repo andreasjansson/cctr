@@ -47,17 +47,18 @@ fn main() -> anyhow::Result<()> {
         output.finish_progress();
     });
 
+    let pattern = cli.pattern.as_deref();
     let results: Vec<SuiteResult> = if cli.sequential || suites.len() == 1 {
         suites
             .iter()
-            .map(|suite| run_suite(suite, file_filter.as_deref(), Some(&progress_tx)))
+            .map(|suite| run_suite(suite, pattern, Some(&progress_tx)))
             .collect()
     } else {
         suites
             .par_iter()
             .map(|suite| {
                 let tx = progress_tx.clone();
-                run_suite(suite, file_filter.as_deref(), Some(&tx))
+                run_suite(suite, pattern, Some(&tx))
             })
             .collect()
     };
