@@ -1,89 +1,5 @@
 ===
-arithmetic expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "arithmetic:" | tail -1
----
-✓ : 10/10 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-comparison expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "comparison:" | tail -1
----
-✓ : 8/8 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-logical expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "logical:" | tail -1
----
-✓ : 8/8 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-string expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "strings:" | tail -1
----
-✓ : 11/11 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-membership expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "membership:" | tail -1
----
-✓ : 6/6 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-function expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "functions:" | tail -1
----
-✓ : 5/5 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-kitchen sink expressions all pass
-===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "kitchen_sink:" | tail -1
----
-✓ : 6/6 tests passed in {{ t }}s
----
-with
-* t: number
-having
-* t < 10
-
-===
-all expression tests pass
+all 54 expression tests pass
 ===
 cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
@@ -95,8 +11,36 @@ having
 * t < 30
 
 ===
-list shows all expression test files
+verbose shows all tests running
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --list | grep "test(s)" | wc -l | tr -d ' '
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -c "^✓" | tr -d ' '
+---
+55
+
+===
+no failures in expression tests
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -c "^✗" || echo 0
+---
+0
+
+===
+list shows 6 test files
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list | grep -c "test(s)"
 ---
 6
+
+===
+arithmetic has 10 tests
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list | grep "arithmetic:" | head -1
+---
+  arithmetic: 10 test(s)
+
+===
+kitchen sink has 6 tests
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list | grep "kitchen_sink:" | head -1
+---
+  kitchen_sink: 6 test(s)
