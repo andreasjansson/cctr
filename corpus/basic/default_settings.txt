@@ -1,0 +1,24 @@
+===
+Run a basic successful cctr test
+===
+cctr -C {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1
+---
+.F
+
+✗ test/corpus: 1/2 tests passed in {{ n }}s
+
+Failures:
+
+✗ test/corpus/cat_incorrect: Test cat with incorrect output
+  {{ FIXTURE_DIR }}/test/corpus/cat_incorrect.txt:1
+  Command: cat foo.txt
+
+-bar
++foo
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ n }}s
+---
+with
+* n: number
+having
+* n < 5
