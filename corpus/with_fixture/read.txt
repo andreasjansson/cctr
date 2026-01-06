@@ -11,3 +11,13 @@ use FIXTURE_DIR variable
 cat {{ FIXTURE_DIR }}/sample.txt
 ---
 Hello from fixture
+
+===
+list mode shows fixture marker
+===
+cctr . --list | head -4
+---
+
+with_fixture [fixture]
+  read: 3 test(s)
+    - read from fixture
