@@ -1,0 +1,66 @@
+===
+len of string
+===
+echo "word: hello"
+---
+word: {{ s }}
+---
+with
+* s: string
+having
+* len(s) == 5
+
+===
+len comparison
+===
+echo "text: abcdefghij"
+---
+text: {{ t }}
+---
+with
+* t: string
+having
+* len(t) == 10
+* len(t) > 5
+* len(t) < 20
+
+===
+len in arithmetic
+===
+echo "name: alice"
+---
+name: {{ n }}
+---
+with
+* n: string
+having
+* len(n) + 5 == 10
+* len(n) * 2 == 10
+
+===
+len with empty check
+===
+echo "data: x"
+---
+data: {{ d }}
+---
+with
+* d: string
+having
+* len(d) > 0
+* len(d) >= 1
+
+===
+len in complex expression
+===
+echo "short: ab long: abcdefgh"
+---
+short: {{ s }} long: {{ l }}
+---
+with
+* s: string
+* l: string
+having
+* len(s) < len(l)
+* len(l) - len(s) == 6
+* len(s) + len(l) == 10
