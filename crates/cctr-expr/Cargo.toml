@@ -1,0 +1,12 @@
+[package]
+name = "cctr-expr"
+description = "Expression language parser and evaluator for cctr constraints"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+regex = "1"
+thiserror = "1"
+winnow = "0.6"
