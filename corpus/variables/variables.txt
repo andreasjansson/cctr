@@ -44,7 +44,7 @@ list mode shows variable test names
 cctr -C {{ FIXTURE_DIR }}/tests --list
 ---
 
-tests
+
   numbers: 3 test(s)
     - number variable match
     - number constraint pass
