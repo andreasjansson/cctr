@@ -93,34 +93,11 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(if all_passed { 0 } else { 1 });
 }
 
-fn parse_filter(
-    filter: &Option<String>,
+fn list_tests(
     root: &std::path::Path,
-) -> (Option<String>, Option<String>) {
-    match filter {
-        None => (None, None),
-        Some(f) => {
-            if !f.contains('/') {
-                return (Some(f.clone()), None);
-            }
-
-            let potential_suite = root.join(f);
-            if potential_suite.is_dir() {
-                return (Some(f.clone()), None);
-            }
-
-            if let Some(pos) = f.rfind('/') {
-                let suite_part = &f[..pos];
-                let file_part = &f[pos + 1..];
-                (Some(suite_part.to_string()), Some(file_part.to_string()))
-            } else {
-                (Some(f.clone()), None)
-            }
-        }
-    }
-}
-
-fn list_tests(root: &std::path::Path, output: &mut Output) -> anyhow::Result<()> {
+    pattern: Option<&str>,
+    output: &mut Output,
+) -> anyhow::Result<()> {
     let suites = discover_suites(root)?;
 
     let mut suite_tests = Vec::new();
@@ -130,7 +107,14 @@ fn list_tests(root: &std::path::Path, output: &mut Output) -> anyhow::Result<()>
             let tests = parse_corpus_file(&file)?;
             all_tests.extend(tests);
         }
-        suite_tests.push((suite, all_tests));
+
+        if let Some(pat) = pattern {
+            all_tests.retain(|t| t.name.contains(pat));
+        }
+
+        if !all_tests.is_empty() || pattern.is_none() {
+            suite_tests.push((suite, all_tests));
+        }
     }
 
     output.print_list(&suite_tests);
