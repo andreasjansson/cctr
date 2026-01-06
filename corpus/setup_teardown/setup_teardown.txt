@@ -1,0 +1,20 @@
+===
+setup runs before tests
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗]'
+---
+✓ tests/_setup: create marker file
+✓ tests/use_setup: verify setup ran
+✓ tests/_teardown: cleanup marker
+
+===
+all tests pass with setup teardown
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+---
+All 3 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 5
