@@ -113,7 +113,7 @@ having
 ===
 chained operations
 ===
-echo "result: 25"
+echo "result: 27"
 ---
 result: {{ n }}
 ---
