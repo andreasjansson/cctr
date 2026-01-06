@@ -41,12 +41,16 @@ cctr {{ FIXTURE_DIR }}/with_fixture --no-color
 ---
 .
 
-✓ with_fixture: 1/1 tests passed in {{ t }}s
+✓ with_fixture: 1/1 tests passed in {{ t1 }}s
+
+All 1 tests passed in {{ t2 }}s
 ---
 with
-* t: number
+* t1: number
+* t2: number
 having
-* t < 5
+* t1 < 5
+* t2 < 5
 
 ===
 run tests with setup
