@@ -5,12 +5,16 @@ cctr {{ FIXTURE_DIR }}/passing --no-color
 ---
 ...
 
-✓ passing: 3/3 tests passed in {{ t }}s
+✓ passing: 3/3 tests passed in {{ t1 }}s
+
+All 3 tests passed in {{ t2 }}s
 ---
 with
-* t: number
+* t1: number
+* t2: number
 having
-* t < 5
+* t1 < 5
+* t2 < 5
 
 ===
 run passing tests verbose
