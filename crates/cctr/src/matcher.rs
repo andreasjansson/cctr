@@ -170,4 +170,13 @@ mod tests {
             .matches("passed in {{ n }}s", "failed in 0.05s")
             .unwrap());
     }
+
+    #[test]
+    fn test_empty_string_match() {
+        let vars = vec![make_var("s", "string")];
+        let constraints = vec!["len(s) == 0".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("val: {{ s }}", "val: ").unwrap());
+    }
 }
