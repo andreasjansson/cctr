@@ -150,7 +150,7 @@ fn run_corpus_file(
 
 pub fn run_suite(
     suite: &Suite,
-    file_filter: Option<&str>,
+    pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> SuiteResult {
     let start = Instant::now();
@@ -188,7 +188,14 @@ pub fn run_suite(
 
     if suite.has_setup {
         let setup_file = suite.path.join("_setup.txt");
-        let file_result = run_corpus_file(&setup_file, work_dir, &suite.name, &vars, progress_tx);
+        let file_result = run_corpus_file(
+            &setup_file,
+            work_dir,
+            &suite.name,
+            &vars,
+            pattern,
+            progress_tx,
+        );
         let setup_passed = file_result.passed();
         file_results.push(file_result);
 
@@ -204,24 +211,27 @@ pub fn run_suite(
     }
 
     for corpus_file in suite.corpus_files() {
-        if let Some(filter) = file_filter {
-            let stem = corpus_file
-                .file_stem()
-                .map(|s| s.to_string_lossy())
-                .unwrap_or_default();
-            if !stem.contains(filter) {
-                continue;
-            }
-        }
-
-        let file_result = run_corpus_file(&corpus_file, work_dir, &suite.name, &vars, progress_tx);
+        let file_result = run_corpus_file(
+            &corpus_file,
+            work_dir,
+            &suite.name,
+            &vars,
+            pattern,
+            progress_tx,
+        );
         file_results.push(file_result);
     }
 
     if suite.has_teardown {
         let teardown_file = suite.path.join("_teardown.txt");
-        let file_result =
-            run_corpus_file(&teardown_file, work_dir, &suite.name, &vars, progress_tx);
+        let file_result = run_corpus_file(
+            &teardown_file,
+            work_dir,
+            &suite.name,
+            &vars,
+            pattern,
+            progress_tx,
+        );
         file_results.push(file_result);
     }
 
