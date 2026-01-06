@@ -15,12 +15,6 @@ Hello from fixture
 ===
 list mode shows fixture marker
 ===
-cctr . --list | grep -E '\[fixture\]|read:' | head -2
+cctr corpus/with_fixture --list | grep fixture
 ---
-{{ name }} [fixture]
-  read: 3 test(s)
----
-with
-* name: string
-having
-* len(name) > 0
+with_fixture [fixture]
