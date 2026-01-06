@@ -1,0 +1,102 @@
+===
+arithmetic expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "arithmetic:" | tail -1
+---
+✓ : 10/10 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+comparison expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "comparison:" | tail -1
+---
+✓ : 8/8 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+logical expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "logical:" | tail -1
+---
+✓ : 8/8 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+string expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "strings:" | tail -1
+---
+✓ : 11/11 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+membership expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "membership:" | tail -1
+---
+✓ : 6/6 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+function expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "functions:" | tail -1
+---
+✓ : 5/5 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+kitchen sink expressions all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "kitchen_sink:" | tail -1
+---
+✓ : 6/6 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
+
+===
+all expression tests pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+---
+All 54 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 30
+
+===
+list shows all expression test files
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list | grep "test(s)" | wc -l | tr -d ' '
+---
+6
