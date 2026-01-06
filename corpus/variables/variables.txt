@@ -1,7 +1,7 @@
 ===
 number variable tests first two pass
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/numbers:' | head -2
+{{ FIXTURE_DIR }}/../../../target/release/cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/numbers:' | head -2
 ---
 ✓ /numbers: number variable match {{ t1 }}s
 ✓ /numbers: number constraint pass {{ t2 }}s
@@ -16,14 +16,14 @@ having
 ===
 number constraint failure detected
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfied" | head -1
+{{ FIXTURE_DIR }}/../../../target/release/cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfied" | head -1
 ---
   Error: constraint 't < 1' not satisfied
 
 ===
 string variable tests pass
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/strings:' | head -3
+{{ FIXTURE_DIR }}/../../../target/release/cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/strings:' | head -3
 ---
 ✓ /strings: string variable match {{ t1 }}s
 ✓ /strings: string startswith {{ t2 }}s
