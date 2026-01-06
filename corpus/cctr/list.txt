@@ -3,14 +3,19 @@ list tests in passing suite
 ===
 cctr {{ FIXTURE_DIR }}/passing --list
 ---
-passing/simple: echo test
-passing/simple: true returns success
-passing/simple: multiline output
+
+passing
+  simple: 3 test(s)
+    - echo test
+    - true returns success
+    - multiline output
 
 ===
 list tests in with_setup suite
 ===
 cctr {{ FIXTURE_DIR }}/with_setup --list
 ---
-with_setup/_setup: create marker file
-with_setup/uses_setup: marker file exists from setup
+
+with_setup [setup]
+  uses_setup: 1 test(s)
+    - marker file exists from setup
