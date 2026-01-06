@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+echo "Running unit tests..."
+cargo test --all
+
+echo ""
+echo "Running corpus tests..."
+cargo run --release --package cctr -- -C corpus "$@"
