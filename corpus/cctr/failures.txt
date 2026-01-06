@@ -13,6 +13,6 @@ having
 ===
 failing test exits non-zero
 ===
-cctr {{ FIXTURE_DIR }}/failing --no-color 2>&1; echo "exit: $?"
+cctr {{ FIXTURE_DIR }}/failing --no-color >/dev/null 2>&1; echo "exit: $?"
 ---
 exit: 1
