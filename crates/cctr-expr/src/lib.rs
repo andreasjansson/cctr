@@ -721,4 +721,19 @@ mod tests {
         let v = vars(&[("s", Value::String("hello".to_string()))]);
         assert!(eval_bool("len(s) == 5", &v).unwrap());
     }
+
+    #[test]
+    fn test_backslash_in_string() {
+        // Test that backslash is parsed correctly
+        let v = vars(&[("p", Value::String("C:\\Users\\test".to_string()))]);
+
+        // Should contain "test"
+        assert!(eval_bool(r#"p contains "test""#, &v).unwrap());
+
+        // Should contain backslash (escaped in the expression)
+        assert!(eval_bool(r#"p contains "\\""#, &v).unwrap());
+
+        // Should contain "Users"
+        assert!(eval_bool(r#"p contains "Users""#, &v).unwrap());
+    }
 }
