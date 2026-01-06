@@ -134,6 +134,7 @@ with
 having
 * p contains "Users"
 * p contains "test"
+* p contains "\\"
 
 ===
 unicode string
