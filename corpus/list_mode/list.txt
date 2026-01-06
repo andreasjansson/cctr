@@ -3,6 +3,12 @@ list tests
 ===
 cctr -C {{ FIXTURE_DIR }}/suites --list
 ---
-first/tests: first test
-first/tests: second test
-second/tests: third test
+
+first
+  tests: 2 test(s)
+    - first test
+    - second test
+
+second
+  tests: 1 test(s)
+    - third test
