@@ -11,3 +11,14 @@ non verbose shows dots
 cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | head -1
 ---
 ..
+
+===
+list mode shows test names
+===
+cctr {{ FIXTURE_DIR }}/tests --list
+---
+
+tests
+  simple: 2 test(s)
+    - test one
+    - test two
