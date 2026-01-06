@@ -15,8 +15,8 @@
 use std::collections::HashMap;
 use thiserror::Error;
 use winnow::ascii::{digit1, multispace0};
-use winnow::combinator::{alt, cut_err, delimited, opt, preceded, repeat, separated, terminated};
-use winnow::error::{ContextError, StrContext};
+use winnow::combinator::{alt, delimited, opt, preceded, repeat, separated, terminated};
+use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::{any, none_of, one_of, take_while};
 
@@ -171,7 +171,7 @@ where
     delimited(multispace0, p, multispace0)
 }
 
-fn number(input: &mut &str) -> PResult<Expr> {
+fn number(input: &mut &str) -> ModalResult<Expr> {
     let neg: Option<char> = opt('-').parse_next(input)?;
     let int_part: &str = digit1.parse_next(input)?;
     let frac_part: Option<&str> = opt(preceded('.', digit1)).parse_next(input)?;
@@ -189,7 +189,7 @@ fn number(input: &mut &str) -> PResult<Expr> {
     Ok(Expr::Number(s.parse().unwrap()))
 }
 
-fn string_char(input: &mut &str) -> PResult<char> {
+fn string_char(input: &mut &str) -> ModalResult<char> {
     let c: char = none_of('"').parse_next(input)?;
     if c == '\\' {
         let escaped: char = any.parse_next(input)?;
@@ -206,7 +206,7 @@ fn string_char(input: &mut &str) -> PResult<char> {
     }
 }
 
-fn string_literal(input: &mut &str) -> PResult<Expr> {
+fn string_literal(input: &mut &str) -> ModalResult<Expr> {
     let chars: String = delimited(
         '"',
         repeat(0.., string_char).fold(String::new, |mut s, c| {
@@ -219,7 +219,7 @@ fn string_literal(input: &mut &str) -> PResult<Expr> {
     Ok(Expr::String(chars))
 }
 
-fn regex_literal(input: &mut &str) -> PResult<Expr> {
+fn regex_literal(input: &mut &str) -> ModalResult<Expr> {
     '/'.parse_next(input)?;
     let mut s = String::new();
     loop {
@@ -238,14 +238,14 @@ fn regex_literal(input: &mut &str) -> PResult<Expr> {
     Ok(Expr::String(s))
 }
 
-fn ident(input: &mut &str) -> PResult<String> {
+fn ident(input: &mut &str) -> ModalResult<String> {
     let first: char = one_of(|c: char| c.is_ascii_alphabetic() || c == '_').parse_next(input)?;
     let rest: &str =
         take_while(0.., |c: char| c.is_ascii_alphanumeric() || c == '_').parse_next(input)?;
     Ok(format!("{}{}", first, rest))
 }
 
-fn var_or_bool_or_func(input: &mut &str) -> PResult<Expr> {
+fn var_or_bool_or_func(input: &mut &str) -> ModalResult<Expr> {
     let name = ident.parse_next(input)?;
 
     // Check for function call
@@ -266,7 +266,7 @@ fn var_or_bool_or_func(input: &mut &str) -> PResult<Expr> {
     }
 }
 
-fn array(input: &mut &str) -> PResult<Expr> {
+fn array(input: &mut &str) -> ModalResult<Expr> {
     let elements: Vec<Expr> = delimited(
         ('[', multispace0),
         separated(0.., ws(expr), ws(',')),
@@ -276,7 +276,7 @@ fn array(input: &mut &str) -> PResult<Expr> {
     Ok(Expr::Array(elements))
 }
 
-fn atom(input: &mut &str) -> PResult<Expr> {
+fn atom(input: &mut &str) -> ModalResult<Expr> {
     let _ = multispace0.parse_next(input)?;
     alt((
         delimited(('(', multispace0), expr, (multispace0, ')')),
@@ -289,7 +289,7 @@ fn atom(input: &mut &str) -> PResult<Expr> {
     .parse_next(input)
 }
 
-fn unary(input: &mut &str) -> PResult<Expr> {
+fn unary(input: &mut &str) -> ModalResult<Expr> {
     let _ = multispace0.parse_next(input)?;
     let neg: Option<char> = opt('-').parse_next(input)?;
     if neg.is_some() {
@@ -302,7 +302,7 @@ fn unary(input: &mut &str) -> PResult<Expr> {
     atom(input)
 }
 
-fn pow(input: &mut &str) -> PResult<Expr> {
+fn pow(input: &mut &str) -> ModalResult<Expr> {
     let base = unary.parse_next(input)?;
     let _ = multispace0.parse_next(input)?;
     let caret: Option<char> = opt('^').parse_next(input)?;
@@ -319,7 +319,7 @@ fn pow(input: &mut &str) -> PResult<Expr> {
     }
 }
 
-fn term(input: &mut &str) -> PResult<Expr> {
+fn term(input: &mut &str) -> ModalResult<Expr> {
     let init = pow.parse_next(input)?;
 
     repeat(0.., (ws(one_of(['*', '/'])), pow))
@@ -341,7 +341,7 @@ fn term(input: &mut &str) -> PResult<Expr> {
         .parse_next(input)
 }
 
-fn arith(input: &mut &str) -> PResult<Expr> {
+fn arith(input: &mut &str) -> ModalResult<Expr> {
     let init = term.parse_next(input)?;
 
     repeat(0.., (ws(one_of(['+', '-'])), term))
@@ -363,7 +363,7 @@ fn arith(input: &mut &str) -> PResult<Expr> {
         .parse_next(input)
 }
 
-fn cmp_op(input: &mut &str) -> PResult<BinaryOp> {
+fn cmp_op(input: &mut &str) -> ModalResult<BinaryOp> {
     alt((
         "==".value(BinaryOp::Eq),
         "!=".value(BinaryOp::Ne),
@@ -380,7 +380,7 @@ fn cmp_op(input: &mut &str) -> PResult<BinaryOp> {
     .parse_next(input)
 }
 
-fn peek_non_ident(input: &mut &str) -> PResult<()> {
+fn peek_non_ident(input: &mut &str) -> ModalResult<()> {
     let next = input.chars().next();
     if next
         .map(|c| c.is_ascii_alphanumeric() || c == '_')
@@ -392,7 +392,7 @@ fn peek_non_ident(input: &mut &str) -> PResult<()> {
     }
 }
 
-fn comparison(input: &mut &str) -> PResult<Expr> {
+fn comparison(input: &mut &str) -> ModalResult<Expr> {
     let left = arith.parse_next(input)?;
     let _ = multispace0.parse_next(input)?;
 
@@ -411,7 +411,7 @@ fn comparison(input: &mut &str) -> PResult<Expr> {
     }
 }
 
-fn not_expr(input: &mut &str) -> PResult<Expr> {
+fn not_expr(input: &mut &str) -> ModalResult<Expr> {
     let _ = multispace0.parse_next(input)?;
     let not_kw: Option<&str> = opt(terminated("not", peek_non_ident)).parse_next(input)?;
     if not_kw.is_some() {
@@ -426,7 +426,7 @@ fn not_expr(input: &mut &str) -> PResult<Expr> {
     }
 }
 
-fn and_expr(input: &mut &str) -> PResult<Expr> {
+fn and_expr(input: &mut &str) -> ModalResult<Expr> {
     let init = not_expr.parse_next(input)?;
 
     repeat(
@@ -444,7 +444,7 @@ fn and_expr(input: &mut &str) -> PResult<Expr> {
     .parse_next(input)
 }
 
-fn or_expr(input: &mut &str) -> PResult<Expr> {
+fn or_expr(input: &mut &str) -> ModalResult<Expr> {
     let init = and_expr.parse_next(input)?;
 
     repeat(
@@ -462,7 +462,7 @@ fn or_expr(input: &mut &str) -> PResult<Expr> {
     .parse_next(input)
 }
 
-fn expr(input: &mut &str) -> PResult<Expr> {
+fn expr(input: &mut &str) -> ModalResult<Expr> {
     or_expr(input)
 }
 
