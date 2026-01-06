@@ -1,0 +1,11 @@
+[package]
+name = "cctr-corpus"
+description = "Corpus test file parser for cctr"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror = "1"
+winnow = "0.6"
