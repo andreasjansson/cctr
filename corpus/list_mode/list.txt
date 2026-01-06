@@ -1,0 +1,8 @@
+===
+list tests
+===
+cctr -C {{ FIXTURE_DIR }}/suites --list
+---
+first/tests: first test
+first/tests: second test
+second/tests: third test
