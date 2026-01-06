@@ -1,0 +1,25 @@
+===
+exit zero passes exit only mode
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit zero"
+---
+✓ tests/exit: exit zero passes
+
+===
+exit nonzero fails exit only mode
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit nonzero"
+---
+✗ tests/exit: exit nonzero fails
+
+===
+summary shows one pass one fail
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+---
+1 passed, 1 failed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 5
