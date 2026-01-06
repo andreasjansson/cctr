@@ -72,9 +72,9 @@ impl<'a> Matcher<'a> {
             regex_str.push_str(&regex::escape(literal));
 
             if let Some(var) = self.variables.iter().find(|v| v.name == var_name) {
-                let capture_pattern = match var.var_type.as_str() {
-                    "number" => r"-?\d+(?:\.\d+)?",
-                    _ => r".+?",
+                let capture_pattern = match var.var_type {
+                    VarType::Number => r"-?\d+(?:\.\d+)?",
+                    VarType::String => r".+?",
                 };
                 regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
             } else {
