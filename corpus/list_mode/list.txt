@@ -1,7 +1,7 @@
 ===
 list tests
 ===
-cctr -C {{ FIXTURE_DIR }}/suites --list
+cctr {{ FIXTURE_DIR }}/suites --list
 ---
 
 first

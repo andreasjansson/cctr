@@ -1,7 +1,7 @@
 ===
 run passing tests
 ===
-cctr -C {{ FIXTURE_DIR }}/passing --no-color
+cctr {{ FIXTURE_DIR }}/passing --no-color
 ---
 ...
 
@@ -10,7 +10,7 @@ cctr -C {{ FIXTURE_DIR }}/passing --no-color
 ===
 run passing tests verbose
 ===
-cctr -C {{ FIXTURE_DIR }}/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
+cctr {{ FIXTURE_DIR }}/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
 ---
 ✓ passing/simple: echo test
 ✓ passing/simple: true returns success
@@ -19,7 +19,7 @@ cctr -C {{ FIXTURE_DIR }}/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | hea
 ===
 run tests with fixture support
 ===
-cctr -C {{ FIXTURE_DIR }}/with_fixture --no-color
+cctr {{ FIXTURE_DIR }}/with_fixture --no-color
 ---
 .
 
@@ -28,7 +28,7 @@ cctr -C {{ FIXTURE_DIR }}/with_fixture --no-color
 ===
 run tests with setup
 ===
-cctr -C {{ FIXTURE_DIR }}/with_setup --no-color -v 2>&1 | grep -E '^[✓✗]'
+cctr {{ FIXTURE_DIR }}/with_setup --no-color -v 2>&1 | grep -E '^[✓✗]'
 ---
 ✓ with_setup/_setup: create marker file
 ✓ with_setup/uses_setup: marker file exists from setup

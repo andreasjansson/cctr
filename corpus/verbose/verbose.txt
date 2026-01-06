@@ -1,13 +1,13 @@
 ===
 verbose mode shows timing for each test
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓ /simple:' | wc -l | tr -d ' '
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓ /simple:' | wc -l | tr -d ' '
 ---
 2
 
 ===
 non verbose shows dots
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | head -1
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | head -1
 ---
 ..
