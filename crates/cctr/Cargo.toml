@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 cctr-match = { path = "../cctr-match" }
+cctr-parsers = { path = "../cctr-parsers" }
 clap = { version = "4", features = ["derive", "wrap_help", "color"] }
 thiserror = "1"
 anyhow = "1"
