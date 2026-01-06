@@ -125,7 +125,7 @@ having
 ===
 string with backslash
 ===
-echo 'path: C:\Users\test'
+printf '%s\n' 'path: C:\Users\test'
 ---
 path: {{ p }}
 ---
