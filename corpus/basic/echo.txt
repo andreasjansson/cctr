@@ -1,0 +1,19 @@
+===
+simple echo
+===
+echo hello
+---
+hello
+
+===
+echo with multiple words
+===
+echo hello world
+---
+hello world
+
+===
+exit only mode
+===
+true
+---
