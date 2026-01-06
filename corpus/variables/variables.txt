@@ -37,3 +37,19 @@ having
 * t1 < 5
 * t2 < 5
 * t3 < 5
+
+===
+list mode shows variable test names
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list
+---
+
+tests
+  numbers: 3 test(s)
+    - number variable match
+    - number constraint pass
+    - number constraint fail
+  strings: 3 test(s)
+    - string variable match
+    - string startswith
+    - string endswith
