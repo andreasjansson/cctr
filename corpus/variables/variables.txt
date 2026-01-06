@@ -1,10 +1,10 @@
 ===
 number variable tests first two pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/numbers:' | head -2
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep 'tests/numbers:' | head -2
 ---
-✓ /numbers: number variable match {{ t1 }}s
-✓ /numbers: number constraint pass {{ t2 }}s
+✓ tests/numbers: number variable match {{ t1 }}s
+✓ tests/numbers: number constraint pass {{ t2 }}s
 ---
 with
 * t1: number
@@ -23,11 +23,11 @@ cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfied" 
 ===
 string variable tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/strings:' | head -3
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep 'tests/strings:' | head -3
 ---
-✓ /strings: string variable match {{ t1 }}s
-✓ /strings: string startswith {{ t2 }}s
-✓ /strings: string endswith {{ t3 }}s
+✓ tests/strings: string variable match {{ t1 }}s
+✓ tests/strings: string startswith {{ t2 }}s
+✓ tests/strings: string endswith {{ t3 }}s
 ---
 with
 * t1: number
@@ -44,7 +44,7 @@ list mode shows variable test names
 cctr {{ FIXTURE_DIR }}/tests --list
 ---
 
-
+tests
   numbers: 3 test(s)
     - number variable match
     - number constraint pass
