@@ -5,7 +5,7 @@ cctr -C {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1
 ---
 .F
 
-✗ test/corpus: 1/2 tests passed in {{ n }}s
+✗ test/corpus: 1/2 tests passed in {{ suite_time }}s
 
 Failures:
 
@@ -16,9 +16,12 @@ Failures:
 -bar
 +foo
 
-Summary: 1 passed, 1 failed, 0 skipped in {{ n }}s
+Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 with
-* n: number
+* suite_time: number
+* total_time: number
 having
-* n < 5
+* suite_time < 5
+* total_time < 5
+* suite_time <= total_time
