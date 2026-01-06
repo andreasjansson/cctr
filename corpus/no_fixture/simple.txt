@@ -21,10 +21,11 @@ true
 ---
 
 ===
-exit only fails
+command with nonzero exit
 ===
-false
+false || echo "failed as expected"
 ---
+failed as expected
 
 ===
 arithmetic in shell
