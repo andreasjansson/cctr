@@ -31,7 +31,7 @@ list mode shows fixture tests
 cctr -C {{ FIXTURE_DIR }}/tests --list
 ---
 
-tests
+ [fixture]
   read_fixture: 2 test(s)
     - read from fixture dir
     - fixture dir is copied
