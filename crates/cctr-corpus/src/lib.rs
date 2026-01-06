@@ -146,7 +146,7 @@ fn dash_sep(input: &mut &str) -> ModalResult<()> {
     }
 }
 
-fn line_content(input: &mut &str) -> ModalResult<&str> {
+fn line_content<'a>(input: &mut &'a str) -> ModalResult<&'a str> {
     take_till(0.., |c| c == '\n' || c == '\r').parse_next(input)
 }
 
