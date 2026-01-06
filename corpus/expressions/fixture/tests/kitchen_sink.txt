@@ -25,7 +25,7 @@ having
 * not (score < 0 or score > 100)
 * (age > 20 and score > 90) or status == "admin"
 * len(name) + age == 35
-* age * 2 > score
+* age * 3 > score
 
 ===
 nested parentheses
