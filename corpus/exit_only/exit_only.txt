@@ -3,7 +3,7 @@ exit zero passes exit only mode
 ===
 cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit zero" | head -1
 ---
-✓ /exit: exit zero passes {{ t }}s
+✓ tests/exit: exit zero passes {{ t }}s
 ---
 with
 * t: number
@@ -15,7 +15,7 @@ exit nonzero fails exit only mode
 ===
 cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit nonzero" | head -1
 ---
-✗ /exit: exit nonzero fails {{ t }}s
+✗ tests/exit: exit nonzero fails {{ t }}s
 ---
 with
 * t: number
@@ -40,7 +40,7 @@ list mode shows exit only tests
 cctr {{ FIXTURE_DIR }}/tests --list
 ---
 
-
+tests
   exit: 2 test(s)
     - exit zero passes
     - exit nonzero fails
