@@ -1,0 +1,13 @@
+===
+verbose mode shows timing
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓.*[0-9]+\.[0-9]+s$' | wc -l | tr -d ' '
+---
+2
+
+===
+non verbose shows dots
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | head -1
+---
+..
