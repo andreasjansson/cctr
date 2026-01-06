@@ -86,62 +86,7 @@ cctr tests/ -p auth
 cctr tests/ -p "user.*create"
 ```
 
-List all tests without running them:
-
-```bash
-cctr tests/ -l
-```
-
-Output:
-
-```
-my_suite [fixture]
-  auth: 3 test(s)
-    - login with valid credentials
-    - login with invalid password
-    - logout clears session
-  users: 2 test(s)
-    - create user
-    - delete user
-```
-
-Verbose output showing each test with timing:
-
-```bash
-cctr tests/ -v
-```
-
-Output:
-
-```
-✓ my_suite/auth: login with valid credentials 0.03s
-✓ my_suite/auth: login with invalid password 0.02s
-✓ my_suite/auth: logout clears session 0.04s
-✓ my_suite/users: create user 0.05s
-✓ my_suite/users: delete user 0.03s
-
-✓ my_suite: 5/5 tests passed in 0.17s
-
-All 5 tests passed in 0.17s
-```
-
-Default (non-verbose) output shows dots for passing tests and `F` for failures:
-
-```bash
-cctr tests/
-```
-
-Output:
-
-```
-.....
-
-✓ my_suite: 5/5 tests passed in 0.15s
-
-All 5 tests passed in 0.15s
-```
-
-## Directory structure
+## Corpus test directory structure
 
 cctr discovers tests by recursively scanning for `.txt` files. The directory structure determines how tests are organized into suites.
 
@@ -357,46 +302,6 @@ three
 
 Variables capture dynamic parts of the output. Declare them in a `with` section and reference them in the expected output using `{{ name }}` syntax.
 
-### Number variables
-
-Capture numeric values:
-
-```
-===
-timing output
-===
-./slow-command
----
-Completed in {{ duration }}s
----
-with
-* duration: number
-```
-
-Number variables match integers and decimals, including negative numbers: `42`, `3.14`, `-17`, `0.001`.
-
-### String variables
-
-Capture text values:
-
-```
-===
-error message
-===
-./failing-command
----
-Error: {{ message }}
----
-with
-* message: string
-```
-
-String variables match any text up to the next literal part of the pattern (or end of line).
-
-### Multiple variables
-
-Capture several values in one test:
-
 ```
 ===
 process stats
@@ -409,6 +314,13 @@ with
 * count: number
 * time: number
 ```
+
+Two variable types are supported:
+
+| Type | Matches |
+|------|---------|
+| `number` | Integers and decimals, including negative: `42`, `3.14`, `-17`, `0.001` |
+| `string` | Any text up to the next literal part of the pattern (or end of line) |
 
 ## Constraints
 
