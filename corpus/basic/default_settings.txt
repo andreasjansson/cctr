@@ -33,7 +33,7 @@ list mode shows tests
 cctr -C {{ FIXTURE_DIR }}/test/corpus --list
 ---
 
-corpus
+ [fixture]
   cat_correct: 1 test(s)
     - Test cat with correct output
   cat_incorrect: 1 test(s)
