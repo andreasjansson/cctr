@@ -1,7 +1,7 @@
 ===
 verbose mode shows timing for each test
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓ /simple:' | wc -l | tr -d ' '
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓ tests/simple:' | wc -l | tr -d ' '
 ---
 2
 
