@@ -182,7 +182,7 @@ fn command_line(input: &mut &str) -> ModalResult<String> {
     Ok(content.to_string())
 }
 
-fn expected_line(input: &mut &str) -> ModalResult<&str> {
+fn expected_line<'a>(input: &mut &'a str) -> ModalResult<&'a str> {
     let content = line_content.parse_next(input)?;
     opt_newline.parse_next(input)?;
     Ok(content)
