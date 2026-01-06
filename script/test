@@ -8,4 +8,4 @@ cargo test --all
 
 echo ""
 echo "Running corpus tests..."
-cargo run --release --package cctr -- -C corpus "$@"
+cargo run --release --package cctr -- corpus "$@"
