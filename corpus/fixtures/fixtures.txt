@@ -24,3 +24,14 @@ with
 * t: number
 having
 * t < 5
+
+===
+list mode shows fixture tests
+===
+cctr -C {{ FIXTURE_DIR }}/tests --list
+---
+
+tests
+  read_fixture: 2 test(s)
+    - read from fixture dir
+    - fixture dir is copied
