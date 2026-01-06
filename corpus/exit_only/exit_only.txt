@@ -1,7 +1,7 @@
 ===
 exit zero passes exit only mode
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit zero" | head -1
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit zero" | head -1
 ---
 ✓ /exit: exit zero passes {{ t }}s
 ---
@@ -13,7 +13,7 @@ having
 ===
 exit nonzero fails exit only mode
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit nonzero" | head -1
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "exit nonzero" | head -1
 ---
 ✗ /exit: exit nonzero fails {{ t }}s
 ---
@@ -25,7 +25,7 @@ having
 ===
 summary shows one pass one fail
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
 Summary: 1 passed, 1 failed, 0 skipped in {{ t }}s
 ---
@@ -37,7 +37,7 @@ having
 ===
 list mode shows exit only tests
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --list
+cctr {{ FIXTURE_DIR }}/tests --list
 ---
 
 
