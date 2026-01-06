@@ -291,8 +291,6 @@ fn with_having_section(input: &mut &str) -> ModalResult<(Vec<Variable>, Vec<Stri
 }
 
 fn test_case(input: &mut &str) -> ModalResult<TestCase> {
-    let start_pos = input.len();
-
     skip_blank_lines.parse_next(input)?;
 
     // Opening ===
@@ -322,8 +320,6 @@ fn test_case(input: &mut &str) -> ModalResult<TestCase> {
         .unwrap_or_default();
 
     skip_blank_lines.parse_next(input)?;
-
-    let end_pos = input.len();
 
     Ok(TestCase {
         description,
