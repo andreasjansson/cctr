@@ -1,6 +1,6 @@
 //! Pattern matching for test output with variable extraction and constraints.
 
-use crate::parse::VariableDecl;
+use crate::parse::{VarType, VariableDecl};
 use cctr_expr::{eval_bool, Value};
 use regex::Regex;
 use std::collections::HashMap;
