@@ -1,6 +1,0 @@
-===
-third test
-===
-echo 3
----
-3
