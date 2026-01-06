@@ -20,16 +20,16 @@ cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -c "^✓" | tr -d ' '
 ===
 no failures in expression tests
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -c "^✗" || echo 0
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "^✗" | wc -l | tr -d ' '
 ---
 0
 
 ===
-list shows 6 test files
+list shows 7 test files
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --list | grep -c "test(s)"
+cctr -C {{ FIXTURE_DIR }}/tests --list | grep "test(s)" | wc -l | tr -d ' '
 ---
-6
+7
 
 ===
 arithmetic has 10 tests
