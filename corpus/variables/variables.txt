@@ -1,0 +1,23 @@
+===
+number variable tests all pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗].*numbers' | head -2
+---
+✓ tests/numbers: number variable match
+✓ tests/numbers: number constraint pass
+
+===
+number constraint failure detected
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfied" | head -1
+---
+  Error: constraint 't < 1' not satisfied
+
+===
+string variable tests pass
+===
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗].*strings' | head -3
+---
+✓ tests/strings: string variable match
+✓ tests/strings: string startswith
+✓ tests/strings: string endswith
