@@ -15,7 +15,11 @@ hello world
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Test format](#test-format)
+- [Directory structure](#directory-structure)
+  - [Suites](#suites)
+  - [Fixtures](#fixtures)
+  - [Setup and teardown](#setup-and-teardown)
+- [Test file format](#test-file-format)
   - [Basic structure](#basic-structure)
   - [Multiple tests per file](#multiple-tests-per-file)
   - [Exit-only tests](#exit-only-tests)
@@ -33,11 +37,7 @@ hello world
   - [Array membership](#array-membership)
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
-- [Fixtures](#fixtures)
-  - [Using FIXTURE_DIR](#using-fixture_dir)
-  - [Using WORK_DIR](#using-work_dir)
-- [Setup and teardown](#setup-and-teardown)
-- [Test discovery](#test-discovery)
+- [Built-in variables](#built-in-variables)
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
 - [Development](#development)
@@ -141,7 +141,142 @@ Output:
 All 5 tests passed in 0.15s
 ```
 
-## Test format
+## Directory structure
+
+cctr discovers tests by recursively scanning for `.txt` files. The directory structure determines how tests are organized into suites.
+
+### Suites
+
+Each directory containing `.txt` files becomes a test suite. The suite name is the directory path relative to the test root:
+
+```
+tests/
+  auth/
+    login.txt           → suite "auth", file "login"
+    logout.txt          → suite "auth", file "logout"
+  api/
+    v1/
+      users.txt         → suite "api/v1", file "users"
+      products.txt      → suite "api/v1", file "products"
+  utils.txt             → suite "tests", file "utils"
+```
+
+Files starting with `_` are reserved for setup/teardown and are not treated as test files.
+
+### Fixtures
+
+A `fixture/` subdirectory contains test data that gets copied to a temporary directory before the suite runs. This ensures tests start with a clean, known state.
+
+```
+tests/
+  my_suite/
+    feature.txt
+    integration.txt
+    fixture/
+      config.json
+      data/
+        users.csv
+        products.csv
+      scripts/
+        helper.sh
+```
+
+When a suite has a fixture:
+
+- The entire `fixture/` directory is copied to a temp directory
+- Tests run with that temp directory as the working directory
+- The `{{ FIXTURE_DIR }}` variable points to this location
+- Changes made during tests don't affect the original fixture
+- The temp directory is cleaned up after the suite completes
+
+Files inside `fixture/` are never treated as test files.
+
+### Setup and teardown
+
+Create `_setup.txt` and/or `_teardown.txt` in a suite directory:
+
+```
+tests/
+  my_suite/
+    _setup.txt          → runs before all tests
+    _teardown.txt       → runs after all tests
+    feature.txt
+    integration.txt
+    fixture/
+      ...
+```
+
+`_setup.txt` runs once before any tests in the suite. If setup fails, all tests in the suite are skipped:
+
+```
+===
+initialize database
+===
+./scripts/init-db.sh
+---
+Database initialized
+
+===
+seed test data
+===
+./scripts/seed-data.sh
+---
+```
+
+`_teardown.txt` runs after all tests complete, regardless of whether they passed or failed:
+
+```
+===
+cleanup temp files
+===
+rm -rf /tmp/test-*
+---
+
+===
+stop services
+===
+./scripts/stop-services.sh
+---
+```
+
+Setup and teardown files use the same format as regular test files. Each test case in them must pass for the file to succeed.
+
+### Complete example
+
+A full-featured test directory:
+
+```
+tests/
+  auth/
+    _setup.txt
+    _teardown.txt
+    login.txt
+    logout.txt
+    permissions.txt
+    fixture/
+      users.json
+      roles.json
+  api/
+    v1/
+      users.txt
+      products.txt
+      fixture/
+        sample_request.json
+        expected_response.json
+    v2/
+      users.txt
+  utils/
+    strings.txt
+    numbers.txt
+```
+
+This creates three suites:
+- `auth` (with fixture, setup, and teardown)
+- `api/v1` (with fixture)
+- `api/v2` (no fixture)
+- `utils` (no fixture)
+
+## Test file format
 
 ### Basic structure
 
@@ -156,7 +291,7 @@ command to run
 expected output
 ```
 
-The description appears in test listings and failure messages. The command is executed in a shell. The expected output is compared against stdout.
+The description appears in test listings and failure messages. The command is executed in a shell (`sh -c`). The expected output is compared against stdout.
 
 ### Multiple tests per file
 
@@ -435,23 +570,16 @@ From highest to lowest:
 9. Logical `and`
 10. Logical `or`
 
-## Fixtures
+## Built-in variables
 
-Put test data files in a `fixture/` subdirectory. cctr copies this directory to a temporary location before running the suite.
+These variables are automatically available in commands:
 
-```
-tests/
-  my_suite/
-    test_file.txt
-    fixture/
-      config.json
-      data/
-        sample.csv
-```
+| Variable | Description |
+|----------|-------------|
+| `{{ WORK_DIR }}` | Temporary directory where tests run |
+| `{{ FIXTURE_DIR }}` | Location of copied fixture files (same as `WORK_DIR` when fixture exists) |
 
-### Using FIXTURE_DIR
-
-Reference fixture files in commands using the `{{ FIXTURE_DIR }}` variable:
+Use `FIXTURE_DIR` to reference test data:
 
 ```
 ===
@@ -460,91 +588,24 @@ read config
 cat {{ FIXTURE_DIR }}/config.json
 ---
 {"debug": true}
-
-===
-process data
-===
-wc -l {{ FIXTURE_DIR }}/data/sample.csv
----
-100 {{ path }}
----
-with
-* path: string
 ```
 
-### Using WORK_DIR
-
-The `{{ WORK_DIR }}` variable points to the temporary directory where tests run. Use it to write output files:
+Use `WORK_DIR` to write temporary files:
 
 ```
 ===
-create output
+create and read file
 ===
-echo "result" > {{ WORK_DIR }}/output.txt && cat {{ WORK_DIR }}/output.txt
+echo "hello" > {{ WORK_DIR }}/temp.txt && cat {{ WORK_DIR }}/temp.txt
 ---
-result
+hello
 ```
 
 When a fixture exists, `FIXTURE_DIR` and `WORK_DIR` point to the same location (the fixture is copied into the work directory).
 
-## Setup and teardown
-
-Create `_setup.txt` and `_teardown.txt` files in a suite directory for code that runs before and after the suite's tests.
-
-```
-tests/
-  my_suite/
-    _setup.txt
-    _teardown.txt
-    test_feature.txt
-```
-
-`_setup.txt`:
-
-```
-===
-initialize database
-===
-./init-db.sh
----
-```
-
-`_teardown.txt`:
-
-```
-===
-cleanup
-===
-./cleanup.sh
----
-```
-
-Setup runs once before all tests in the suite. If setup fails, the suite's tests are skipped. Teardown runs after all tests complete, regardless of pass/fail status.
-
-## Test discovery
-
-cctr recursively finds all `.txt` files in the test root, excluding:
-
-- Files starting with `_` (setup/teardown files)
-- Files inside `fixture/` directories
-
-Each directory containing corpus files becomes a test suite. The suite name is derived from the directory path relative to the test root.
-
-```
-tests/
-  auth/
-    login.txt          → suite "auth", file "login"
-    logout.txt         → suite "auth", file "logout"
-    fixture/
-      users.json       → (not a test file)
-  api/
-    v1/
-      users.txt        → suite "api/v1", file "users"
-```
-
 ## Parallel execution
 
-By default, cctr runs test suites in parallel using all available CPU cores. Tests within a suite run sequentially.
+By default, cctr runs test suites in parallel using all available CPU cores. Tests within a suite run sequentially (to allow setup/teardown and shared fixture state).
 
 Use `-s` or `--sequential` to run suites one at a time:
 
