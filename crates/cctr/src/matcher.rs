@@ -120,7 +120,10 @@ mod tests {
     fn make_var(name: &str, var_type: &str) -> VariableDecl {
         VariableDecl {
             name: name.to_string(),
-            var_type: var_type.to_string(),
+            var_type: match var_type {
+                "number" => VarType::Number,
+                _ => VarType::String,
+            },
         }
     }
 
