@@ -1,7 +1,7 @@
 ===
-verbose mode shows timing
+verbose mode shows timing for each test
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓.*[0-9]+\.[0-9]+s$' | wc -l | tr -d ' '
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^✓ /simple:' | wc -l | tr -d ' '
 ---
 2
 
