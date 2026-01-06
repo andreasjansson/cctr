@@ -1,11 +1,11 @@
 ===
 setup runs before tests
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '/_setup:|/use_setup:|/_teardown:'
+cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E 'tests/_setup:|tests/use_setup:|tests/_teardown:'
 ---
-✓ /_setup: create marker file {{ t1 }}s
-✓ /use_setup: verify setup ran {{ t2 }}s
-✓ /_teardown: cleanup marker {{ t3 }}s
+✓ tests/_setup: create marker file {{ t1 }}s
+✓ tests/use_setup: verify setup ran {{ t2 }}s
+✓ tests/_teardown: cleanup marker {{ t3 }}s
 ---
 with
 * t1: number
@@ -34,6 +34,6 @@ list mode shows setup and teardown
 cctr {{ FIXTURE_DIR }}/tests --list
 ---
 
- [setup, teardown]
+tests [setup, teardown]
   use_setup: 1 test(s)
     - verify setup ran
