@@ -1,0 +1,103 @@
+===
+equals
+===
+echo "value: 42"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n == 42
+
+===
+not equals
+===
+echo "value: 42"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n != 0
+* n != 100
+
+===
+less than
+===
+echo "value: 5"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n < 10
+* n < 100
+
+===
+less than or equal
+===
+echo "value: 10"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n <= 10
+* n <= 100
+
+===
+greater than
+===
+echo "value: 50"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n > 0
+* n > 49
+
+===
+greater than or equal
+===
+echo "value: 100"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n >= 100
+* n >= 0
+
+===
+chained comparisons with and
+===
+echo "value: 50"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n > 0 and n < 100
+* n >= 50 and n <= 50
+
+===
+comparison with arithmetic
+===
+echo "value: 10"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n == 5 + 5
+* n < 20 - 5
+* n > 2 * 3
