@@ -98,12 +98,12 @@ impl<'a> Matcher<'a> {
         for var in self.variables {
             if let Some(m) = caps.name(&var.name) {
                 let text = m.as_str();
-                let value = match var.var_type.as_str() {
-                    "number" => {
+                let value = match var.var_type {
+                    VarType::Number => {
                         let n: f64 = text.parse().unwrap_or(0.0);
                         Value::Number(n)
                     }
-                    _ => Value::String(text.to_string()),
+                    VarType::String => Value::String(text.to_string()),
                 };
                 values.insert(var.name.clone(), value);
             }
