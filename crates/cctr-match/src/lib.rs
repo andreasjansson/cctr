@@ -6,15 +6,24 @@
 //! # Example
 //!
 //! ```
-//! use cctr_match::{Pattern, VarType};
+//! use cctr_match::{Pattern, VarType, MatchError};
 //!
 //! let pattern = Pattern::new("Completed in {{ time }}s")
 //!     .var("time", VarType::Number)
 //!     .constraint("time > 0")
 //!     .constraint("time < 60");
 //!
+//! // Pattern matches and constraints satisfied
 //! assert!(pattern.matches("Completed in 1.5s").unwrap());
-//! assert!(!pattern.matches("Completed in 120s").unwrap()); // constraint fails
+//!
+//! // Pattern matches but constraint fails - returns error
+//! assert!(matches!(
+//!     pattern.matches("Completed in 120s"),
+//!     Err(MatchError::ConstraintNotSatisfied { .. })
+//! ));
+//!
+//! // Pattern doesn't match at all - returns Ok(false)
+//! assert!(!pattern.matches("Failed in 1.5s").unwrap());
 //! ```
 
 mod expr;
