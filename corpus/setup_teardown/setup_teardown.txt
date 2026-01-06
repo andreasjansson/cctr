@@ -1,11 +1,20 @@
 ===
 setup runs before tests
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗]'
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '/_setup:|/use_setup:|/_teardown:'
 ---
-✓ tests/_setup: create marker file
-✓ tests/use_setup: verify setup ran
-✓ tests/_teardown: cleanup marker
+✓ /_setup: create marker file {{ t1 }}s
+✓ /use_setup: verify setup ran {{ t2 }}s
+✓ /_teardown: cleanup marker {{ t3 }}s
+---
+with
+* t1: number
+* t2: number
+* t3: number
+having
+* t1 < 5
+* t2 < 5
+* t3 < 5
 
 ===
 all tests pass with setup teardown
