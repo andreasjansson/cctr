@@ -26,3 +26,34 @@ having
 * suite_time < 5
 * total_time < 5
 * suite_time <= total_time
+
+===
+list mode shows tests
+===
+cctr -C {{ FIXTURE_DIR }}/test/corpus --list
+---
+
+corpus
+  cat_correct: 1 test(s)
+    - Test cat with correct output
+  cat_incorrect: 1 test(s)
+    - Test cat with incorrect output
+
+===
+verbose mode shows timing
+===
+cctr -C {{ FIXTURE_DIR }}/test/corpus --no-color -v 2>&1 | grep '/cat_correct:' | head -1
+---
+✓ /cat_correct: Test cat with correct output {{ t }}s
+---
+with
+* t: number
+having
+* t < 5
+
+===
+non-verbose mode shows dots
+===
+cctr -C {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1 | head -1
+---
+.F
