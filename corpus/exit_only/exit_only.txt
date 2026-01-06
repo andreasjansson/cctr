@@ -40,7 +40,7 @@ list mode shows exit only tests
 cctr -C {{ FIXTURE_DIR }}/tests --list
 ---
 
-tests
+
   exit: 2 test(s)
     - exit zero passes
     - exit nonzero fails
