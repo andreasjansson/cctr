@@ -1,10 +1,17 @@
 ===
-number variable tests all pass
+number variable tests first two pass
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗].*numbers' | head -2
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/numbers:' | head -2
 ---
-✓ tests/numbers: number variable match
-✓ tests/numbers: number constraint pass
+✓ /numbers: number variable match {{ t1 }}s
+✓ /numbers: number constraint pass {{ t2 }}s
+---
+with
+* t1: number
+* t2: number
+having
+* t1 < 5
+* t2 < 5
 
 ===
 number constraint failure detected
@@ -16,8 +23,17 @@ cctr -C {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfie
 ===
 string variable tests pass
 ===
-cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E '^[✓✗].*strings' | head -3
+cctr -C {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep '/strings:' | head -3
 ---
-✓ tests/strings: string variable match
-✓ tests/strings: string startswith
-✓ tests/strings: string endswith
+✓ /strings: string variable match {{ t1 }}s
+✓ /strings: string startswith {{ t2 }}s
+✓ /strings: string endswith {{ t3 }}s
+---
+with
+* t1: number
+* t2: number
+* t3: number
+having
+* t1 < 5
+* t2 < 5
+* t3 < 5
