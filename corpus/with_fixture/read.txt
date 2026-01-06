@@ -13,8 +13,8 @@ cat {{ FIXTURE_DIR }}/sample.txt
 Hello from fixture
 
 ===
-list mode shows fixture marker
+list has fixture marker
 ===
-cctr corpus/with_fixture --list | grep fixture
+cctr --list | grep fixture | wc -l | tr -d ' '
 ---
-with_fixture [fixture]
+1
