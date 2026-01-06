@@ -15,9 +15,12 @@ Hello from fixture
 ===
 list mode shows fixture marker
 ===
-cctr . --list | head -4
+cctr . --list | grep -E '\[fixture\]|read:' | head -2
 ---
-
-with_fixture [fixture]
+{{ name }} [fixture]
   read: 3 test(s)
-    - read from fixture
+---
+with
+* name: string
+having
+* len(name) > 0
