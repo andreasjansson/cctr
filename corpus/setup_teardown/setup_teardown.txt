@@ -34,10 +34,6 @@ list mode shows setup and teardown
 cctr -C {{ FIXTURE_DIR }}/tests --list
 ---
 
-tests
-  _setup: 1 test(s)
-    - create marker file
-  _teardown: 1 test(s)
-    - cleanup marker
+ [setup, teardown]
   use_setup: 1 test(s)
     - verify setup ran
