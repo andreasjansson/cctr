@@ -179,18 +179,4 @@ mod tests {
 
         assert!(matcher.matches("val: {{ s }}", "val: ").unwrap());
     }
-
-    #[test]
-    fn test_debug_regex() {
-        let vars = vec![make_var("s", "string")];
-        let constraints = vec![];
-        let matcher = Matcher::new(&vars, &constraints);
-
-        let regex = matcher.build_regex("val: {{ s }}").unwrap();
-        println!("Regex: {}", regex.as_str());
-
-        // Test with empty string after "val: "
-        assert!(regex.is_match("val: "));
-        assert!(regex.is_match("val: hello"));
-    }
 }
