@@ -38,15 +38,6 @@ impl<'a> Matcher<'a> {
 
         let values = self.extract_values(&caps);
 
-        // Debug: print captured values
-        if std::env::var("CCTR_DEBUG").is_ok() {
-            eprintln!("DEBUG: Pattern regex: {}", regex.as_str());
-            eprintln!("DEBUG: Actual: {:?}", actual);
-            for (k, v) in &values {
-                eprintln!("DEBUG: Captured {} = {:?}", k, v);
-            }
-        }
-
         for constraint in self.constraints {
             match eval_bool(constraint, &values) {
                 Ok(true) => {}
