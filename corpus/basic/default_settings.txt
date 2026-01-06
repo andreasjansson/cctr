@@ -5,11 +5,11 @@ cctr {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1
 ---
 .F
 
-✗ : 1/2 tests passed in {{ suite_time }}s
+✗ corpus: 1/2 tests passed in {{ suite_time }}s
 
 Failures:
 
-✗ /cat_incorrect: Test cat with incorrect output
+✗ corpus/cat_incorrect: Test cat with incorrect output
   {{ path }}/test/corpus/cat_incorrect.txt:1
   Command: cat foo.txt
 
@@ -33,7 +33,7 @@ list mode shows tests
 cctr {{ FIXTURE_DIR }}/test/corpus --list
 ---
 
- [fixture]
+corpus [fixture]
   cat_correct: 1 test(s)
     - Test cat with correct output
   cat_incorrect: 1 test(s)
@@ -42,9 +42,9 @@ cctr {{ FIXTURE_DIR }}/test/corpus --list
 ===
 verbose mode shows timing
 ===
-cctr {{ FIXTURE_DIR }}/test/corpus --no-color -v 2>&1 | grep '/cat_correct:' | head -1
+cctr {{ FIXTURE_DIR }}/test/corpus --no-color -v 2>&1 | grep 'corpus/cat_correct:' | head -1
 ---
-✓ /cat_correct: Test cat with correct output {{ t }}s
+✓ corpus/cat_correct: Test cat with correct output {{ t }}s
 ---
 with
 * t: number
