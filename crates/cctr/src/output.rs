@@ -129,7 +129,7 @@ impl Output {
         writeln!(self.stdout).unwrap();
     }
 
-    pub fn print_results(&mut self, results: &[SuiteResult], elapsed: Duration) {
+    pub fn print_results(&mut self, results: &[SuiteResult], elapsed: Duration, update_mode: bool) {
         let mut total_passed = 0;
         let mut total_failed = 0;
         let mut total_skipped = 0;
@@ -181,8 +181,13 @@ impl Output {
                 )
                 .unwrap();
             } else {
-                self.set_color(Color::Red);
-                write!(self.stdout, "✗ {}", suite_result.suite.name).unwrap();
+                if update_mode {
+                    self.set_color(Color::Cyan);
+                    write!(self.stdout, "↺ {}", suite_result.suite.name).unwrap();
+                } else {
+                    self.set_color(Color::Red);
+                    write!(self.stdout, "✗ {}", suite_result.suite.name).unwrap();
+                }
                 self.reset();
                 writeln!(
                     self.stdout,
@@ -203,9 +208,15 @@ impl Output {
 
         if !failed_tests.is_empty() {
             writeln!(self.stdout).unwrap();
-            self.set_color(Color::Red);
-            self.set_bold();
-            writeln!(self.stdout, "Failures:").unwrap();
+            if update_mode {
+                self.set_color(Color::Cyan);
+                self.set_bold();
+                writeln!(self.stdout, "Updated:").unwrap();
+            } else {
+                self.set_color(Color::Red);
+                self.set_bold();
+                writeln!(self.stdout, "Failures:").unwrap();
+            }
             self.reset();
 
             for result in failed_tests {
@@ -217,8 +228,13 @@ impl Output {
                     .map(|s| s.to_string_lossy())
                     .unwrap_or_default();
 
-                self.set_color(Color::Red);
-                write!(self.stdout, "✗").unwrap();
+                if update_mode {
+                    self.set_color(Color::Cyan);
+                    write!(self.stdout, "↺").unwrap();
+                } else {
+                    self.set_color(Color::Red);
+                    write!(self.stdout, "✗").unwrap();
+                }
                 self.reset();
                 writeln!(
                     self.stdout,
@@ -262,12 +278,21 @@ impl Output {
             self.set_bold();
             write!(self.stdout, "Summary:").unwrap();
             self.reset();
-            writeln!(
-                self.stdout,
-                " {} passed, {} failed, {} skipped{}",
-                total_passed, total_failed, total_skipped, elapsed_str
-            )
-            .unwrap();
+            if update_mode {
+                writeln!(
+                    self.stdout,
+                    " {} ok, {} updated, {} skipped{}",
+                    total_passed, total_failed, total_skipped, elapsed_str
+                )
+                .unwrap();
+            } else {
+                writeln!(
+                    self.stdout,
+                    " {} passed, {} failed, {} skipped{}",
+                    total_passed, total_failed, total_skipped, elapsed_str
+                )
+                .unwrap();
+            }
         }
     }
 
