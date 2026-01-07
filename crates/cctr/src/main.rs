@@ -11,6 +11,13 @@ use std::thread;
 use std::time::Instant;
 
 fn main() -> anyhow::Result<()> {
+    // Reset SIGPIPE handler to default (terminate) so piping to head/tail works correctly
+    #[cfg(unix)]
+    {
+        unsafe {
+            libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+        }
+    }
     let cli = Cli::parse();
 
     let use_color = !cli.no_color && atty::is(atty::Stream::Stdout);
