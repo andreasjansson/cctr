@@ -48,10 +48,10 @@ impl Suite {
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|p| {
-                p.extension().map_or(false, |ext| ext == "txt")
+                p.extension().is_some_and(|ext| ext == "txt")
                     && !p
                         .file_name()
-                        .map_or(false, |n| n.to_string_lossy().starts_with('_'))
+                        .is_some_and(|n| n.to_string_lossy().starts_with('_'))
             })
             .collect();
         files.sort();
