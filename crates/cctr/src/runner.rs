@@ -58,7 +58,7 @@ impl SuiteResult {
 
 #[derive(Debug, Clone)]
 pub enum ProgressEvent {
-    TestComplete(TestResult),
+    TestComplete(Box<TestResult>),
     Skip { suite: String, reason: String },
 }
 
