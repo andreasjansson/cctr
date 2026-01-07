@@ -9,10 +9,55 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features
+
+  corpus:
+    name: Corpus Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release
+      - run: echo "$PWD/target/release" >> $GITHUB_PATH
+      - run: cctr corpus
+
   release-plz-pr:
     name: Release-plz PR
     runs-on: ubuntu-latest
+    needs: [fmt, clippy, test, corpus]
     concurrency:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
@@ -34,6 +79,7 @@ jobs:
   release-plz-release:
     name: Release-plz release
     runs-on: ubuntu-latest
+    needs: [fmt, clippy, test, corpus]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
