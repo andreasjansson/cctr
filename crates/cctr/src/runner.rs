@@ -244,7 +244,13 @@ pub fn run_suite(
         file_results.push(file_result);
     }
 
+    eprintln!(
+        "[CCTR DEBUG] run_suite {} all corpus files done",
+        suite.name
+    );
+
     if suite.has_teardown {
+        eprintln!("[CCTR DEBUG] run_suite {} running teardown", suite.name);
         let teardown_file = suite.path.join("_teardown.txt");
         let file_result = run_corpus_file(
             &teardown_file,
