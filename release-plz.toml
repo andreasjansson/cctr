@@ -1,0 +1,4 @@
+[workspace]
+# Use v prefix for tags (e.g., v0.1.0)
+git_tag_name = "v{{ version }}"
+git_release_name = "v{{ version }}"
