@@ -1,0 +1,6 @@
+===
+wrong output
+===
+echo hello
+---
+goodbye
