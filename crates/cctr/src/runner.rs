@@ -89,30 +89,32 @@ fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, vars: &TemplateV
     let (actual_output, exit_code) = run_command(&command, work_dir);
     let elapsed = start.elapsed();
 
-    let (passed, error) = if test.variables.is_empty() {
+    let (passed, error, expected_output) = if test.variables.is_empty() {
         // Simple mode: exact match or exit-only
         let expected = vars.apply(&test.expected_output);
         if expected.is_empty() {
-            (exit_code == 0, None)
+            (exit_code == 0, None, expected)
         } else {
-            (actual_output == expected, None)
+            (actual_output == expected, None, expected)
         }
     } else {
         // Pattern matching mode
         let var_names = test.variable_names();
         let expected_pattern = vars.apply_except(&test.expected_output, &var_names);
         let matcher = Matcher::new(&test.variables, &test.constraints);
-        match matcher.matches(&expected_pattern, &actual_output) {
+        let result = match matcher.matches(&expected_pattern, &actual_output) {
             Ok(true) => (true, None),
             Ok(false) => (false, None),
             Err(e) => (false, Some(e.to_string())),
-        }
+        };
+        (result.0, result.1, expected_pattern)
     };
 
     TestResult {
         test: test.clone(),
         passed,
         actual_output: Some(actual_output),
+        expected_output,
         error,
         elapsed,
         suite: suite_name.to_string(),
