@@ -90,10 +90,13 @@ impl Output {
         }
     }
 
-    fn print_verbose_result(&mut self, result: &TestResult) {
+    fn print_verbose_result(&mut self, result: &TestResult, update_mode: bool) {
         if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, "✓").unwrap();
+        } else if update_mode {
+            self.set_color(Color::Cyan);
+            write!(self.stdout, "↺").unwrap();
         } else {
             self.set_color(Color::Red);
             write!(self.stdout, "✗").unwrap();
