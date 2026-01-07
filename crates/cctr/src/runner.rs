@@ -137,7 +137,7 @@ fn run_corpus_file(
         }
         let result = run_test(&test, work_dir, suite_name, vars);
         if let Some(tx) = progress_tx {
-            let _ = tx.send(ProgressEvent::TestComplete(result.clone()));
+            let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
         results.push(result);
     }
