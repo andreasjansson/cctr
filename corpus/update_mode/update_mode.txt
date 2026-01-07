@@ -17,7 +17,7 @@ Updated:
 -goodbye
 +hello
 
-Summary: 1 ok, 1 updated, 0 skipped in {{ time2 }}s
+Summary: 1 left unchanged, 1 updated, 0 skipped in {{ time2 }}s
 ---
 with
 * path: string
