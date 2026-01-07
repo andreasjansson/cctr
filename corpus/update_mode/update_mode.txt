@@ -1,44 +1,36 @@
 ===
-update mode shows U for updated tests
+update mode output
 ===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | head -1
+cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1
 ---
 .U
 
-===
-update mode shows updated count in summary
-===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "Summary:"
----
-Summary: 1 ok, 1 updated, 0 skipped in {{ time }}s
----
-with
-* time: number
+Updated: {{ path }}
+↺ tests: 1/2 tests passed in {{ time1 }}s
 
-===
-update mode shows Updated header not file path
-===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^Updated:$"
----
 Updated:
 
-===
-update mode uses rotate symbol for updated tests
-===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^↺ tests:"
----
-↺ tests: 1/2 tests passed in {{ time }}s
+↺ tests/needs_update: wrong output
+  tests/needs_update.txt:1
+  Command: echo hello
+
+-goodbye
++hello
+
+Summary: 1 ok, 1 updated, 0 skipped in {{ time2 }}s
 ---
 with
-* time: number
+* path: string
+* time1: number
+* time2: number
 
 ===
 file is actually updated
 ===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt; cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1; cat {{ FIXTURE_DIR }}/tests/needs_update.txt
+cat {{ FIXTURE_DIR }}/tests/needs_update.txt
 ---
 ===
-wrong
+wrong output
 ===
 echo hello
 ---
