@@ -1,14 +1,14 @@
 ===
 update mode shows U for updated tests
 ===
-cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | head -1
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | head -1
 ---
 .U
 
 ===
 update mode shows updated count in summary
 ===
-cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "Summary:"
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "Summary:"
 ---
 Summary: 1 ok, 1 updated, 0 skipped in {{ time }}s
 ---
@@ -18,14 +18,14 @@ with
 ===
 update mode shows Updated header
 ===
-cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^Updated:"
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^Updated:"
 ---
 Updated:
 
 ===
 update mode uses rotate symbol for updated tests
 ===
-cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^↺ tests:"
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^↺ tests:"
 ---
 ↺ tests: 1/2 tests passed in {{ time }}s
 ---
@@ -35,10 +35,10 @@ with
 ===
 file is actually updated
 ===
-cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1; cat {{ FIXTURE_DIR }}/tests/needs_update.txt
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1 && cat {{ FIXTURE_DIR }}/tests/needs_update.txt
 ---
 ===
-wrong output
+wrong
 ===
 echo hello
 ---
