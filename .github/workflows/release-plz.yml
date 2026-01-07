@@ -1,0 +1,50 @@
+name: Release-plz
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-plz-release:
+    name: Release-plz release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
