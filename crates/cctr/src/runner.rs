@@ -166,6 +166,7 @@ pub fn run_suite(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> SuiteResult {
+    eprintln!("[CCTR DEBUG] run_suite START: {}", suite.name);
     let start = Instant::now();
     let mut file_results = Vec::new();
     let mut setup_error = None;
@@ -173,6 +174,10 @@ pub fn run_suite(
     let temp_dir = match TempDir::with_prefix(format!("cctr_{}_", suite.name.replace('/', "_"))) {
         Ok(d) => d,
         Err(e) => {
+            eprintln!(
+                "[CCTR DEBUG] run_suite {} failed to create temp dir",
+                suite.name
+            );
             return SuiteResult {
                 suite: suite.clone(),
                 file_results,
