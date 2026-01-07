@@ -98,12 +98,12 @@ pub fn discover_suites(root: &Path) -> Result<Vec<Suite>> {
         if !path.is_file() {
             continue;
         }
-        if path.extension().map_or(true, |ext| ext != "txt") {
+        if path.extension().is_none_or(|ext| ext != "txt") {
             continue;
         }
         if path
             .file_name()
-            .map_or(false, |n| n.to_string_lossy().starts_with('_'))
+            .is_some_and(|n| n.to_string_lossy().starts_with('_'))
         {
             continue;
         }
