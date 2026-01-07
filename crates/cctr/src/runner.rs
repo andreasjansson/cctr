@@ -169,7 +169,11 @@ pub fn run_suite(
         }
     };
 
-    let work_dir = temp_dir.path();
+    let work_dir = temp_dir
+        .path()
+        .canonicalize()
+        .unwrap_or_else(|_| temp_dir.path().to_path_buf());
+    let work_dir = work_dir.as_path();
     let mut vars = TemplateVars::new();
     vars.set("WORK_DIR", work_dir.to_string_lossy().as_ref());
 
