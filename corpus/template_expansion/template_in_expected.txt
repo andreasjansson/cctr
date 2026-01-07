@@ -1,0 +1,34 @@
+===
+FIXTURE_DIR expands in command
+===
+echo "path={{ FIXTURE_DIR }}"
+---
+path={{ FIXTURE_DIR }}
+
+===
+WORK_DIR expands in command
+===
+echo "path={{ WORK_DIR }}"
+---
+path={{ WORK_DIR }}
+
+===
+both expand in expected output
+===
+echo "fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}"
+---
+fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}
+
+===
+pwd matches FIXTURE_DIR
+===
+pwd
+---
+{{ FIXTURE_DIR }}
+
+===
+realpath resolves to same as FIXTURE_DIR
+===
+realpath .
+---
+{{ FIXTURE_DIR }}
