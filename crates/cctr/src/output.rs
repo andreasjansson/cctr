@@ -238,7 +238,7 @@ impl Output {
                     .unwrap();
                     writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
                     writeln!(self.stdout).unwrap();
-                    self.print_diff(&result.test.expected_output, actual);
+                    self.print_diff(&result.expected_output, actual);
                 }
             }
         }
