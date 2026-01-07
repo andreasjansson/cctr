@@ -1,0 +1,45 @@
+===
+update mode shows U for updated tests
+===
+cctr {{ FIXTURE_DIR }}/tests -u 2>&1 | head -1
+---
+U.
+
+===
+update mode shows updated count in summary
+===
+cctr {{ FIXTURE_DIR }}/tests -u 2>&1 | grep "Summary:"
+---
+Summary: 1 ok, 1 updated, 0 skipped in {{ time }}s
+---
+with
+* time: number
+
+===
+update mode shows Updated header
+===
+cctr {{ FIXTURE_DIR }}/tests -u 2>&1 | grep "^Updated:"
+---
+Updated:
+
+===
+update mode uses rotate symbol for updated tests
+===
+cctr {{ FIXTURE_DIR }}/tests -u 2>&1 | grep "^↺"
+---
+↺ tests: 1/2 tests passed in {{ time }}s
+---
+with
+* time: number
+
+===
+file is actually updated
+===
+cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1; cat {{ FIXTURE_DIR }}/tests/needs_update.txt
+---
+===
+wrong output
+===
+echo hello
+---
+hello
