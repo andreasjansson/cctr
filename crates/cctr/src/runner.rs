@@ -236,7 +236,7 @@ pub fn run_suite(
             work_dir,
             &suite.name,
             &vars,
-            pattern,
+            None, // Teardown always runs all tests regardless of pattern
             progress_tx,
         );
         file_results.push(file_result);
