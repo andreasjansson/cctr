@@ -200,7 +200,7 @@ pub fn run_suite(
             work_dir,
             &suite.name,
             &vars,
-            pattern,
+            None, // Setup always runs all tests regardless of pattern
             progress_tx,
         );
         let setup_passed = file_result.passed();
