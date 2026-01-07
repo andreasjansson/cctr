@@ -64,6 +64,8 @@ pub enum ProgressEvent {
 }
 
 fn run_command(command: &str, work_dir: &Path) -> (String, i32) {
+    eprintln!("[CCTR DEBUG] run_command: {} in {:?}", command, work_dir);
+    let start = Instant::now();
     let result = Command::new("sh")
         .arg("-c")
         .arg(command)
@@ -76,9 +78,17 @@ fn run_command(command: &str, work_dir: &Path) -> (String, i32) {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let combined = format!("{}{}", stdout, stderr);
             let exit_code = output.status.code().unwrap_or(-1);
+            eprintln!(
+                "[CCTR DEBUG] run_command done in {:?}: exit={}",
+                start.elapsed(),
+                exit_code
+            );
             (combined.trim_end_matches('\n').to_string(), exit_code)
         }
-        Err(e) => (format!("Failed to execute command: {}", e), -1),
+        Err(e) => {
+            eprintln!("[CCTR DEBUG] run_command failed: {}", e);
+            (format!("Failed to execute command: {}", e), -1)
+        }
     }
 }
 
