@@ -46,10 +46,11 @@ fn main() -> anyhow::Result<()> {
     let (progress_tx, progress_rx) = mpsc::channel::<ProgressEvent>();
     let verbose = cli.verbose;
 
+    let update = cli.update;
     let progress_handle = thread::spawn(move || {
         let mut output = Output::new(use_color);
         for event in progress_rx {
-            output.print_progress(&event, verbose);
+            output.print_progress(&event, verbose, update);
         }
         output.finish_progress();
     });
