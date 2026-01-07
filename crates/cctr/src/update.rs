@@ -34,15 +34,13 @@ pub fn update_corpus_file(file_path: &Path, results: &[&TestResult]) -> std::io:
             if SEPARATOR_PATTERN.is_match(line) && expected_start.is_none() {
                 expected_start = Some(i + 1);
                 in_expected = true;
-            } else if in_expected {
-                if HEADER_PATTERN.is_match(line) || i >= lines.len() - 1 {
-                    expected_end = Some(if HEADER_PATTERN.is_match(line) {
-                        i
-                    } else {
-                        i + 1
-                    });
-                    break;
-                }
+            } else if in_expected && (HEADER_PATTERN.is_match(line) || i >= lines.len() - 1) {
+                expected_end = Some(if HEADER_PATTERN.is_match(line) {
+                    i
+                } else {
+                    i + 1
+                });
+                break;
             }
         }
 
@@ -51,8 +49,7 @@ pub fn update_corpus_file(file_path: &Path, results: &[&TestResult]) -> std::io:
             let mut new_lines: Vec<&str> = lines[..start].to_vec();
             new_lines.extend(actual_lines.iter());
 
-            let needs_blank =
-                end < lines.len() && !lines.get(end - 1).map_or(true, |l| l.is_empty());
+            let needs_blank = end < lines.len() && !lines.get(end - 1).is_none_or(|l| l.is_empty());
             if needs_blank && !actual.is_empty() {
                 new_lines.push("");
             }
