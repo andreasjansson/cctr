@@ -38,13 +38,13 @@ impl Output {
         let _ = self.stdout.reset();
     }
 
-    pub fn print_progress(&mut self, event: &ProgressEvent, verbose: bool) {
+    pub fn print_progress(&mut self, event: &ProgressEvent, verbose: bool, update_mode: bool) {
         match event {
             ProgressEvent::TestComplete(result) => {
                 if verbose {
-                    self.print_verbose_result(result);
+                    self.print_verbose_result(result, update_mode);
                 } else {
-                    self.print_dot(result);
+                    self.print_dot(result, update_mode);
                 }
             }
             ProgressEvent::Skip { suite, reason } => {
@@ -65,10 +65,13 @@ impl Output {
         }
     }
 
-    fn print_dot(&mut self, result: &TestResult) {
+    fn print_dot(&mut self, result: &TestResult, update_mode: bool) {
         if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, ".").unwrap();
+        } else if update_mode {
+            self.set_color(Color::Cyan);
+            write!(self.stdout, "U").unwrap();
         } else {
             self.set_color(Color::Red);
             write!(self.stdout, "F").unwrap();
