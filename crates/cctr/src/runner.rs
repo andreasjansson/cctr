@@ -13,6 +13,7 @@ pub struct TestResult {
     pub test: TestCase,
     pub passed: bool,
     pub actual_output: Option<String>,
+    pub expected_output: String,
     pub error: Option<String>,
     pub elapsed: Duration,
     pub suite: String,
