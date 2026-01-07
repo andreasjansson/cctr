@@ -281,7 +281,7 @@ impl Output {
             if update_mode {
                 writeln!(
                     self.stdout,
-                    " {} ok, {} updated, {} skipped{}",
+                    " {} left unchanged, {} updated, {} skipped{}",
                     total_passed, total_failed, total_skipped, elapsed_str
                 )
                 .unwrap();
