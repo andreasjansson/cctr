@@ -263,6 +263,11 @@ pub fn run_suite(
         file_results.push(file_result);
     }
 
+    eprintln!(
+        "[CCTR DEBUG] run_suite {} COMPLETE in {:?}",
+        suite.name,
+        start.elapsed()
+    );
     SuiteResult {
         suite: suite.clone(),
         file_results,
