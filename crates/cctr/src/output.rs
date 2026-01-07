@@ -224,10 +224,15 @@ impl Output {
                 if let Some(error) = &result.error {
                     writeln!(self.stdout, "  Error: {}", error).unwrap();
                 } else if let Some(actual) = &result.actual_output {
+                    let display_path = std::env::current_dir()
+                        .ok()
+                        .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
+                        .map(|p| p.to_path_buf())
+                        .unwrap_or_else(|| result.test.file_path.clone());
                     writeln!(
                         self.stdout,
                         "  {}:{}",
-                        result.test.file_path.display(),
+                        display_path.display(),
                         result.test.start_line
                     )
                     .unwrap();
