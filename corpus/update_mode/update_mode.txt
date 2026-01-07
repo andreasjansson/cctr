@@ -16,9 +16,9 @@ with
 * time: number
 
 ===
-update mode shows Updated header
+update mode shows Updated header not file path
 ===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^Updated:"
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1 | grep "^Updated:$"
 ---
 Updated:
 
@@ -35,7 +35,7 @@ with
 ===
 file is actually updated
 ===
-printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt && cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1 && cat {{ FIXTURE_DIR }}/tests/needs_update.txt
+printf '===\nwrong\n===\necho hello\n---\ngoodbye\n' > {{ FIXTURE_DIR }}/tests/needs_update.txt; cctr {{ FIXTURE_DIR }}/tests -u > /dev/null 2>&1; cat {{ FIXTURE_DIR }}/tests/needs_update.txt
 ---
 ===
 wrong
