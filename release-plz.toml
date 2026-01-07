@@ -2,3 +2,14 @@
 # Use v prefix for tags (e.g., v0.1.0)
 git_tag_name = "v{{ version }}"
 git_release_name = "v{{ version }}"
+
+# Only release the main cctr CLI, not internal library crates
+[[package]]
+name = "cctr-corpus"
+release = false
+publish = false
+
+[[package]]
+name = "cctr-expr"
+release = false
+publish = false
