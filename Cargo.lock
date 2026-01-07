@@ -126,6 +126,7 @@ dependencies = [
  "cctr-corpus",
  "cctr-expr",
  "clap",
+ "libc",
  "predicates",
  "rayon",
  "regex",
