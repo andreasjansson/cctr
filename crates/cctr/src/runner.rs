@@ -166,7 +166,6 @@ pub fn run_suite(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> SuiteResult {
-    eprintln!("[CCTR DEBUG] run_suite START: {}", suite.name);
     let start = Instant::now();
     let mut file_results = Vec::new();
     let mut setup_error = None;
@@ -174,10 +173,6 @@ pub fn run_suite(
     let temp_dir = match TempDir::with_prefix(format!("cctr_{}_", suite.name.replace('/', "_"))) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!(
-                "[CCTR DEBUG] run_suite {} failed to create temp dir",
-                suite.name
-            );
             return SuiteResult {
                 suite: suite.clone(),
                 file_results,
@@ -244,13 +239,7 @@ pub fn run_suite(
         file_results.push(file_result);
     }
 
-    eprintln!(
-        "[CCTR DEBUG] run_suite {} all corpus files done",
-        suite.name
-    );
-
     if suite.has_teardown {
-        eprintln!("[CCTR DEBUG] run_suite {} running teardown", suite.name);
         let teardown_file = suite.path.join("_teardown.txt");
         let file_result = run_corpus_file(
             &teardown_file,
@@ -263,11 +252,6 @@ pub fn run_suite(
         file_results.push(file_result);
     }
 
-    eprintln!(
-        "[CCTR DEBUG] run_suite {} COMPLETE in {:?}",
-        suite.name,
-        start.elapsed()
-    );
     SuiteResult {
         suite: suite.clone(),
         file_results,

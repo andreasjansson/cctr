@@ -56,11 +56,6 @@ fn main() -> anyhow::Result<()> {
     });
 
     let pattern = cli.pattern.as_deref();
-    eprintln!(
-        "[CCTR MAIN] Starting {} suites (parallel={})",
-        suites.len(),
-        !cli.sequential && suites.len() > 1
-    );
     let results: Vec<SuiteResult> = if cli.sequential || suites.len() == 1 {
         suites
             .iter()
@@ -75,16 +70,9 @@ fn main() -> anyhow::Result<()> {
             })
             .collect()
     };
-    eprintln!(
-        "[CCTR MAIN] All suites complete, got {} results",
-        results.len()
-    );
 
-    eprintln!("[CCTR MAIN] Dropping progress_tx");
     drop(progress_tx);
-    eprintln!("[CCTR MAIN] Joining progress_handle");
     progress_handle.join().unwrap();
-    eprintln!("[CCTR MAIN] progress_handle joined");
 
     if cli.update {
         for suite_result in &results {
