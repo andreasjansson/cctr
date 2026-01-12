@@ -35,6 +35,7 @@ hello world
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
 - [Built-in variables](#built-in-variables)
+- [Environment variables](#environment-variables)
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
 - [Development](#development)
