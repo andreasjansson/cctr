@@ -481,7 +481,7 @@ From highest to lowest:
 
 ## Built-in variables
 
-These variables are automatically available in commands:
+These variables are automatically available in both commands and expected output:
 
 | Variable | Description |
 |----------|-------------|
@@ -511,6 +511,33 @@ hello
 ```
 
 When a fixture exists, `FIXTURE_DIR` and `WORK_DIR` point to the same location (the fixture is copied into the work directory).
+
+## Environment variables
+
+Environment variables can be used in both commands and expected output using the same `{{ VAR_NAME }}` syntax:
+
+```
+===
+use home directory
+===
+echo "home={{ HOME }}"
+---
+home={{ HOME }}
+
+===
+current user
+===
+whoami
+---
+{{ USER }}
+```
+
+This is useful for:
+- Testing commands that output paths or user-specific information
+- Configuring tests based on the environment
+- Avoiding hardcoded values that differ between machines
+
+Environment variables are expanded after built-in variables (`WORK_DIR`, `FIXTURE_DIR`), so built-in variables take precedence if there's a name conflict. Unknown variables (not set in the environment) are left unchanged.
 
 ## Parallel execution
 
