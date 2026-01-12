@@ -70,20 +70,24 @@ fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
             break;
         }
 
-        // Collect command lines (support backslash continuation)
+        // Collect command lines until we hit the --- separator
         let mut command_lines = Vec::new();
         while i < lines.len() && !is_dash_separator(lines[i]) {
-            let line = lines[i];
-            command_lines.push(line);
+            command_lines.push(lines[i]);
             i += 1;
-            // If line doesn't end with backslash, stop collecting
-            if !line.trim_end().ends_with('\\') {
-                break;
-            }
         }
 
         if command_lines.is_empty() {
             continue;
+        }
+
+        // Trim trailing empty lines from command
+        while command_lines
+            .last()
+            .map(|s| s.trim().is_empty())
+            .unwrap_or(false)
+        {
+            command_lines.pop();
         }
 
         let command = command_lines.join("\n");
