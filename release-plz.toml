@@ -3,13 +3,15 @@
 git_tag_name = "v{{ version }}"
 git_release_name = "v{{ version }}"
 
-# Library crates: publish to crates.io but don't create GitHub releases
+# Disable release-plz publishing - we use cargo publish --workspace instead
+# This is needed because release-plz doesn't publish workspace crates in dependency order
+publish = false
+
+# Library crates: don't create separate GitHub releases
 [[package]]
 name = "cctr-corpus"
-publish = true
 release = false
 
 [[package]]
 name = "cctr-expr"
-publish = true
 release = false
