@@ -115,10 +115,10 @@ fn list_tests(
             let tests = parse_corpus_file(&file)?;
 
             // Check if file name matches the pattern
-            let file_matches = pattern.map_or(true, |pat| {
+            let file_matches = pattern.is_none_or(|pat| {
                 file.file_stem()
                     .and_then(|s| s.to_str())
-                    .map_or(false, |name| name.contains(pat))
+                    .is_some_and(|name| name.contains(pat))
             });
 
             // Keep tests where either the file matches or the test name matches
