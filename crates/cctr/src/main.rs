@@ -113,11 +113,25 @@ fn list_tests(
         let mut all_tests = Vec::new();
         for file in suite.corpus_files() {
             let tests = parse_corpus_file(&file)?;
-            all_tests.extend(tests);
-        }
 
-        if let Some(pat) = pattern {
-            all_tests.retain(|t| t.name.contains(pat));
+            // Check if file name matches the pattern
+            let file_matches = pattern.map_or(true, |pat| {
+                file.file_stem()
+                    .and_then(|s| s.to_str())
+                    .map_or(false, |name| name.contains(pat))
+            });
+
+            // Keep tests where either the file matches or the test name matches
+            let filtered: Vec<_> = if let Some(pat) = pattern {
+                tests
+                    .into_iter()
+                    .filter(|t| file_matches || t.name.contains(pat))
+                    .collect()
+            } else {
+                tests
+            };
+
+            all_tests.extend(filtered);
         }
 
         if !all_tests.is_empty() || pattern.is_none() {
