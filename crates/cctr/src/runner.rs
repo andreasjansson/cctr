@@ -132,9 +132,18 @@ fn run_corpus_file(
     let tests = parse_corpus_file(file_path).unwrap_or_default();
     let mut results = Vec::new();
 
+    // Check if file name matches the pattern (excluding .txt extension)
+    let file_matches = pattern.map_or(true, |pat| {
+        file_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map_or(false, |name| name.contains(pat))
+    });
+
     for test in tests {
         if let Some(pat) = pattern {
-            if !test.name.contains(pat) {
+            // Match if either the file name OR the test name contains the pattern
+            if !file_matches && !test.name.contains(pat) {
                 continue;
             }
         }
