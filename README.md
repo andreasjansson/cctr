@@ -4,7 +4,7 @@
 
 cctr is a test runner for command-line tools. Tests are defined as plain text corpus files that specify commands and their expected output.
 
-```bash
+```console
 $ cat test/cryptic.txt
 ===
 Test cryptic hello
