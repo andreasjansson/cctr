@@ -17,6 +17,8 @@ cctr is heavily inspired by [Tree-sitter's corpus tests](https://tree-sitter.git
 
 cctr is especially suited for agentic development of command line tools. cctr test cases can be easily written and read by humans, while the agent satisfies the test cases with code. In agentic development, code is a leaky abstraction. cctr is a sealant.
 
+See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory for a comprehensive suite of cctr tests for cctr itself.
+
 ## Table of contents
 
 - [Installation](#installation)
