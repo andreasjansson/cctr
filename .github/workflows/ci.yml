@@ -123,11 +123,14 @@ jobs:
             os: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.check-release.outputs.version }}
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: cctr
           target: ${{ matrix.target }}
           archive: cctr-v${{ needs.check-release.outputs.version }}-${{ matrix.target }}
+          ref: refs/tags/v${{ needs.check-release.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # Publish to crates.io
