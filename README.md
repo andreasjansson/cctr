@@ -4,13 +4,21 @@
 
 cctr is a test runner for command-line tools. Tests are defined as plain text corpus files that specify commands and their expected output.
 
-```
+```bash
+$ cat test/cryptic.txt
 ===
 Test cryptic hello
 ===
 echo "khoor zruog" | tr "a-z" "x-za-w"
 ---
 hello world
+
+$ cctr test/
+.
+
+✓ test: 1/1 tests passed in 0.02s
+
+All 1 tests passed in 0.02s
 ```
 
 cctr is heavily inspired by [Tree-sitter's corpus tests](https://tree-sitter.github.io/tree-sitter/creating-parsers/5-writing-tests.html), which act both as high-level end-to-end tests and documentation.
