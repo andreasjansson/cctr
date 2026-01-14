@@ -1,0 +1,11 @@
+===
+exit zero passes
+===
+true
+---
+
+===
+exit nonzero fails
+===
+false
+---

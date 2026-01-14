@@ -1,0 +1,13 @@
+===
+read from fixture dir
+===
+cat {{ FIXTURE_DIR }}/data.txt
+---
+hello from fixture
+
+===
+fixture dir is copied
+===
+cat data.txt
+---
+hello from fixture

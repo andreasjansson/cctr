@@ -1,0 +1,6 @@
+===
+Test cat with incorrect output
+===
+cat foo.txt
+---
+bar

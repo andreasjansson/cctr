@@ -1,0 +1,317 @@
+===
+empty string
+===
+echo "val: "
+---
+val: {{ s }}
+---
+with
+* s: string
+having
+* s == ""
+* len(s) == 0
+
+===
+string with spaces only
+===
+echo "val:    "
+---
+val: {{ s }}
+---
+with
+* s: string
+having
+* s == "   "
+* len(s) == 3
+
+===
+deeply nested parentheses
+===
+echo "n: 10"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* ((((((n)))))) == 10
+* (((n + 5) * 2) - 10) / 2 == 10
+
+===
+zero
+===
+echo "n: 0"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n == 0
+* n >= 0
+* n <= 0
+* n + 0 == 0
+* n * 100 == 0
+
+===
+negative zero
+===
+echo "n: -0"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n == 0
+* n == -0
+
+===
+very small decimal
+===
+echo "n: 0.0001"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n > 0
+* n < 1
+* n == 0.0001
+* n * 10000 == 1
+
+===
+very large number
+===
+echo "n: 999999999"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n > 0
+* n == 999999999
+* n + 1 == 1000000000
+
+===
+negative decimal
+===
+echo "n: -3.14159"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n < 0
+* n > -4
+* -n > 3
+
+===
+string with double quotes escaped
+===
+echo 'val: say "hello"'
+---
+val: {{ s }}
+---
+with
+* s: string
+having
+* s contains "hello"
+* len(s) == 11
+
+===
+string with backslash
+===
+printf '%s\n' 'path: C:\Users\test'
+---
+path: {{ p }}
+---
+with
+* p: string
+having
+* p contains "Users"
+* p contains "test"
+* p contains "\\"
+
+===
+unicode string
+===
+echo "msg: héllo wörld 你好"
+---
+msg: {{ m }}
+---
+with
+* m: string
+having
+* m contains "héllo"
+* m contains "你好"
+
+===
+regex with special chars
+===
+echo "expr: (a+b)*c"
+---
+expr: {{ e }}
+---
+with
+* e: string
+having
+* e matches /^\(a\+b\)\*c$/
+
+===
+empty array membership
+===
+echo "n: 5"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* not (n in [])
+
+===
+single element array
+===
+echo "n: 42"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n in [42]
+
+===
+large array
+===
+echo "n: 50"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+
+===
+startswith empty string
+===
+echo "s: hello"
+---
+s: {{ s }}
+---
+with
+* s: string
+having
+* s startswith ""
+
+===
+endswith empty string
+===
+echo "s: hello"
+---
+s: {{ s }}
+---
+with
+* s: string
+having
+* s endswith ""
+
+===
+contains empty string
+===
+echo "s: hello"
+---
+s: {{ s }}
+---
+with
+* s: string
+having
+* s contains ""
+
+===
+regex matches empty
+===
+echo "s: hello"
+---
+s: {{ s }}
+---
+with
+* s: string
+having
+* s matches /.*/ 
+
+===
+power of zero
+===
+echo "n: 1"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n == 2 ^ 0
+* n == 100 ^ 0
+* n == 1 ^ 100
+
+===
+zero power
+===
+echo "n: 0"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* n == 0 ^ 1
+* n == 0 ^ 5
+
+===
+multiple not
+===
+echo "n: 5"
+---
+n: {{ n }}
+---
+with
+* n: number
+having
+* not not not not (n == 5)
+* not not (n > 0)
+
+===
+comparison chain
+===
+echo "a: 1 b: 2 c: 3 d: 4 e: 5"
+---
+a: {{ a }} b: {{ b }} c: {{ c }} d: {{ d }} e: {{ e }}
+---
+with
+* a: number
+* b: number
+* c: number
+* d: number
+* e: number
+having
+* a < b and b < c and c < d and d < e
+* e - a == 4
+* a + b + c + d + e == 15
+
+===
+string equals with special chars
+===
+echo "s: !@#$%^&*()"
+---
+s: {{ s }}
+---
+with
+* s: string
+having
+* s == "!@#\$%^&*()"
+* len(s) == 10

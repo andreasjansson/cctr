@@ -1,0 +1,6 @@
+===
+marker file exists from setup
+===
+test -f marker.txt && echo exists
+---
+exists

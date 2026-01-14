@@ -1,0 +1,20 @@
+===
+read from fixture
+===
+cat sample.txt
+---
+Hello from fixture
+
+===
+use FIXTURE_DIR variable
+===
+cat {{ FIXTURE_DIR }}/sample.txt
+---
+Hello from fixture
+
+===
+list has fixture marker
+===
+cctr --list | grep fixture | wc -l | tr -d ' '
+---
+1

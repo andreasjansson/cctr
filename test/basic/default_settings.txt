@@ -1,0 +1,58 @@
+===
+Run a basic successful cctr test
+===
+cctr {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1
+---
+.F
+
+✗ corpus: 1/2 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ corpus/cat_incorrect: Test cat with incorrect output
+  test/corpus/cat_incorrect.txt:1
+  Command: cat foo.txt
+
+-bar
++foo
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
+---
+with
+* suite_time: number
+* total_time: number
+having
+* suite_time < 5
+* total_time < 5
+* suite_time <= total_time
+
+===
+list mode shows tests
+===
+cctr {{ FIXTURE_DIR }}/test/corpus --list
+---
+
+corpus [fixture]
+  cat_correct: 1 test(s)
+    - Test cat with correct output
+  cat_incorrect: 1 test(s)
+    - Test cat with incorrect output
+
+===
+verbose mode shows timing
+===
+cctr {{ FIXTURE_DIR }}/test/corpus --no-color -v 2>&1 | grep 'corpus/cat_correct:' | head -1
+---
+✓ corpus/cat_correct: Test cat with correct output {{ t }}s
+---
+with
+* t: number
+having
+* t < 5
+
+===
+non-verbose mode shows dots
+===
+cctr {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1 | head -1
+---
+.F

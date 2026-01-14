@@ -1,0 +1,56 @@
+===
+echo works without fixture
+===
+echo hello
+---
+hello
+
+===
+multiline output
+===
+printf 'line1\nline2\nline3'
+---
+line1
+line2
+line3
+
+===
+exit only passes
+===
+true
+---
+
+===
+command with nonzero exit
+===
+false || echo "failed as expected"
+---
+failed as expected
+
+===
+arithmetic in shell
+===
+echo $((2 + 3))
+---
+5
+
+===
+environment variable
+===
+echo "HOME is set: $HOME" | grep -q HOME && echo yes
+---
+yes
+
+===
+work dir exists
+===
+test -d {{ WORK_DIR }} && echo exists
+---
+exists
+
+===
+list mode works
+===
+cctr --list 2>&1 | head -1
+---
+

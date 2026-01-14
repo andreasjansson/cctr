@@ -1,0 +1,123 @@
+===
+addition
+===
+echo "sum: 15"
+---
+sum: {{ n }}
+---
+with
+* n: number
+having
+* n == 10 + 5
+
+===
+subtraction
+===
+echo "diff: 7"
+---
+diff: {{ n }}
+---
+with
+* n: number
+having
+* n == 10 - 3
+
+===
+multiplication
+===
+echo "product: 42"
+---
+product: {{ n }}
+---
+with
+* n: number
+having
+* n == 6 * 7
+
+===
+division
+===
+echo "quotient: 4"
+---
+quotient: {{ n }}
+---
+with
+* n: number
+having
+* n == 20 / 5
+
+===
+power
+===
+echo "power: 8"
+---
+power: {{ n }}
+---
+with
+* n: number
+having
+* n == 2 ^ 3
+
+===
+precedence mul before add
+===
+echo "result: 14"
+---
+result: {{ n }}
+---
+with
+* n: number
+having
+* n == 2 + 3 * 4
+
+===
+parentheses override precedence
+===
+echo "result: 20"
+---
+result: {{ n }}
+---
+with
+* n: number
+having
+* n == (2 + 3) * 4
+
+===
+negative numbers
+===
+echo "value: -5"
+---
+value: {{ n }}
+---
+with
+* n: number
+having
+* n == -5
+* n < 0
+* -n == 5
+
+===
+decimal arithmetic
+===
+echo "result: 3.5"
+---
+result: {{ n }}
+---
+with
+* n: number
+having
+* n == 1.5 + 2
+* n > 3
+* n < 4
+
+===
+chained operations
+===
+echo "result: 27"
+---
+result: {{ n }}
+---
+with
+* n: number
+having
+* n == 2 + 3 * 4 + 5 * 3 - 2
