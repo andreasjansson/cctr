@@ -191,3 +191,13 @@ jobs:
             --notes-file release_notes.md \
             --latest \
             --draft=false
+
+  # Update Homebrew tap
+  homebrew:
+    name: Update Homebrew
+    needs: [check-release, release]
+    if: needs.check-release.outputs.should_release == 'true'
+    uses: ./.github/workflows/update-homebrew.yml
+    with:
+      version: ${{ needs.check-release.outputs.version }}
+    secrets: inherit
