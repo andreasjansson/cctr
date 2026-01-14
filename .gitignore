@@ -1,2 +1,4 @@
 *.greger
 target
+TODO.md
+.DS_Store
