@@ -4,7 +4,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(
     name = "cctr",
-    about = "CLI Corpus Test Runner - Named after the Corpus Christi Terminal Railroad",
+    about = "CLI Corpus Test Runner",
     version
 )]
 pub struct Cli {

@@ -1,6 +1,6 @@
 [package]
 name = "cctr"
-description = "CLI Corpus Test Runner - Named after the Corpus Christi Terminal Railroad"
+description = "CLI Corpus Test Runner"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
