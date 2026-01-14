@@ -2,11 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(
-    name = "cctr",
-    about = "CLI Corpus Test Runner",
-    version
-)]
+#[command(name = "cctr", about = "CLI Corpus Test Runner", version)]
 pub struct Cli {
     /// Root directory for test discovery
     #[arg(default_value = ".")]
