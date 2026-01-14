@@ -1,4 +1,8 @@
-# cctr - CLI Corpus Test Runner
+<div align="center">
+  <img src="./assets/logo.png" alt="cctr logo" width="100" align="left" />
+  <h1><code>cctr</code> - CLI Corpus Test Runner</h1>
+</div>
+<br clear="left" />
 
 cctr is a test runner for command-line tools. Tests are defined as plain text corpus files that specify commands and their expected output.
 
@@ -10,6 +14,10 @@ echo hello world
 ---
 hello world
 ```
+
+cctr is heavily inspired by [Tree-sitter's corpus tests](https://tree-sitter.github.io/tree-sitter/creating-parsers/5-writing-tests.html), which act both as high-level end-to-end tests and documentation.
+
+cctr is especially suited for agentic development of command line tools. cctr test cases can be easily written and read by humans, while the agent satisfies the test cases with code. In agentic development, code is a leaky abstraction. cctr is a sealant.
 
 ## Table of contents
 
