@@ -49,16 +49,16 @@ cctr is especially suited for agentic development of command line tools. cctr te
 
 ## Installation
 
-### Via Cargo
-
-```bash
-cargo install cctr
-```
-
 ### Via Homebrew (macOS/Linux)
 
 ```bash
 brew install andreasjansson/tap/cctr
+```
+
+### Via Cargo
+
+```bash
+cargo install cctr
 ```
 
 ### Pre-built binaries
