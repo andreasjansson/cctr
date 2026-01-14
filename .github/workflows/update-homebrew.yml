@@ -1,39 +1,28 @@
 name: Update Homebrew Formula
 
 on:
-  workflow_run:
-    workflows: ["Release Binaries"]
-    types: [completed]
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
 
 jobs:
   update-formula:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Get release info
-        id: release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Get latest release tag
-          TAG=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name')
-          VERSION=${TAG#v}
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Download and hash binaries
         id: hashes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ steps.release.outputs.tag }}"
-          BASE="https://github.com/${{ github.repository }}/releases/download/${TAG}"
+          VERSION="${{ inputs.version }}"
+          BASE="https://github.com/${{ github.repository }}/releases/download/v${VERSION}"
           
           for target in x86_64-apple-darwin aarch64-apple-darwin x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
-            FILE="cctr-${TAG}-${target}.tar.gz"
+            FILE="cctr-v${VERSION}-${target}.tar.gz"
             curl -sL "${BASE}/${FILE}" -o "${FILE}"
             SHA=$(sha256sum "${FILE}" | cut -d' ' -f1)
-            # Convert target to env-friendly name
             NAME=$(echo "$target" | tr '-' '_')
             echo "${NAME}=${SHA}" >> $GITHUB_OUTPUT
           done
@@ -42,34 +31,34 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          VERSION="${{ steps.release.outputs.version }}"
+          VERSION="${{ inputs.version }}"
           
-          cat > cctr.rb << 'FORMULA'
+          cat > cctr.rb << EOF
           class Cctr < Formula
             desc "CLI Corpus Test Runner"
             homepage "https://github.com/andreasjansson/cctr"
-            version "VERSION_PLACEHOLDER"
+            version "${VERSION}"
             license "MIT"
 
             on_macos do
               on_intel do
-                url "https://github.com/andreasjansson/cctr/releases/download/vVERSION_PLACEHOLDER/cctr-vVERSION_PLACEHOLDER-x86_64-apple-darwin.tar.gz"
-                sha256 "INTEL_MAC_SHA"
+                url "https://github.com/andreasjansson/cctr/releases/download/v${VERSION}/cctr-v${VERSION}-x86_64-apple-darwin.tar.gz"
+                sha256 "${{ steps.hashes.outputs.x86_64_apple_darwin }}"
               end
               on_arm do
-                url "https://github.com/andreasjansson/cctr/releases/download/vVERSION_PLACEHOLDER/cctr-vVERSION_PLACEHOLDER-aarch64-apple-darwin.tar.gz"
-                sha256 "ARM_MAC_SHA"
+                url "https://github.com/andreasjansson/cctr/releases/download/v${VERSION}/cctr-v${VERSION}-aarch64-apple-darwin.tar.gz"
+                sha256 "${{ steps.hashes.outputs.aarch64_apple_darwin }}"
               end
             end
 
             on_linux do
               on_intel do
-                url "https://github.com/andreasjansson/cctr/releases/download/vVERSION_PLACEHOLDER/cctr-vVERSION_PLACEHOLDER-x86_64-unknown-linux-gnu.tar.gz"
-                sha256 "INTEL_LINUX_SHA"
+                url "https://github.com/andreasjansson/cctr/releases/download/v${VERSION}/cctr-v${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+                sha256 "${{ steps.hashes.outputs.x86_64_unknown_linux_gnu }}"
               end
               on_arm do
-                url "https://github.com/andreasjansson/cctr/releases/download/vVERSION_PLACEHOLDER/cctr-vVERSION_PLACEHOLDER-aarch64-unknown-linux-gnu.tar.gz"
-                sha256 "ARM_LINUX_SHA"
+                url "https://github.com/andreasjansson/cctr/releases/download/v${VERSION}/cctr-v${VERSION}-aarch64-unknown-linux-gnu.tar.gz"
+                sha256 "${{ steps.hashes.outputs.aarch64_unknown_linux_gnu }}"
               end
             end
 
@@ -81,21 +70,13 @@ jobs:
               assert_match version.to_s, shell_output("#{bin}/cctr --version")
             end
           end
-          FORMULA
+          EOF
           
-          # Replace placeholders
-          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" cctr.rb
-          sed -i "s/INTEL_MAC_SHA/${{ steps.hashes.outputs.x86_64_apple_darwin }}/g" cctr.rb
-          sed -i "s/ARM_MAC_SHA/${{ steps.hashes.outputs.aarch64_apple_darwin }}/g" cctr.rb
-          sed -i "s/INTEL_LINUX_SHA/${{ steps.hashes.outputs.x86_64_unknown_linux_gnu }}/g" cctr.rb
-          sed -i "s/ARM_LINUX_SHA/${{ steps.hashes.outputs.aarch64_unknown_linux_gnu }}/g" cctr.rb
-          
-          # Clone homebrew tap, update formula, and push
-          git clone https://x-access-token:${GH_TOKEN}@github.com/andreasjansson/homebrew-cctr.git
-          cp cctr.rb homebrew-cctr/Formula/cctr.rb
-          cd homebrew-cctr
+          git clone https://x-access-token:${GH_TOKEN}@github.com/andreasjansson/homebrew-tap.git
+          cp cctr.rb homebrew-tap/Formula/cctr.rb
+          cd homebrew-tap
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/cctr.rb
-          git commit -m "Update cctr to ${VERSION}" || echo "No changes to commit"
+          git commit -m "Update cctr to ${VERSION}"
           git push
