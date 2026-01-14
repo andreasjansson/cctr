@@ -183,10 +183,11 @@ jobs:
 
           Pre-built binaries are available for Linux, macOS, and Windows (x86_64 and ARM64).
           EOF
-      - name: Update Release
+      - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release edit "v${{ needs.check-release.outputs.version }}" \
             --notes-file release_notes.md \
-            --latest
+            --latest \
+            --draft=false
