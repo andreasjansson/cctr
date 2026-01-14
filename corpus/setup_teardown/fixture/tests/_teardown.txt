@@ -1,5 +1,0 @@
-===
-cleanup marker
-===
-rm -f marker.txt
----

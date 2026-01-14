@@ -1,5 +1,0 @@
-===
-create marker file
-===
-echo "setup" > marker.txt
----

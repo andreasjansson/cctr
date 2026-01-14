@@ -1,6 +1,0 @@
-===
-Test cat with correct output
-===
-cat foo.txt
----
-foo

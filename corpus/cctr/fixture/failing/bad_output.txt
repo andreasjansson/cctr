@@ -1,6 +1,0 @@
-===
-wrong expected output
-===
-echo actual
----
-expected

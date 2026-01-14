@@ -1,6 +1,0 @@
-===
-correct output
-===
-echo hello
----
-hello

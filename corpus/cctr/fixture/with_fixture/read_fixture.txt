@@ -1,6 +1,0 @@
-===
-read from fixture directory
-===
-cat {{ FIXTURE_DIR }}/data.txt
----
-hello from fixture

@@ -1,6 +1,0 @@
-===
-verify setup ran
-===
-cat marker.txt
----
-setup
