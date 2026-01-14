@@ -45,7 +45,6 @@ cctr is especially suited for agentic development of command line tools. cctr te
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
 - [Development](#development)
-- [Why "cctr"?](#why-cctr)
 - [License](#license)
 
 ## Installation
@@ -576,10 +575,6 @@ Only tests without variables are updated. Tests with variables must be updated m
 ./script/test      # Run unit tests and corpus tests
 ./script/install   # Build and install
 ```
-
-## Why "cctr"?
-
-Named after the [Corpus Christi Terminal Railroad](https://en.wikipedia.org/wiki/Corpus_Christi_Terminal_Railroad).
 
 ## License
 
