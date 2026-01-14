@@ -9,8 +9,8 @@ authors = ["Andreas Jansson"]
 license = "MIT"
 
 [workspace.dependencies]
-cctr-expr = { version = "0.3.0", path = "crates/cctr-expr" }
-cctr-corpus = { version = "0.3.0", path = "crates/cctr-corpus" }
+cctr-expr = { path = "crates/cctr-expr" }
+cctr-corpus = { path = "crates/cctr-corpus" }
 
 [profile.release]
 lto = true
