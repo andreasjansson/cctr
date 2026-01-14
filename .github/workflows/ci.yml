@@ -172,11 +172,11 @@ jobs:
           ## Installation
 
           ```bash
-          # Via cargo
-          cargo install cctr
-
           # Via Homebrew (macOS/Linux)
           brew install andreasjansson/tap/cctr
+
+          # Via Cargo
+          cargo install cctr
           ```
 
           ## Binaries
