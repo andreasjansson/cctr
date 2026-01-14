@@ -6,9 +6,9 @@ cctr is a test runner for command-line tools. Tests are defined as plain text co
 
 ```
 ===
-simple echo
+Test cryptic hello
 ===
-echo hello world
+echo "khoor zruog" | tr "a-z" "x-za-w"
 ---
 hello world
 ```
