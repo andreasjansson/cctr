@@ -54,34 +54,128 @@ jobs:
       - run: echo "$PWD/target/release" >> $GITHUB_PATH
       - run: cctr corpus
 
-  # Auto-create git tag when version changes on main
-  tag-release:
-    name: Tag Release
+  # Check if we need to release (version changed)
+  check-release:
+    name: Check Release
     runs-on: ubuntu-latest
     needs: [fmt, clippy, test, corpus]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Get version from Cargo.toml
-        id: version
+      - name: Check if release needed
+        id: check
         run: |
           VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists"
+            echo "should_release=false" >> $GITHUB_OUTPUT
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION does not exist, will release"
+            echo "should_release=true" >> $GITHUB_OUTPUT
           fi
+
+  # Create tag
+  create-tag:
+    name: Create Tag
+    runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
       - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          git tag -a "v${{ needs.check-release.outputs.version }}" -m "Release v${{ needs.check-release.outputs.version }}"
+          git push origin "v${{ needs.check-release.outputs.version }}"
+
+  # Build binaries for all platforms
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    needs: [check-release, create-tag]
+    if: needs.check-release.outputs.should_release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: cctr
+          target: ${{ matrix.target }}
+          archive: cctr-v${{ needs.check-release.outputs.version }}-${{ matrix.target }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish to crates.io
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: [check-release, create-tag]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish to crates.io
+        run: |
+          cargo publish -p cctr-expr --no-verify
+          cargo publish -p cctr-corpus --no-verify
+          cargo publish -p cctr --no-verify
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # Update GitHub Release
+  release:
+    name: Update GitHub Release
+    runs-on: ubuntu-latest
+    needs: [check-release, build, publish]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release Notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## Installation
+
+          ```bash
+          # Via cargo
+          cargo install cctr
+
+          # Via Homebrew (macOS/Linux)
+          brew install andreasjansson/tap/cctr
+          ```
+
+          ## Binaries
+
+          Pre-built binaries are available for Linux, macOS, and Windows (x86_64 and ARM64).
+          EOF
+      - name: Update Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "v${{ needs.check-release.outputs.version }}" \
+            --notes-file release_notes.md \
+            --latest
