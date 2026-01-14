@@ -52,7 +52,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release
       - run: echo "$PWD/target/release" >> $GITHUB_PATH
-      - run: cctr corpus
+      - run: cctr test
 
   # Check if we need to release (version changed)
   check-release:
