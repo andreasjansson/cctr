@@ -49,6 +49,27 @@ cctr is especially suited for agentic development of command line tools. cctr te
 
 ## Installation
 
+### Via Cargo
+
+```bash
+cargo install cctr
+```
+
+### Via Homebrew (macOS/Linux)
+
+```bash
+brew install andreasjansson/tap/cctr
+```
+
+### Pre-built binaries
+
+Download from the [releases page](https://github.com/andreasjansson/cctr/releases). Binaries are available for:
+- Linux (x86_64, ARM64)
+- macOS (Intel, Apple Silicon)
+- Windows (x86_64, ARM64)
+
+### From source
+
 ```bash
 ./script/install              # Install to ~/.local/bin
 ./script/install --system     # Install to /usr/local/bin (requires sudo)
