@@ -1,13 +1,8 @@
-<table>
-<tr>
-<td width="100%">
-<h1 style="border-bottom: none;"><code>cctr</code> - CLI Corpus Test Runner</h1>
-</td>
-<td align="right" style="padding-left: 20px;">
-<img src="./assets/logo.png" alt="cctr logo" width="100" />
-</td>
-</tr>
-</table>
+<img align="right" src="./assets/logo.png" alt="cctr logo" width="100" />
+
+# `cctr` - CLI Corpus Test Runner
+
+<br clear="right" />
 
 cctr is a test runner for command-line tools. Tests are defined as plain text corpus files that specify commands and their expected output.
 
