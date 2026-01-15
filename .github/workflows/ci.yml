@@ -491,7 +491,7 @@ jobs:
           powershell -Command "2 + 2"
           ---
           4
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\basic.txt -Encoding utf8
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\basic.txt -Encoding utf8NoBOM
 
           @"
           ===
@@ -505,7 +505,7 @@ jobs:
           * n: number
           having
           * n == 42
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\variables.txt -Encoding utf8
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\variables.txt -Encoding utf8NoBOM
 
           @"
           ===
@@ -514,6 +514,6 @@ jobs:
           echo ok
           ---
           ok
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\exit_only.txt -Encoding utf8
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\exit_only.txt -Encoding utf8NoBOM
 
           cctr $env:TEMP\cctr-test
