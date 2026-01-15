@@ -473,11 +473,11 @@ jobs:
             throw "Version mismatch"
           }
       - name: Run standalone smoke tests
-        shell: pwsh
+        shell: bash
         run: |
-          New-Item -ItemType Directory -Force -Path $env:TEMP\cctr-test
+          mkdir -p /tmp/cctr-test
           
-          @"
+          cat > /tmp/cctr-test/basic.txt << 'EOF'
           ===
           echo hello world
           ===
@@ -486,18 +486,18 @@ jobs:
           hello world
 
           ===
-          arithmetic
+          echo with spaces
           ===
-          powershell -Command "2 + 2"
+          echo "hello   world"
           ---
-          4
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\basic.txt -Encoding utf8NoBOM
+          hello   world
+          EOF
 
-          @"
+          cat > /tmp/cctr-test/variables.txt << 'EOF'
           ===
           capture number
           ===
-          echo count: 42
+          echo "count: 42"
           ---
           count: {{ n }}
           ---
@@ -505,15 +505,15 @@ jobs:
           * n: number
           having
           * n == 42
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\variables.txt -Encoding utf8NoBOM
+          EOF
 
-          @"
+          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
           ===
           successful exit
           ===
           echo ok
           ---
           ok
-          "@ | Out-File -FilePath $env:TEMP\cctr-test\exit_only.txt -Encoding utf8NoBOM
+          EOF
 
-          cctr $env:TEMP\cctr-test
+          cctr /tmp/cctr-test
