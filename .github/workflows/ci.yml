@@ -150,6 +150,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Build to generate README-crates.md
+        run: cargo build -p cctr
       - name: Publish to crates.io
         run: |
           cargo publish -p cctr-expr --no-verify
