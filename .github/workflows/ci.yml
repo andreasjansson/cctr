@@ -201,3 +201,250 @@ jobs:
     with:
       version: ${{ needs.check-release.outputs.version }}
     secrets: inherit
+
+  # Post-release smoke tests
+  smoke-test-macos:
+    name: Smoke Test (macOS/Homebrew)
+    runs-on: macos-latest
+    needs: [check-release, homebrew]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install via Homebrew
+        run: |
+          brew install andreasjansson/tap/cctr
+      - name: Verify version
+        run: |
+          cctr --version
+          cctr --version | grep -q "${{ needs.check-release.outputs.version }}"
+      - name: Run cctr corpus tests
+        run: |
+          cctr test
+      - name: Run standalone smoke tests
+        run: |
+          mkdir -p /tmp/cctr-test
+          
+          cat > /tmp/cctr-test/basic.txt << 'EOF'
+          ===
+          echo hello world
+          ===
+          echo "hello world"
+          ---
+          hello world
+
+          ===
+          arithmetic
+          ===
+          echo $((2 + 2))
+          ---
+          4
+
+          ===
+          multiline output
+          ===
+          printf "one\ntwo\nthree\n"
+          ---
+          one
+          two
+          three
+          EOF
+
+          cat > /tmp/cctr-test/variables.txt << 'EOF'
+          ===
+          capture number
+          ===
+          echo "count: 42"
+          ---
+          count: {{ n }}
+          ---
+          with
+          * n: number
+          having
+          * n == 42
+
+          ===
+          capture string
+          ===
+          echo "status: success"
+          ---
+          status: {{ s }}
+          ---
+          with
+          * s: string
+          having
+          * s == "success"
+          EOF
+
+          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
+          ===
+          successful exit
+          ===
+          true
+          ---
+
+          ===
+          test file exists
+          ===
+          test -d /tmp
+          ---
+          EOF
+
+          cctr /tmp/cctr-test
+
+  smoke-test-linux:
+    name: Smoke Test (Linux/GitHub Release)
+    runs-on: ubuntu-latest
+    needs: [check-release, homebrew]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from GitHub Release
+        run: |
+          curl -L "https://github.com/andreasjansson/cctr/releases/download/v${{ needs.check-release.outputs.version }}/cctr-v${{ needs.check-release.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz" | tar xz
+          sudo mv cctr /usr/local/bin/
+      - name: Verify version
+        run: |
+          cctr --version
+          cctr --version | grep -q "${{ needs.check-release.outputs.version }}"
+      - name: Run cctr corpus tests
+        run: |
+          cctr test
+      - name: Run standalone smoke tests
+        run: |
+          mkdir -p /tmp/cctr-test
+          
+          cat > /tmp/cctr-test/basic.txt << 'EOF'
+          ===
+          echo hello world
+          ===
+          echo "hello world"
+          ---
+          hello world
+
+          ===
+          arithmetic
+          ===
+          echo $((2 + 2))
+          ---
+          4
+
+          ===
+          multiline output
+          ===
+          printf "one\ntwo\nthree\n"
+          ---
+          one
+          two
+          three
+          EOF
+
+          cat > /tmp/cctr-test/variables.txt << 'EOF'
+          ===
+          capture number
+          ===
+          echo "count: 42"
+          ---
+          count: {{ n }}
+          ---
+          with
+          * n: number
+          having
+          * n == 42
+
+          ===
+          capture string
+          ===
+          echo "status: success"
+          ---
+          status: {{ s }}
+          ---
+          with
+          * s: string
+          having
+          * s == "success"
+          EOF
+
+          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
+          ===
+          successful exit
+          ===
+          true
+          ---
+
+          ===
+          test file exists
+          ===
+          test -d /tmp
+          ---
+          EOF
+
+          cctr /tmp/cctr-test
+
+  smoke-test-windows:
+    name: Smoke Test (Windows/GitHub Release)
+    runs-on: windows-latest
+    needs: [check-release, homebrew]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from GitHub Release
+        shell: pwsh
+        run: |
+          $version = "${{ needs.check-release.outputs.version }}"
+          $url = "https://github.com/andreasjansson/cctr/releases/download/v${version}/cctr-v${version}-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri $url -OutFile cctr.zip
+          Expand-Archive -Path cctr.zip -DestinationPath .
+          Move-Item -Path cctr.exe -Destination C:\Windows\System32\cctr.exe
+      - name: Verify version
+        shell: pwsh
+        run: |
+          cctr --version
+          $output = cctr --version
+          if ($output -notmatch "${{ needs.check-release.outputs.version }}") {
+            throw "Version mismatch"
+          }
+      - name: Run standalone smoke tests
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:TEMP\cctr-test
+          
+          @"
+          ===
+          echo hello world
+          ===
+          echo hello world
+          ---
+          hello world
+
+          ===
+          arithmetic
+          ===
+          powershell -Command "2 + 2"
+          ---
+          4
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\basic.txt -Encoding utf8
+
+          @"
+          ===
+          capture number
+          ===
+          echo count: 42
+          ---
+          count: {{ n }}
+          ---
+          with
+          * n: number
+          having
+          * n == 42
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\variables.txt -Encoding utf8
+
+          @"
+          ===
+          successful exit
+          ===
+          echo ok
+          ---
+          ok
+          "@ | Out-File -FilePath $env:TEMP\cctr-test\exit_only.txt -Encoding utf8
+
+          cctr $env:TEMP\cctr-test
