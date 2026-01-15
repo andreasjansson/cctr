@@ -3,10 +3,12 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.12.0"
+version = "0.12.1"
 edition = "2021"
 authors = ["Andreas Jansson"]
 license = "MIT"
+homepage = "https://github.com/andreasjansson/cctr"
+repository = "https://github.com/andreasjansson/cctr"
 
 [workspace.dependencies]
 cctr-expr = { version = "0.12.0", path = "crates/cctr-expr" }
