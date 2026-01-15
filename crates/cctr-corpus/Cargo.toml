@@ -1,6 +1,6 @@
 [package]
 name = "cctr-corpus"
-description = "Corpus test file parser for cctr"
+description = "This is an internal component crate of cctr"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
