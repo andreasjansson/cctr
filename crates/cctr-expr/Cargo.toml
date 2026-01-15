@@ -1,6 +1,6 @@
 [package]
 name = "cctr-expr"
-description = "Expression language parser and evaluator for cctr constraints"
+description = "This is an internal component crate of cctr"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
