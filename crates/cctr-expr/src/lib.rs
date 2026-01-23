@@ -105,8 +105,8 @@ impl Value {
             Value::String(_) => "string",
             Value::Bool(_) => "bool",
             Value::Null => "null",
-            Value::Array(_) => "json_array",
-            Value::Object(_) => "json_object",
+            Value::Array(_) => "array",
+            Value::Object(_) => "object",
             Value::Type(_) => "type",
         }
     }
