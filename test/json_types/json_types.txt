@@ -11,69 +11,69 @@ with
 ===
 json_string wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_string_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_string --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 's == "world"' not satisfied
 
 ===
 json_bool wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_bool_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_bool --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'b == false' not satisfied
 
 ===
 json_array wrong index value fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_array_wrong_index.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_array_index --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'a[0] == 999' not satisfied
 
 ===
 json_array wrong length fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_array_wrong_length.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_array_length --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'len(a) == 5' not satisfied
 
 ===
 json_array wrong type fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_array_wrong_type.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_array_type --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'type(a) == json_object' not satisfied
 
 ===
 json_array forall fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_array_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_array_forall --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'x < 5 forall x in a' not satisfied
 
 ===
 json_object wrong property fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_object_wrong_property.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_object_property --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'o.name == "bob"' not satisfied
 
 ===
 json_object missing key fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_object_missing_key.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr {{ FIXTURE_DIR }}/fail_object_missing --no-color 2>&1 | grep "constraint.*failed"
 ---
   Error: constraint 'o.missing == "value"' failed: key not found: missing
 
 ===
 json_object forall fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_object_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_object_forall --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'type(v) == number forall v in o' not satisfied
 
 ===
 json nested wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/failing/json_nested_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/fail_nested --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'o.users[0].name == "charlie"' not satisfied
