@@ -41,7 +41,7 @@ json_array out of bounds fails
 ===
 cctr {{ FIXTURE_DIR }}/json_array/json_array_out_of_bounds.txt --no-color 2>&1 | grep "constraint.*failed"
 ---
-  Error: constraint 'a[10] == 1' failed: index out of bounds: 10 >= 3
+  Error: constraint 'a[10] == 1' failed: index out of bounds: 10 (len: 3)
 
 ===
 json_array index on non-array fails
