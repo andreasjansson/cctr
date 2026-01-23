@@ -1,0 +1,67 @@
+===
+json_array length
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* len(a) == 3
+
+===
+json_array index access
+===
+echo '[10, 20, 30]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* a[0] == 10
+* a[1] == 20
+* a[2] == 30
+
+===
+json_array type function
+===
+echo '[1, "hello", true]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* type(a[0]) == number
+* type(a[1]) == string
+* type(a[2]) == json_bool
+
+===
+json_array forall
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* x <= 3 forall x in a
+* x > 0 forall x in a
+
+===
+json_array nested
+===
+echo '[[1, 2], [3, 4]]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* len(a) == 2
+* len(a[0]) == 2
+* a[0][0] == 1
+* a[1][1] == 4
