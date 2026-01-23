@@ -43,6 +43,8 @@ pub enum Value {
     String(String),
     Bool(bool),
     Array(Vec<Value>),
+    Object(HashMap<String, Value>),
+    Type(String),
 }
 
 impl Value {
