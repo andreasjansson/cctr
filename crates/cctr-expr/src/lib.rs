@@ -108,6 +108,10 @@ impl Value {
             Value::Type(_) => "type",
         }
     }
+
+    pub fn type_value(&self) -> Value {
+        Value::Type(self.type_name().to_string())
+    }
 }
 
 // ============ AST Types ============
