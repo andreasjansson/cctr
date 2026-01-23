@@ -697,6 +697,22 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                         .cloned()
                         .ok_or(EvalError::IndexOutOfBounds { index: i as i64, len: arr.len() })
                 }
+                Value::String(s) => {
+                    let i = idx.as_number()?;
+                    let chars: Vec<char> = s.chars().collect();
+                    let actual_index = if i < 0.0 {
+                        let neg_idx = (-i) as usize;
+                        if neg_idx > chars.len() {
+                            return Err(EvalError::IndexOutOfBounds { index: i as i64, len: chars.len() });
+                        }
+                        chars.len() - neg_idx
+                    } else {
+                        i as usize
+                    };
+                    chars.get(actual_index)
+                        .map(|c| Value::String(c.to_string()))
+                        .ok_or(EvalError::IndexOutOfBounds { index: i as i64, len: chars.len() })
+                }
                 Value::Object(obj) => {
                     let key = idx.as_string()?;
                     obj.get(key)
@@ -704,7 +720,7 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                         .ok_or_else(|| EvalError::KeyNotFound(key.to_string()))
                 }
                 _ => Err(EvalError::TypeError {
-                    expected: "array or object",
+                    expected: "array, string, or object",
                     got: base.type_name(),
                 }),
             }
