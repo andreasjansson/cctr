@@ -545,7 +545,7 @@ having
 * len(name) > 0
 * len(arr) == 3
 * type(value) == number
-* type(items) == json_array
+* type(items) == array
 * keys(obj) == ["a", "b", "c"]
 * values(obj) == [1, 2, 3]
 * sum(numbers) == 100
