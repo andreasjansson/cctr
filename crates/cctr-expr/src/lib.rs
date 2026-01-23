@@ -123,6 +123,7 @@ pub enum Expr {
     Number(f64),
     String(String),
     Bool(bool),
+    Null,
     Var(String),
     Array(Vec<Expr>),
     Object(Vec<(String, Expr)>),
