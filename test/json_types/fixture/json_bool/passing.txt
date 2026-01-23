@@ -22,3 +22,69 @@ with
 having
 * b == false
 * b != true
+
+===
+json_bool type check
+===
+echo 'true'
+---
+{{ b }}
+---
+with
+* b: json_bool
+having
+* type(b) == bool
+
+===
+json_bool in expression result
+===
+echo '5'
+---
+{{ n }}
+---
+with
+* n: number
+having
+* (n > 3) == true
+* (n < 3) == false
+
+===
+json_bool in array
+===
+echo '[true, false, true]'
+---
+{{ arr }}
+---
+with
+* arr: json_array
+having
+* arr[0] == true
+* arr[1] == false
+* type(arr[0]) == bool
+
+===
+json_bool in object
+===
+echo '{"active": true, "deleted": false}'
+---
+{{ obj }}
+---
+with
+* obj: json_object
+having
+* obj.active == true
+* obj.deleted == false
+* obj.active != obj.deleted
+
+===
+json_bool not operator
+===
+echo 'true'
+---
+{{ b }}
+---
+with
+* b: json_bool
+having
+* not (b == false)
+* not (not b)
