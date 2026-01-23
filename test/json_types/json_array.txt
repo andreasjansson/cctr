@@ -3,7 +3,7 @@ json_array passing tests
 ===
 cctr {{ FIXTURE_DIR }}/json_array/passing.txt --no-color 2>&1 | tail -1
 ---
-All 17 tests passed in {{ t }}s
+All 22 tests passed in {{ t }}s
 ---
 with
 * t: number
