@@ -114,6 +114,37 @@ having
 * "aaa" < "aab"
 
 ===
+json_string indexing
+===
+echo '{"s": "hello"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.s[0] == "h"
+* o.s[1] == "e"
+* o.s[4] == "o"
+* o.s[-1] == "o"
+* o.s[-2] == "l"
+
+===
+json_string indexing unicode
+===
+echo '{"s": "héllo"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.s[0] == "h"
+* o.s[1] == "é"
+* o.s[2] == "l"
+* len(o.s) == 5
+
+===
 json_string lower upper functions
 ===
 echo '{"s": "HeLLo WoRLd"}'
