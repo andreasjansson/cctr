@@ -34,6 +34,35 @@ fn format_constraint_error(constraint: &str, bindings: &[(String, String)]) -> S
     msg
 }
 
+fn format_value(value: &Value) -> String {
+    match value {
+        Value::Number(n) => {
+            if n.fract() == 0.0 && n.abs() < 1e15 {
+                format!("{}", *n as i64)
+            } else {
+                format!("{}", n)
+            }
+        }
+        Value::String(s) => format!("{:?}", s),
+        Value::Bool(b) => format!("{}", b),
+        Value::Null => "null".to_string(),
+        Value::Array(arr) => {
+            let items: Vec<String> = arr.iter().map(format_value).collect();
+            format!("[{}]", items.join(", "))
+        }
+        Value::Object(obj) => {
+            let mut pairs: Vec<(&String, &Value)> = obj.iter().collect();
+            pairs.sort_by_key(|(k, _)| *k);
+            let items: Vec<String> = pairs
+                .iter()
+                .map(|(k, v)| format!("{:?}: {}", k, format_value(v)))
+                .collect();
+            format!("{{{}}}", items.join(", "))
+        }
+        Value::Type(t) => t.clone(),
+    }
+}
+
 pub struct Matcher<'a> {
     variables: &'a [VariableDecl],
     constraints: &'a [String],
