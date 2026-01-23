@@ -11,9 +11,10 @@ with
 ===
 json_object wrong property fails
 ===
-cctr {{ FIXTURE_DIR }}/json_object/json_object_wrong_property.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_object/json_object_wrong_property.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'o.name == "bob"' not satisfied
+  where o = {"age": 30, "name": "alice"}
 
 ===
 json_object missing key fails
@@ -25,16 +26,18 @@ cctr {{ FIXTURE_DIR }}/json_object/json_object_missing_key.txt --no-color 2>&1 |
 ===
 json_object forall fails
 ===
-cctr {{ FIXTURE_DIR }}/json_object/json_object_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_object/json_object_forall_fails.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'type(v) == number forall v in o' not satisfied
+  where o = {"a": 1, "b": 2, "c": "not a number"}
 
 ===
 json_nested wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/json_object/json_nested_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_object/json_nested_wrong_value.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'o.users[0].name == "charlie"' not satisfied
+  where o = {"users": [{"name": "alice"}, {"name": "bob"}]}
 
 ===
 json_object property on array fails

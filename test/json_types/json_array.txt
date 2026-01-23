@@ -11,30 +11,34 @@ with
 ===
 json_array wrong index value fails
 ===
-cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_index.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_index.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'a[0] == 999' not satisfied
+  where a = [1, 2, 3]
 
 ===
 json_array wrong length fails
 ===
-cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_length.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_length.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'len(a) == 5' not satisfied
+  where a = [1, 2, 3]
 
 ===
 json_array wrong type fails
 ===
-cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_type.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_type.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'type(a) == object' not satisfied
+  where a = [1, 2, 3]
 
 ===
 json_array forall fails
 ===
-cctr {{ FIXTURE_DIR }}/json_array/json_array_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_array/json_array_forall_fails.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'x < 5 forall x in a' not satisfied
+  where a = [1, 2, 10]
 
 ===
 json_array out of bounds fails

@@ -12,10 +12,55 @@ pub enum MatchError {
     RegexBuild(#[from] regex::Error),
     #[error("constraint '{constraint}' failed: {error}")]
     ConstraintFailed { constraint: String, error: String },
-    #[error("constraint '{constraint}' not satisfied")]
-    ConstraintNotSatisfied { constraint: String },
+    #[error("{}", format_constraint_error(.constraint, .bindings))]
+    ConstraintNotSatisfied {
+        constraint: String,
+        bindings: Vec<(String, String)>,
+    },
     #[error("failed to parse JSON for variable '{name}': {error}")]
     JsonParse { name: String, error: String },
+}
+
+fn format_constraint_error(constraint: &str, bindings: &[(String, String)]) -> String {
+    let mut msg = format!("constraint '{}' not satisfied", constraint);
+    if !bindings.is_empty() {
+        msg.push_str("\n  where ");
+        let binding_strs: Vec<String> = bindings
+            .iter()
+            .map(|(name, value)| format!("{} = {}", name, value))
+            .collect();
+        msg.push_str(&binding_strs.join(", "));
+    }
+    msg
+}
+
+fn format_value(value: &Value) -> String {
+    match value {
+        Value::Number(n) => {
+            if n.fract() == 0.0 && n.abs() < 1e15 {
+                format!("{}", *n as i64)
+            } else {
+                format!("{}", n)
+            }
+        }
+        Value::String(s) => format!("{:?}", s),
+        Value::Bool(b) => format!("{}", b),
+        Value::Null => "null".to_string(),
+        Value::Array(arr) => {
+            let items: Vec<String> = arr.iter().map(format_value).collect();
+            format!("[{}]", items.join(", "))
+        }
+        Value::Object(obj) => {
+            let mut pairs: Vec<(&String, &Value)> = obj.iter().collect();
+            pairs.sort_by_key(|(k, _)| *k);
+            let items: Vec<String> = pairs
+                .iter()
+                .map(|(k, v)| format!("{:?}: {}", k, format_value(v)))
+                .collect();
+            format!("{{{}}}", items.join(", "))
+        }
+        Value::Type(t) => t.clone(),
+    }
 }
 
 pub struct Matcher<'a> {
@@ -39,6 +84,7 @@ impl<'a> Matcher<'a> {
         };
 
         let values = self.extract_values(&caps)?;
+        let bindings = self.format_bindings(&values);
 
         for constraint in self.constraints {
             match eval_bool(constraint, &values) {
@@ -46,6 +92,7 @@ impl<'a> Matcher<'a> {
                 Ok(false) => {
                     return Err(MatchError::ConstraintNotSatisfied {
                         constraint: constraint.clone(),
+                        bindings: bindings.clone(),
                     });
                 }
                 Err(e) => {
@@ -58,6 +105,18 @@ impl<'a> Matcher<'a> {
         }
 
         Ok(true)
+    }
+
+    fn format_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
+        self.variables
+            .iter()
+            .filter_map(|var| {
+                values.get(&var.name).map(|v| {
+                    let formatted = format_value(v);
+                    (var.name.clone(), formatted)
+                })
+            })
+            .collect()
     }
 
     fn build_regex(&self, pattern: &str) -> Result<Regex, regex::Error> {

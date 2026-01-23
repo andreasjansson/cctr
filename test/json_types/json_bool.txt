@@ -11,6 +11,7 @@ with
 ===
 json_bool wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/json_bool/json_bool_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_bool/json_bool_wrong_value.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 'b == false' not satisfied
+  where b = true
