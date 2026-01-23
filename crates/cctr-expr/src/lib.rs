@@ -313,7 +313,9 @@ fn var_or_bool_or_func(input: &mut &str) -> ModalResult<Expr> {
     match name.as_str() {
         "true" => Ok(Expr::Bool(true)),
         "false" => Ok(Expr::Bool(false)),
-        "null" => Ok(Expr::Null),
+        // null is both a value and a type literal - as a standalone value we treat it as Null,
+        // but when used in type comparison (type(x) == null) it matches as a TypeLiteral
+        "null" => Ok(Expr::TypeLiteral(name)),
         // Type keywords
         "number" | "string" | "bool" | "array" | "object" => {
             Ok(Expr::TypeLiteral(name))
