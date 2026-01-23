@@ -107,6 +107,41 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(if all_passed { 0 } else { 1 });
 }
 
+fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
+    let mut content = String::new();
+    std::io::stdin().read_to_string(&mut content)?;
+
+    let use_color = !cli.no_color && atty::is(atty::Stream::Stdout);
+    let start_time = Instant::now();
+
+    let (progress_tx, progress_rx) = mpsc::channel::<ProgressEvent>();
+    let verbose = cli.verbose;
+    let update = cli.update;
+
+    let progress_handle = thread::spawn(move || {
+        let mut output = Output::new(use_color);
+        for event in progress_rx {
+            output.print_progress(&event, verbose, update);
+        }
+        output.finish_progress();
+    });
+
+    let result = run_from_stdin(&content, Some(&progress_tx));
+
+    drop(progress_tx);
+    progress_handle.join().unwrap();
+
+    let elapsed = start_time.elapsed();
+    let results = vec![result];
+    output.print_results(&results, elapsed, cli.update);
+
+    let all_passed = results
+        .iter()
+        .all(|r| r.passed() || r.setup_error.is_some());
+
+    std::process::exit(if all_passed { 0 } else { 1 });
+}
+
 fn list_tests(
     root: &std::path::Path,
     pattern: Option<&str>,
