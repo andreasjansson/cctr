@@ -1,12 +1,7 @@
 ===
 stdin simple test passes
 ===
-echo '===
-test
-===
-echo hello
----
-hello' | cctr - --no-color 2>&1 | tail -1
+printf '===\ntest\n===\necho hello\n---\nhello\n' | cctr - --no-color 2>&1 | tail -1
 ---
 All 1 tests passed in {{ t }}s
 ---
@@ -16,17 +11,7 @@ with
 ===
 stdin test with variables
 ===
-echo '===
-test
-===
-echo 42
----
-{{ n }}
----
-with
-* n: number
-having
-* n == 42' | cctr - --no-color 2>&1 | tail -1
+printf '===\ntest\n===\necho 42\n---\n{{ n }}\n---\nwith\n* n: number\nhaving\n* n == 42\n' | cctr - --no-color 2>&1 | tail -1
 ---
 All 1 tests passed in {{ t }}s
 ---
@@ -36,17 +21,7 @@ with
 ===
 stdin test with json
 ===
-echo '===
-test
-===
-echo '\''{"x": 1}'\''
----
-{{ o }}
----
-with
-* o: json_object
-having
-* o.x == 1' | cctr - --no-color 2>&1 | tail -1
+printf '===\ntest\n===\necho '"'"'{"x": 1}'"'"'\n---\n{{ o }}\n---\nwith\n* o: json_object\nhaving\n* o.x == 1\n' | cctr - --no-color 2>&1 | tail -1
 ---
 All 1 tests passed in {{ t }}s
 ---
@@ -56,12 +31,7 @@ with
 ===
 stdin failing test
 ===
-echo '===
-test
-===
-echo wrong
----
-expected' | cctr - --no-color 2>&1 | grep "0 passed, 1 failed"
+printf '===\ntest\n===\necho wrong\n---\nexpected\n' | cctr - --no-color 2>&1 | grep "0 passed, 1 failed"
 ---
 Summary: 0 passed, 1 failed, 0 skipped in {{ t }}s
 ---
