@@ -5,6 +5,10 @@ use std::path::Path;
 pub enum VarType {
     Number,
     String,
+    JsonString,
+    JsonBool,
+    JsonArray,
+    JsonObject,
 }
 
 #[derive(Debug, Clone)]
