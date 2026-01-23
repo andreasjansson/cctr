@@ -1,51 +1,9 @@
 ===
-json_string tests pass
+all json type tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests/json_string.txt --no-color 2>&1 | head -4
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
-...
-
-✓ {{ path }}: 3/3 tests passed in {{ t }}s
+All 16 tests passed in {{ t }}s
 ---
 with
-* path: string
-* t: number
-
-===
-json_bool tests pass
-===
-cctr {{ FIXTURE_DIR }}/tests/json_bool.txt --no-color 2>&1 | head -4
----
-..
-
-✓ {{ path }}: 2/2 tests passed in {{ t }}s
----
-with
-* path: string
-* t: number
-
-===
-json_array tests pass
-===
-cctr {{ FIXTURE_DIR }}/tests/json_array.txt --no-color 2>&1 | head -4
----
-.....
-
-✓ {{ path }}: 5/5 tests passed in {{ t }}s
----
-with
-* path: string
-* t: number
-
-===
-json_object tests pass
-===
-cctr {{ FIXTURE_DIR }}/tests/json_object.txt --no-color 2>&1 | head -4
----
-......
-
-✓ {{ path }}: 6/6 tests passed in {{ t }}s
----
-with
-* path: string
 * t: number
