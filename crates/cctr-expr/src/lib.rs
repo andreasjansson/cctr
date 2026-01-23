@@ -857,6 +857,8 @@ fn values_equal(a: &Value, b: &Value) -> bool {
         (Value::String(a), Value::String(b)) => a == b,
         (Value::Bool(a), Value::Bool(b)) => a == b,
         (Value::Null, Value::Null) => true,
+        // Allow null literal to match Type("null") for type comparisons like `type(x) == null`
+        (Value::Null, Value::Type(t)) | (Value::Type(t), Value::Null) => t == "null",
         (Value::Array(a), Value::Array(b)) => {
             a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| values_equal(x, y))
         }
