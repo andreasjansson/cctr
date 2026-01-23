@@ -907,6 +907,24 @@ fn eval_func_call(
             let val = evaluate(&args[0], vars)?;
             Ok(Value::String(val.as_string()?.to_uppercase()))
         }
+        "unique" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let arr = val.as_array()?;
+            let mut result = Vec::new();
+            for item in arr {
+                if !result.iter().any(|v| values_equal(v, item)) {
+                    result.push(item.clone());
+                }
+            }
+            Ok(Value::Array(result))
+        }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
 }
