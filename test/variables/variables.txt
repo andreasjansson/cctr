@@ -16,9 +16,10 @@ having
 ===
 number constraint failure detected
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep "constraint.*not satisfied" | head -1
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep -A1 "constraint.*not satisfied" | head -2
 ---
   Error: constraint 't < 1' not satisfied
+  where t = 5
 
 ===
 string variable tests pass
