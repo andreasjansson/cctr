@@ -734,11 +734,36 @@ fn eval_func_call(
             match val {
                 Value::String(s) => Ok(Value::Number(s.len() as f64)),
                 Value::Array(a) => Ok(Value::Number(a.len() as f64)),
+                Value::Object(o) => Ok(Value::Number(o.len() as f64)),
                 _ => Err(EvalError::TypeError {
-                    expected: "string or array",
+                    expected: "string, array, or object",
                     got: val.type_name(),
                 }),
             }
+        }
+        "type" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            Ok(Value::Type(val.type_name().to_string()))
+        }
+        "keys" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let obj = val.as_object()?;
+            let keys: Vec<Value> = obj.keys().map(|k| Value::String(k.clone())).collect();
+            Ok(Value::Array(keys))
         }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
