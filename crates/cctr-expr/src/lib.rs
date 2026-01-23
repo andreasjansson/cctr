@@ -808,6 +808,72 @@ fn eval_func_call(
             let values: Vec<Value> = pairs.into_iter().map(|(_, v)| v.clone()).collect();
             Ok(Value::Array(values))
         }
+        "sum" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let arr = val.as_array()?;
+            let mut total = 0.0;
+            for item in arr {
+                total += item.as_number()?;
+            }
+            Ok(Value::Number(total))
+        }
+        "min" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let arr = val.as_array()?;
+            if arr.is_empty() {
+                return Err(EvalError::TypeError {
+                    expected: "non-empty array",
+                    got: "empty array",
+                });
+            }
+            let mut min_val = arr[0].as_number()?;
+            for item in arr.iter().skip(1) {
+                let n = item.as_number()?;
+                if n < min_val {
+                    min_val = n;
+                }
+            }
+            Ok(Value::Number(min_val))
+        }
+        "max" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let arr = val.as_array()?;
+            if arr.is_empty() {
+                return Err(EvalError::TypeError {
+                    expected: "non-empty array",
+                    got: "empty array",
+                });
+            }
+            let mut max_val = arr[0].as_number()?;
+            for item in arr.iter().skip(1) {
+                let n = item.as_number()?;
+                if n > max_val {
+                    max_val = n;
+                }
+            }
+            Ok(Value::Number(max_val))
+        }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
 }
