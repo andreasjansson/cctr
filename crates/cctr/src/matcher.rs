@@ -12,10 +12,26 @@ pub enum MatchError {
     RegexBuild(#[from] regex::Error),
     #[error("constraint '{constraint}' failed: {error}")]
     ConstraintFailed { constraint: String, error: String },
-    #[error("constraint '{constraint}' not satisfied")]
-    ConstraintNotSatisfied { constraint: String },
+    #[error("{}", format_constraint_error(.constraint, .bindings))]
+    ConstraintNotSatisfied {
+        constraint: String,
+        bindings: Vec<(String, String)>,
+    },
     #[error("failed to parse JSON for variable '{name}': {error}")]
     JsonParse { name: String, error: String },
+}
+
+fn format_constraint_error(constraint: &str, bindings: &[(String, String)]) -> String {
+    let mut msg = format!("constraint '{}' not satisfied", constraint);
+    if !bindings.is_empty() {
+        msg.push_str("\n  where ");
+        let binding_strs: Vec<String> = bindings
+            .iter()
+            .map(|(name, value)| format!("{} = {}", name, value))
+            .collect();
+        msg.push_str(&binding_strs.join(", "));
+    }
+    msg
 }
 
 pub struct Matcher<'a> {
