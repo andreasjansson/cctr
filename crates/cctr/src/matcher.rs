@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_json_bool_true() {
-        let vars = vec![make_var("b", "json_bool")];
+        let vars = vec![make_var("b", "json bool")];
         let constraints = vec!["b == true".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
