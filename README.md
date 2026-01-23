@@ -355,10 +355,10 @@ Seven variable types are supported:
 |------|---------|
 | `number` | Integers and decimals, including negative: `42`, `3.14`, `-17`, `0.001` |
 | `string` | Any text up to the next literal part of the pattern (or end of line) |
-| `json_string` | JSON string literal: `"hello"`, `"with \"escapes\""` (value is the string content) |
-| `json_bool` | JSON boolean: `true`, `false` |
-| `json_array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
-| `json_object` | JSON object: `{"name": "alice", "age": 30}` |
+| `json string` | JSON string literal: `"hello"`, `"with \"escapes\""` (value is the string content) |
+| `json bool` | JSON boolean: `true`, `false` |
+| `json array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
+| `json object` | JSON object: `{"name": "alice", "age": 30}` |
 
 JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
 
