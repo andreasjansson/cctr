@@ -885,6 +885,28 @@ fn eval_func_call(
             let val = evaluate(&args[0], vars)?;
             Ok(Value::Number(val.as_number()?.abs()))
         }
+        "lower" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            Ok(Value::String(val.as_string()?.to_lowercase()))
+        }
+        "upper" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            Ok(Value::String(val.as_string()?.to_uppercase()))
+        }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
 }
