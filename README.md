@@ -576,7 +576,7 @@ From highest to lowest:
 1. Parentheses `()`
 2. Function calls `len()`
 3. Unary `-`, `not`
-4. Exponentiation `^`, `**`
+4. Exponentiation `^`
 5. Multiplicative `*`, `/`, `%`
 6. Additive `+`, `-`
 7. Comparison `<`, `<=`, `>`, `>=`, `==`, `!=`
