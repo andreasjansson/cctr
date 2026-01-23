@@ -384,3 +384,18 @@ with
 having
 * o.first + " " + o.second == "hello world"
 * o.first + o.second == "helloworld"
+
+===
+json_object abs function
+===
+echo '{"a": -5, "b": 3, "c": -2.5}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* abs(o.a) == 5
+* abs(o.b) == 3
+* abs(o.c) == 2.5
+* abs(o.a - o.b) == 8
