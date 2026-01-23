@@ -787,8 +787,26 @@ fn eval_func_call(
             }
             let val = evaluate(&args[0], vars)?;
             let obj = val.as_object()?;
-            let keys: Vec<Value> = obj.keys().map(|k| Value::String(k.clone())).collect();
+            let mut keys: Vec<String> = obj.keys().cloned().collect();
+            keys.sort();
+            let keys: Vec<Value> = keys.into_iter().map(Value::String).collect();
             Ok(Value::Array(keys))
+        }
+        "values" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let obj = val.as_object()?;
+            // Sort by keys and return corresponding values
+            let mut pairs: Vec<(&String, &Value)> = obj.iter().collect();
+            pairs.sort_by_key(|(k, _)| *k);
+            let values: Vec<Value> = pairs.into_iter().map(|(_, v)| v.clone()).collect();
+            Ok(Value::Array(values))
         }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
