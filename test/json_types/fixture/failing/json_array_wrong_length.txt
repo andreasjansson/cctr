@@ -1,0 +1,11 @@
+===
+json_array wrong length
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* len(a) == 5
