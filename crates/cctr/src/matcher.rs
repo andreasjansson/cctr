@@ -321,7 +321,7 @@ mod tests {
 
     #[test]
     fn test_json_forall() {
-        let vars = vec![make_var("a", "json_array")];
+        let vars = vec![make_var("a", "json array")];
         let constraints = vec!["x <= 3 forall x in a".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
