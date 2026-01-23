@@ -95,3 +95,20 @@ with
 having
 * arr[0] == "a"
 * type(arr[1]) == string
+
+===
+json_string comparison operators
+===
+echo '{"a": "apple", "b": "banana", "c": "cherry"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.a < o.b
+* o.b < o.c
+* o.c > o.a
+* o.a <= o.a
+* o.b >= o.b
+* "aaa" < "aab"
