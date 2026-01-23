@@ -38,10 +38,32 @@ impl Suite {
             has_fixture,
             has_setup,
             has_teardown,
+            single_file: None,
+        }
+    }
+
+    pub fn new_single_file(dir_path: PathBuf, file_path: PathBuf) -> Self {
+        let name = dir_path.to_string_lossy().into_owned();
+        let has_fixture = dir_path.join("fixture").is_dir();
+        let has_setup = dir_path.join("_setup.txt").is_file();
+        let has_teardown = dir_path.join("_teardown.txt").is_file();
+
+        Self {
+            path: dir_path,
+            name,
+            has_fixture,
+            has_setup,
+            has_teardown,
+            single_file: Some(file_path),
         }
     }
 
     pub fn corpus_files(&self) -> Vec<PathBuf> {
+        // If this suite was created for a single file, return just that file
+        if let Some(ref file) = self.single_file {
+            return vec![file.clone()];
+        }
+
         let mut files: Vec<PathBuf> = std::fs::read_dir(&self.path)
             .into_iter()
             .flatten()
