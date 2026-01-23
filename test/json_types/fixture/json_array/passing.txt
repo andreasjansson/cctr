@@ -206,3 +206,31 @@ having
 * len(a[1]) == 2
 * len(a[2]) == 3
 * len(sub) <= 3 forall sub in a
+
+===
+json_array negative indexing
+===
+echo '[1, 2, 3, 4, 5]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* a[-1] == 5
+* a[-2] == 4
+* a[-5] == 1
+
+===
+json_array negative indexing nested
+===
+echo '[[1, 2], [3, 4]]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* a[-1][-1] == 4
+* a[-2][-1] == 2
+* a[0][-1] == 2
