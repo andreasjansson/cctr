@@ -269,3 +269,42 @@ having
 * type(o.items[0]) == number
 * type(o.items[1]) == string
 * type(o.items[2]) == bool
+
+===
+json_object null value
+===
+echo '{"x": null}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.x == null
+* type(o.x) == null
+
+===
+json_object null in array
+===
+echo '{"items": [1, null, "two"]}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.items[1] == null
+* type(o.items[1]) == null
+* o.items[0] != null
+
+===
+json_object null nested
+===
+echo '{"a": {"b": null}}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.a.b == null
