@@ -88,12 +88,24 @@ impl Value {
         }
     }
 
-    fn type_name(&self) -> &'static str {
+    pub fn as_object(&self) -> Result<&HashMap<String, Value>, EvalError> {
+        match self {
+            Value::Object(o) => Ok(o),
+            _ => Err(EvalError::TypeError {
+                expected: "object",
+                got: self.type_name(),
+            }),
+        }
+    }
+
+    pub fn type_name(&self) -> &'static str {
         match self {
             Value::Number(_) => "number",
             Value::String(_) => "string",
             Value::Bool(_) => "bool",
-            Value::Array(_) => "array",
+            Value::Array(_) => "json_array",
+            Value::Object(_) => "json_object",
+            Value::Type(_) => "type",
         }
     }
 }
