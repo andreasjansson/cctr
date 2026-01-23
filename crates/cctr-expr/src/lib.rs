@@ -375,9 +375,11 @@ fn atom(input: &mut &str) -> ModalResult<Expr> {
     alt((
         delimited(('(', multispace0), expr, (multispace0, ')')),
         array,
+        object,
         string_literal,
         regex_literal,
         number,
+        type_literal,
         var_or_bool_or_func,
     ))
     .parse_next(input)
