@@ -680,10 +680,20 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
             let idx = evaluate(index, vars)?;
             match &base {
                 Value::Array(arr) => {
-                    let i = idx.as_number()? as usize;
-                    arr.get(i)
+                    let i = idx.as_number()?;
+                    let actual_index = if i < 0.0 {
+                        // Negative indexing: -1 is last element, -2 is second to last, etc.
+                        let neg_idx = (-i) as usize;
+                        if neg_idx > arr.len() {
+                            return Err(EvalError::IndexOutOfBounds { index: i as i64, len: arr.len() });
+                        }
+                        arr.len() - neg_idx
+                    } else {
+                        i as usize
+                    };
+                    arr.get(actual_index)
                         .cloned()
-                        .ok_or(EvalError::IndexOutOfBounds { index: i, len: arr.len() })
+                        .ok_or(EvalError::IndexOutOfBounds { index: i as i64, len: arr.len() })
                 }
                 Value::Object(obj) => {
                     let key = idx.as_string()?;
