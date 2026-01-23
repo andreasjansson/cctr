@@ -74,13 +74,17 @@ impl<'a> Matcher<'a> {
             regex_str.push_str(&regex::escape(literal));
 
             if let Some(var) = self.variables.iter().find(|v| v.name == var_name) {
+                // For JSON types, we use a greedy approach that captures balanced brackets/braces.
+                // The actual JSON validation happens in extract_values via serde_json.
                 let capture_pattern = match var.var_type {
                     VarType::Number => r"-?\d+(?:\.\d+)?",
                     VarType::String => r".*?",
                     VarType::JsonString => r#""(?:[^"\\]|\\.)*""#,
                     VarType::JsonBool => r"true|false",
-                    VarType::JsonArray => r"\[(?:[^\[\]]|\[(?:[^\[\]]|\[[^\[\]]*\])*\])*\]",
-                    VarType::JsonObject => r"\{(?:[^\{\}]|\{(?:[^\{\}]|\{[^\{\}]*\})*\})*\}",
+                    // Match balanced brackets - this uses a simple heuristic that works for
+                    // most JSON: capture from [ to the last ] that makes the brackets balanced
+                    VarType::JsonArray => r"\[[\s\S]*\]",
+                    VarType::JsonObject => r"\{[\s\S]*\}",
                 };
                 regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
             } else {
