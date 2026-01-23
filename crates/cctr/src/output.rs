@@ -147,8 +147,7 @@ impl Output {
                 writeln!(
                     self.stdout,
                     ": {} ({} tests skipped)",
-                    setup_error,
-                    skipped_count
+                    setup_error, skipped_count
                 )
                 .unwrap();
                 total_skipped += skipped_count;
