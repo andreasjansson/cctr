@@ -385,6 +385,34 @@ fn atom(input: &mut &str) -> ModalResult<Expr> {
     .parse_next(input)
 }
 
+fn postfix(input: &mut &str) -> ModalResult<Expr> {
+    let mut base = atom.parse_next(input)?;
+    loop {
+        let _ = multispace0.parse_next(input)?;
+        if input.starts_with('[') {
+            '['.parse_next(input)?;
+            let _ = multispace0.parse_next(input)?;
+            let index = expr.parse_next(input)?;
+            let _ = multispace0.parse_next(input)?;
+            ']'.parse_next(input)?;
+            base = Expr::Index {
+                expr: Box::new(base),
+                index: Box::new(index),
+            };
+        } else if input.starts_with('.') {
+            '.'.parse_next(input)?;
+            let name = ident.parse_next(input)?;
+            base = Expr::Property {
+                expr: Box::new(base),
+                name,
+            };
+        } else {
+            break;
+        }
+    }
+    Ok(base)
+}
+
 fn unary(input: &mut &str) -> ModalResult<Expr> {
     let _ = multispace0.parse_next(input)?;
     let neg: Option<char> = opt('-').parse_next(input)?;
