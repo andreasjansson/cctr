@@ -1,6 +1,6 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
-use crate::parse::{parse_corpus_file, TestCase};
+use crate::parse::{parse_corpus_file, parse_corpus_content, TestCase};
 use crate::template::TemplateVars;
 use std::path::{Path, PathBuf};
 use std::process::Command;
