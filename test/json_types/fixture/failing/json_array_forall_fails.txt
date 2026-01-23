@@ -1,0 +1,11 @@
+===
+json_array forall fails for some elements
+===
+echo '[1, 2, 10]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* x < 5 forall x in a
