@@ -1,0 +1,11 @@
+===
+json_array wrong index value
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* a[0] == 999
