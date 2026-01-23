@@ -586,8 +586,30 @@ fn or_expr(input: &mut &str) -> ModalResult<Expr> {
     .parse_next(input)
 }
 
+fn forall_expr(input: &mut &str) -> ModalResult<Expr> {
+    let predicate = or_expr.parse_next(input)?;
+    let _ = multispace0.parse_next(input)?;
+
+    let forall_kw: Option<&str> = opt(terminated("forall", peek_non_ident)).parse_next(input)?;
+    if forall_kw.is_some() {
+        let _ = multispace0.parse_next(input)?;
+        let var = ident.parse_next(input)?;
+        let _ = multispace0.parse_next(input)?;
+        terminated("in", peek_non_ident).parse_next(input)?;
+        let _ = multispace0.parse_next(input)?;
+        let iterable = or_expr.parse_next(input)?;
+        Ok(Expr::ForAll {
+            predicate: Box::new(predicate),
+            var,
+            iterable: Box::new(iterable),
+        })
+    } else {
+        Ok(predicate)
+    }
+}
+
 fn expr(input: &mut &str) -> ModalResult<Expr> {
-    or_expr(input)
+    forall_expr(input)
 }
 
 pub fn parse(input: &str) -> Result<Expr, EvalError> {
