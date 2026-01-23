@@ -33,3 +33,65 @@ with
 * s: json_string
 having
 * s contains "world"
+
+===
+json_string empty
+===
+echo '""'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* s == ""
+* len(s) == 0
+
+===
+json_string with newline escape
+===
+echo '"line1\\nline2"'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* len(s) == 12
+
+===
+json_string with unicode
+===
+echo '"héllo wörld 你好"'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* s contains "héllo"
+
+===
+json_string type check
+===
+echo '"test"'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* type(s) == string
+
+===
+json_string in array context
+===
+echo '["a", "b", "c"]'
+---
+{{ arr }}
+---
+with
+* arr: json_array
+having
+* arr[0] == "a"
+* type(arr[1]) == string
