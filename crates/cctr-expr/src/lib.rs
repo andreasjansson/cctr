@@ -312,6 +312,7 @@ fn var_or_bool_or_func(input: &mut &str) -> ModalResult<Expr> {
     match name.as_str() {
         "true" => Ok(Expr::Bool(true)),
         "false" => Ok(Expr::Bool(false)),
+        "null" => Ok(Expr::Null),
         _ => Ok(Expr::Var(name)),
     }
 }
