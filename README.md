@@ -384,7 +384,8 @@ having
 
 Access patterns:
 - Array indexing: `arr[0]`, `arr[1]`
-- Negative indexing: `arr[-1]` (last element), `arr[-2]` (second to last)
+- String indexing: `str[0]` (first char), `str[1]` (second char)
+- Negative indexing: `arr[-1]` (last element), `str[-1]` (last char)
 - Object property: `obj.name`, `obj.nested.value`
 - Bracket notation: `obj["key-with-dashes"]`
 
