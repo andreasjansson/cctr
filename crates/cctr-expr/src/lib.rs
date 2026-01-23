@@ -822,6 +822,7 @@ fn eval_binary_op(
         BinaryOp::Add => Ok(Value::Number(l.as_number()? + r.as_number()?)),
         BinaryOp::Sub => Ok(Value::Number(l.as_number()? - r.as_number()?)),
         BinaryOp::Mul => Ok(Value::Number(l.as_number()? * r.as_number()?)),
+        BinaryOp::Mod => Ok(Value::Number(l.as_number()? % r.as_number()?)),
         BinaryOp::Div => {
             let divisor = r.as_number()?;
             if divisor == 0.0 {
