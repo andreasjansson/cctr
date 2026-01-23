@@ -433,7 +433,7 @@ having
 
 | Operator | Description |
 |----------|-------------|
-| `+` | Addition |
+| `+` | Addition (numbers), concatenation (strings, arrays) |
 | `-` | Subtraction |
 | `*` | Multiplication |
 | `/` | Division |
@@ -446,6 +446,8 @@ having
 * n ^ 3 == 8
 * total == count * price
 * n % 2 == 0
+* "hello" + " " + "world" == "hello world"
+* [1, 2] + [3, 4] == [1, 2, 3, 4]
 ```
 
 ### Logical operators
