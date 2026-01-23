@@ -349,7 +349,7 @@ with
 * time: number
 ```
 
-Six variable types are supported:
+Seven variable types are supported:
 
 | Type | Matches |
 |------|---------|
@@ -359,6 +359,8 @@ Six variable types are supported:
 | `json_bool` | JSON boolean: `true`, `false` |
 | `json_array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
 | `json_object` | JSON object: `{"name": "alice", "age": 30}` |
+
+JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
 
 ### JSON types
 
