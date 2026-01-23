@@ -14,6 +14,8 @@ pub enum MatchError {
     ConstraintFailed { constraint: String, error: String },
     #[error("constraint '{constraint}' not satisfied")]
     ConstraintNotSatisfied { constraint: String },
+    #[error("failed to parse JSON for variable '{name}': {error}")]
+    JsonParse { name: String, error: String },
 }
 
 pub struct Matcher<'a> {
@@ -36,7 +38,7 @@ impl<'a> Matcher<'a> {
             return Ok(false);
         };
 
-        let values = self.extract_values(&caps);
+        let values = self.extract_values(&caps)?;
 
         for constraint in self.constraints {
             match eval_bool(constraint, &values) {
@@ -75,6 +77,10 @@ impl<'a> Matcher<'a> {
                 let capture_pattern = match var.var_type {
                     VarType::Number => r"-?\d+(?:\.\d+)?",
                     VarType::String => r".*?",
+                    VarType::JsonString => r#""(?:[^"\\]|\\.)*""#,
+                    VarType::JsonBool => r"true|false",
+                    VarType::JsonArray => r"\[(?:[^\[\]]|\[(?:[^\[\]]|\[[^\[\]]*\])*\])*\]",
+                    VarType::JsonObject => r"\{(?:[^\{\}]|\{(?:[^\{\}]|\{[^\{\}]*\})*\})*\}",
                 };
                 regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
             } else {
@@ -92,7 +98,7 @@ impl<'a> Matcher<'a> {
         Regex::new(&regex_str)
     }
 
-    fn extract_values(&self, caps: &regex::Captures) -> HashMap<String, Value> {
+    fn extract_values(&self, caps: &regex::Captures) -> Result<HashMap<String, Value>, MatchError> {
         let mut values = HashMap::new();
 
         for var in self.variables {
@@ -104,12 +110,74 @@ impl<'a> Matcher<'a> {
                         Value::Number(n)
                     }
                     VarType::String => Value::String(text.to_string()),
+                    VarType::JsonString => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        match json {
+                            serde_json::Value::String(s) => Value::String(s),
+                            _ => {
+                                return Err(MatchError::JsonParse {
+                                    name: var.name.clone(),
+                                    error: "expected JSON string".to_string(),
+                                })
+                            }
+                        }
+                    }
+                    VarType::JsonBool => {
+                        let b = text == "true";
+                        Value::Bool(b)
+                    }
+                    VarType::JsonArray => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        json_to_value(&json).map_err(|e| MatchError::JsonParse {
+                            name: var.name.clone(),
+                            error: e,
+                        })?
+                    }
+                    VarType::JsonObject => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        json_to_value(&json).map_err(|e| MatchError::JsonParse {
+                            name: var.name.clone(),
+                            error: e,
+                        })?
+                    }
                 };
                 values.insert(var.name.clone(), value);
             }
         }
 
-        values
+        Ok(values)
+    }
+}
+
+fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
+    match json {
+        serde_json::Value::Null => Ok(Value::String("null".to_string())),
+        serde_json::Value::Bool(b) => Ok(Value::Bool(*b)),
+        serde_json::Value::Number(n) => Ok(Value::Number(n.as_f64().unwrap_or(0.0))),
+        serde_json::Value::String(s) => Ok(Value::String(s.clone())),
+        serde_json::Value::Array(arr) => {
+            let items: Result<Vec<_>, _> = arr.iter().map(json_to_value).collect();
+            Ok(Value::Array(items?))
+        }
+        serde_json::Value::Object(obj) => {
+            let mut map = HashMap::new();
+            for (k, v) in obj {
+                map.insert(k.clone(), json_to_value(v)?);
+            }
+            Ok(Value::Object(map))
+        }
     }
 }
 
