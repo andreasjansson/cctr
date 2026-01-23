@@ -42,6 +42,7 @@ pub enum Value {
     Number(f64),
     String(String),
     Bool(bool),
+    Null,
     Array(Vec<Value>),
     Object(HashMap<String, Value>),
     Type(String),
