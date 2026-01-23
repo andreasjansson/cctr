@@ -1,63 +1,51 @@
 ===
 json_string tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests/json_string.txt --no-color -v 2>&1 | grep '✓'
+cctr {{ FIXTURE_DIR }}/tests/json_string.txt --no-color 2>&1 | head -4
 ---
-✓ tests/json_string: json_string basic match {{ t1 }}s
-✓ tests/json_string: json_string length {{ t2 }}s
-✓ tests/json_string: json_string with escapes {{ t3 }}s
+...
+
+✓ {{ path }}: 3/3 tests passed in {{ t }}s
 ---
 with
-* t1: number
-* t2: number
-* t3: number
+* path: string
+* t: number
 
 ===
 json_bool tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests/json_bool.txt --no-color -v 2>&1 | grep '✓'
+cctr {{ FIXTURE_DIR }}/tests/json_bool.txt --no-color 2>&1 | head -4
 ---
-✓ tests/json_bool: json_bool true {{ t1 }}s
-✓ tests/json_bool: json_bool false {{ t2 }}s
+..
+
+✓ {{ path }}: 2/2 tests passed in {{ t }}s
 ---
 with
-* t1: number
-* t2: number
+* path: string
+* t: number
 
 ===
 json_array tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests/json_array.txt --no-color -v 2>&1 | grep '✓'
+cctr {{ FIXTURE_DIR }}/tests/json_array.txt --no-color 2>&1 | head -4
 ---
-✓ tests/json_array: json_array length {{ t1 }}s
-✓ tests/json_array: json_array index access {{ t2 }}s
-✓ tests/json_array: json_array type function {{ t3 }}s
-✓ tests/json_array: json_array forall {{ t4 }}s
-✓ tests/json_array: json_array nested {{ t5 }}s
+.....
+
+✓ {{ path }}: 5/5 tests passed in {{ t }}s
 ---
 with
-* t1: number
-* t2: number
-* t3: number
-* t4: number
-* t5: number
+* path: string
+* t: number
 
 ===
 json_object tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests/json_object.txt --no-color -v 2>&1 | grep '✓'
+cctr {{ FIXTURE_DIR }}/tests/json_object.txt --no-color 2>&1 | head -4
 ---
-✓ tests/json_object: json_object length {{ t1 }}s
-✓ tests/json_object: json_object bracket access {{ t2 }}s
-✓ tests/json_object: json_object dot access {{ t3 }}s
-✓ tests/json_object: json_object nested {{ t4 }}s
-✓ tests/json_object: json_object forall values {{ t5 }}s
-✓ tests/json_object: json_object keys function {{ t6 }}s
+......
+
+✓ {{ path }}: 6/6 tests passed in {{ t }}s
 ---
 with
-* t1: number
-* t2: number
-* t3: number
-* t4: number
-* t5: number
-* t6: number
+* path: string
+* t: number
