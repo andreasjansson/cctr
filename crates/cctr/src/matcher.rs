@@ -294,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_json_array_match() {
-        let vars = vec![make_var("a", "json_array")];
+        let vars = vec![make_var("a", "json array")];
         let constraints = vec!["len(a) == 3".to_string(), "a[0] == 1".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
