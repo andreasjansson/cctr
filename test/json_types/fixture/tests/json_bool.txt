@@ -1,0 +1,24 @@
+===
+json_bool true
+===
+echo 'true'
+---
+{{ b }}
+---
+with
+* b: json_bool
+having
+* b == true
+
+===
+json_bool false
+===
+echo 'false'
+---
+{{ b }}
+---
+with
+* b: json_bool
+having
+* b == false
+* b != true
