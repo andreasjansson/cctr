@@ -319,6 +319,57 @@ fn array(input: &mut &str) -> ModalResult<Expr> {
     Ok(Expr::Array(elements))
 }
 
+fn object_key(input: &mut &str) -> ModalResult<String> {
+    alt((
+        // Quoted key: "foo"
+        delimited(
+            '"',
+            repeat(0.., string_char).fold(String::new, |mut s, c| {
+                s.push(c);
+                s
+            }),
+            '"',
+        ),
+        // Unquoted identifier key
+        ident,
+    ))
+    .parse_next(input)
+}
+
+fn object_entry(input: &mut &str) -> ModalResult<(String, Expr)> {
+    let key = ws(object_key).parse_next(input)?;
+    ws(':').parse_next(input)?;
+    let value = ws(expr).parse_next(input)?;
+    Ok((key, value))
+}
+
+fn object(input: &mut &str) -> ModalResult<Expr> {
+    let entries: Vec<(String, Expr)> = delimited(
+        ('{', multispace0),
+        separated(0.., object_entry, ws(',')),
+        (multispace0, '}'),
+    )
+    .parse_next(input)?;
+    Ok(Expr::Object(entries))
+}
+
+const TYPE_KEYWORDS: &[&str] = &["number", "string", "json_string", "json_bool", "json_array", "json_object"];
+
+fn type_literal(input: &mut &str) -> ModalResult<Expr> {
+    for &kw in TYPE_KEYWORDS {
+        if input.starts_with(kw) {
+            let after = &(*input)[kw.len()..];
+            let next_char = after.chars().next();
+            if next_char.map(|c| c.is_ascii_alphanumeric() || c == '_').unwrap_or(false) {
+                continue;
+            }
+            *input = after;
+            return Ok(Expr::TypeLiteral(kw.to_string()));
+        }
+    }
+    Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
+}
+
 fn atom(input: &mut &str) -> ModalResult<Expr> {
     let _ = multispace0.parse_next(input)?;
     alt((
