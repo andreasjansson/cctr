@@ -308,3 +308,66 @@ with
 * o: json_object
 having
 * o.a.b == null
+
+===
+json_object keys sorted
+===
+echo '{"zebra": 1, "apple": 2, "mango": 3}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* keys(o) == ["apple", "mango", "zebra"]
+
+===
+json_object values sorted by key
+===
+echo '{"c": 3, "a": 1, "b": 2}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* values(o) == [1, 2, 3]
+
+===
+json_object keys and values correspondence
+===
+echo '{"x": 10, "y": 20, "z": 30}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* keys(o) == ["x", "y", "z"]
+* values(o) == [10, 20, 30]
+* len(keys(o)) == len(values(o))
+
+===
+json_object values with mixed types
+===
+echo '{"a": 1, "b": "two", "c": true}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* values(o) == [1, "two", true]
+
+===
+json_object empty keys and values
+===
+echo '{}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* keys(o) == []
+* values(o) == []
