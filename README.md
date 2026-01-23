@@ -529,7 +529,7 @@ having
 | Function | Description |
 |----------|-------------|
 | `len(x)` | Length of string, array, or object |
-| `type(x)` | Type of value: `number`, `string`, `bool`, `null`, `json_array`, `json_object` |
+| `type(x)` | Type of value: `number`, `string`, `bool`, `null`, `array`, `object` |
 | `keys(obj)` | Array of keys from an object (sorted alphabetically) |
 | `values(obj)` | Array of values from an object (sorted by key) |
 | `sum(arr)` | Sum of numbers in an array |
