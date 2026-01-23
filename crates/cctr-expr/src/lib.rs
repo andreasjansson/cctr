@@ -837,7 +837,14 @@ fn eval_binary_op(
     let r = evaluate(right, vars)?;
 
     match op {
-        BinaryOp::Add => Ok(Value::Number(l.as_number()? + r.as_number()?)),
+        BinaryOp::Add => {
+            match (&l, &r) {
+                (Value::String(ls), Value::String(rs)) => {
+                    Ok(Value::String(format!("{}{}", ls, rs)))
+                }
+                _ => Ok(Value::Number(l.as_number()? + r.as_number()?)),
+            }
+        }
         BinaryOp::Sub => Ok(Value::Number(l.as_number()? - r.as_number()?)),
         BinaryOp::Mul => Ok(Value::Number(l.as_number()? * r.as_number()?)),
         BinaryOp::Mod => Ok(Value::Number(l.as_number()? % r.as_number()?)),
