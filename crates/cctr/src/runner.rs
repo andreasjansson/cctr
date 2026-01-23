@@ -349,6 +349,7 @@ pub fn run_from_stdin(
         has_fixture: false,
         has_setup: false,
         has_teardown: false,
+        single_file: None,
     };
 
     SuiteResult {
