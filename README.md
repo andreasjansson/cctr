@@ -434,7 +434,7 @@ having
 | `*` | Multiplication |
 | `/` | Division |
 | `%` | Modulo |
-| `^` or `**` | Exponentiation |
+| `^` | Exponentiation |
 
 ```
 having
