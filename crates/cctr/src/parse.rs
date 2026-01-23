@@ -187,10 +187,10 @@ fn parse_variable_decl(line: &str) -> Option<VariableDecl> {
     let var_type = match type_str.as_str() {
         "number" => VarType::Number,
         "string" => VarType::String,
-        "json_string" => VarType::JsonString,
-        "json_bool" => VarType::JsonBool,
-        "json_array" => VarType::JsonArray,
-        "json_object" => VarType::JsonObject,
+        "json string" => VarType::JsonString,
+        "json bool" => VarType::JsonBool,
+        "json array" => VarType::JsonArray,
+        "json object" => VarType::JsonObject,
         _ => return None,
     };
     Some(VariableDecl { name, var_type })
