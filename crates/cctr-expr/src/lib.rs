@@ -442,17 +442,8 @@ fn unary(input: &mut &str) -> ModalResult<Expr> {
 fn pow(input: &mut &str) -> ModalResult<Expr> {
     let base = unary.parse_next(input)?;
     let _ = multispace0.parse_next(input)?;
-    // Support both ^ and ** for exponentiation
-    let has_pow = if input.starts_with("**") {
-        *input = &(*input)[2..];
-        true
-    } else if input.starts_with('^') {
-        *input = &(*input)[1..];
-        true
-    } else {
-        false
-    };
-    if has_pow {
+    let caret: Option<char> = opt('^').parse_next(input)?;
+    if caret.is_some() {
         let _ = multispace0.parse_next(input)?;
         let exp = pow.parse_next(input)?;
         Ok(Expr::BinaryOp {
