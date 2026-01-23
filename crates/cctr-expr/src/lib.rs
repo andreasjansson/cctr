@@ -119,6 +119,8 @@ pub enum Expr {
     Bool(bool),
     Var(String),
     Array(Vec<Expr>),
+    Object(Vec<(String, Expr)>),
+    TypeLiteral(String),
     UnaryOp {
         op: UnaryOp,
         expr: Box<Expr>,
@@ -131,6 +133,19 @@ pub enum Expr {
     FuncCall {
         name: String,
         args: Vec<Expr>,
+    },
+    Index {
+        expr: Box<Expr>,
+        index: Box<Expr>,
+    },
+    Property {
+        expr: Box<Expr>,
+        name: String,
+    },
+    ForAll {
+        predicate: Box<Expr>,
+        var: String,
+        iterable: Box<Expr>,
     },
 }
 
