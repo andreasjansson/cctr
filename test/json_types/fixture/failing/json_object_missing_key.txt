@@ -1,0 +1,11 @@
+===
+json_object missing key access
+===
+echo '{"name": "alice"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.missing == "value"
