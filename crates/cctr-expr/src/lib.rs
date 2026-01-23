@@ -850,6 +850,11 @@ fn values_equal(a: &Value, b: &Value) -> bool {
         (Value::Array(a), Value::Array(b)) => {
             a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| values_equal(x, y))
         }
+        (Value::Object(a), Value::Object(b)) => {
+            a.len() == b.len()
+                && a.iter().all(|(k, v)| b.get(k).map(|bv| values_equal(v, bv)).unwrap_or(false))
+        }
+        (Value::Type(a), Value::Type(b)) => a == b,
         _ => false,
     }
 }
