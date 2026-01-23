@@ -637,6 +637,7 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
         Expr::Number(n) => Ok(Value::Number(*n)),
         Expr::String(s) => Ok(Value::String(s.clone())),
         Expr::Bool(b) => Ok(Value::Bool(*b)),
+        Expr::TypeLiteral(t) => Ok(Value::Type(t.clone())),
         Expr::Var(name) => vars
             .get(name)
             .cloned()
@@ -644,6 +645,13 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
         Expr::Array(elements) => {
             let values: Result<Vec<_>, _> = elements.iter().map(|e| evaluate(e, vars)).collect();
             Ok(Value::Array(values?))
+        }
+        Expr::Object(entries) => {
+            let mut map = HashMap::new();
+            for (key, val_expr) in entries {
+                map.insert(key.clone(), evaluate(val_expr, vars)?);
+            }
+            Ok(Value::Object(map))
         }
         Expr::UnaryOp { op, expr } => {
             let val = evaluate(expr, vars)?;
@@ -654,6 +662,57 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
         }
         Expr::BinaryOp { op, left, right } => eval_binary_op(*op, left, right, vars),
         Expr::FuncCall { name, args } => eval_func_call(name, args, vars),
+        Expr::Index { expr, index } => {
+            let base = evaluate(expr, vars)?;
+            let idx = evaluate(index, vars)?;
+            match &base {
+                Value::Array(arr) => {
+                    let i = idx.as_number()? as usize;
+                    arr.get(i)
+                        .cloned()
+                        .ok_or(EvalError::IndexOutOfBounds { index: i, len: arr.len() })
+                }
+                Value::Object(obj) => {
+                    let key = idx.as_string()?;
+                    obj.get(key)
+                        .cloned()
+                        .ok_or_else(|| EvalError::KeyNotFound(key.to_string()))
+                }
+                _ => Err(EvalError::TypeError {
+                    expected: "array or object",
+                    got: base.type_name(),
+                }),
+            }
+        }
+        Expr::Property { expr, name } => {
+            let base = evaluate(expr, vars)?;
+            let obj = base.as_object()?;
+            obj.get(name)
+                .cloned()
+                .ok_or_else(|| EvalError::KeyNotFound(name.clone()))
+        }
+        Expr::ForAll { predicate, var, iterable } => {
+            let iter_val = evaluate(iterable, vars)?;
+            let items = match &iter_val {
+                Value::Array(arr) => arr.clone(),
+                Value::Object(obj) => obj.values().cloned().collect(),
+                _ => {
+                    return Err(EvalError::TypeError {
+                        expected: "array or object",
+                        got: iter_val.type_name(),
+                    });
+                }
+            };
+            for item in items {
+                let mut local_vars = vars.clone();
+                local_vars.insert(var.clone(), item);
+                let result = evaluate(predicate, &local_vars)?;
+                if !result.as_bool()? {
+                    return Ok(Value::Bool(false));
+                }
+            }
+            Ok(Value::Bool(true))
+        }
     }
 }
 
