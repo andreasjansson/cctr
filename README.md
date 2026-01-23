@@ -439,7 +439,7 @@ having
 ```
 having
 * n == 10 + 5
-* n == 2 ^ 3
+* n ^ 3 == 8
 * total == count * price
 * n % 2 == 0
 ```
