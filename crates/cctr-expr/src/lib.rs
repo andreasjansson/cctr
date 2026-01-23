@@ -1228,7 +1228,7 @@ mod tests {
         assert!(eval_bool("type(n) == number", &v).unwrap());
         assert!(eval_bool("type(s) == string", &v).unwrap());
         assert!(eval_bool("type(b) == bool", &v).unwrap());
-        assert!(eval_bool("type(a) == json_array", &v).unwrap());
+        assert!(eval_bool("type(a) == array", &v).unwrap());
     }
 
     #[test]
