@@ -645,6 +645,7 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
         Expr::Number(n) => Ok(Value::Number(*n)),
         Expr::String(s) => Ok(Value::String(s.clone())),
         Expr::Bool(b) => Ok(Value::Bool(*b)),
+        Expr::Null => Ok(Value::Null),
         Expr::TypeLiteral(t) => Ok(Value::Type(t.clone())),
         Expr::Var(name) => vars
             .get(name)
