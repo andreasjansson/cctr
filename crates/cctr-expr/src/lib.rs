@@ -773,7 +773,7 @@ fn eval_func_call(
             }
             let val = evaluate(&args[0], vars)?;
             match val {
-                Value::String(s) => Ok(Value::Number(s.len() as f64)),
+                Value::String(s) => Ok(Value::Number(s.chars().count() as f64)),
                 Value::Array(a) => Ok(Value::Number(a.len() as f64)),
                 Value::Object(o) => Ok(Value::Number(o.len() as f64)),
                 _ => Err(EvalError::TypeError {
