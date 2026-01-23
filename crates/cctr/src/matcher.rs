@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn test_json_string_length() {
-        let vars = vec![make_var("s", "json_string")];
+        let vars = vec![make_var("s", "json string")];
         let constraints = vec!["len(s) == 5".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
