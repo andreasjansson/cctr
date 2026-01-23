@@ -1,0 +1,11 @@
+===
+json_bool wrong value constraint
+===
+echo 'true'
+---
+{{ b }}
+---
+with
+* b: json_bool
+having
+* b == false
