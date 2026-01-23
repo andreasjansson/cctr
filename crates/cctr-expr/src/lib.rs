@@ -313,6 +313,10 @@ fn var_or_bool_or_func(input: &mut &str) -> ModalResult<Expr> {
         "true" => Ok(Expr::Bool(true)),
         "false" => Ok(Expr::Bool(false)),
         "null" => Ok(Expr::Null),
+        // Type keywords
+        "number" | "string" | "bool" | "json_array" | "json_object" => {
+            Ok(Expr::TypeLiteral(name))
+        }
         _ => Ok(Expr::Var(name)),
     }
 }
