@@ -167,7 +167,7 @@ impl<'a> Matcher<'a> {
 
 fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
     match json {
-        serde_json::Value::Null => Ok(Value::String("null".to_string())),
+        serde_json::Value::Null => Ok(Value::Null),
         serde_json::Value::Bool(b) => Ok(Value::Bool(*b)),
         serde_json::Value::Number(n) => Ok(Value::Number(n.as_f64().unwrap_or(0.0))),
         serde_json::Value::String(s) => Ok(Value::String(s.clone())),
