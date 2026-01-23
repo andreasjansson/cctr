@@ -1,0 +1,76 @@
+===
+json_object length
+===
+echo '{"a": 1, "b": 2}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* len(o) == 2
+
+===
+json_object bracket access
+===
+echo '{"name": "alice", "age": 30}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o["name"] == "alice"
+* o["age"] == 30
+
+===
+json_object dot access
+===
+echo '{"name": "bob", "score": 100}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.name == "bob"
+* o.score == 100
+
+===
+json_object nested
+===
+echo '{"user": {"name": "charlie", "tags": [1, 2, 3]}}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.user.name == "charlie"
+* len(o.user.tags) == 3
+* o.user.tags[0] == 1
+
+===
+json_object forall values
+===
+echo '{"a": 1, "b": 2, "c": 3}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* x <= 3 forall x in o
+* type(x) == number forall x in o
+
+===
+json_object keys function
+===
+echo '{"x": 1, "y": 2}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* len(keys(o)) == 2
