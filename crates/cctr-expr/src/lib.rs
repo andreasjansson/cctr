@@ -200,6 +200,10 @@ pub enum EvalError {
         expected: usize,
         got: usize,
     },
+    #[error("index out of bounds: {index} >= {len}")]
+    IndexOutOfBounds { index: usize, len: usize },
+    #[error("key not found: {0}")]
+    KeyNotFound(String),
 }
 
 // ============ Parser ============
