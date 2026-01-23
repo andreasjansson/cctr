@@ -55,6 +55,7 @@ impl<'a> Matcher<'a> {
         };
 
         let values = self.extract_values(&caps)?;
+        let bindings = self.format_bindings(&values);
 
         for constraint in self.constraints {
             match eval_bool(constraint, &values) {
@@ -62,6 +63,7 @@ impl<'a> Matcher<'a> {
                 Ok(false) => {
                     return Err(MatchError::ConstraintNotSatisfied {
                         constraint: constraint.clone(),
+                        bindings: bindings.clone(),
                     });
                 }
                 Err(e) => {
@@ -74,6 +76,18 @@ impl<'a> Matcher<'a> {
         }
 
         Ok(true)
+    }
+
+    fn format_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
+        self.variables
+            .iter()
+            .filter_map(|var| {
+                values.get(&var.name).map(|v| {
+                    let formatted = format_value(v);
+                    (var.name.clone(), formatted)
+                })
+            })
+            .collect()
     }
 
     fn build_regex(&self, pattern: &str) -> Result<Regex, regex::Error> {
