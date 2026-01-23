@@ -387,8 +387,8 @@ fn atom(input: &mut &str) -> ModalResult<Expr> {
         string_literal,
         regex_literal,
         number,
-        type_literal,
         var_or_bool_or_func,
+        type_literal,
     ))
     .parse_next(input)
 }
