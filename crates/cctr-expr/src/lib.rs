@@ -366,7 +366,7 @@ fn object(input: &mut &str) -> ModalResult<Expr> {
     Ok(Expr::Object(entries))
 }
 
-const TYPE_KEYWORDS: &[&str] = &["number", "string", "bool", "null", "json_array", "json_object"];
+const TYPE_KEYWORDS: &[&str] = &["number", "string", "bool", "null", "array", "object"];
 
 fn type_literal(input: &mut &str) -> ModalResult<Expr> {
     for &kw in TYPE_KEYWORDS {
