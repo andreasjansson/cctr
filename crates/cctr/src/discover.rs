@@ -10,6 +10,7 @@ pub struct Suite {
     pub has_fixture: bool,
     pub has_setup: bool,
     pub has_teardown: bool,
+    pub single_file: Option<PathBuf>,
 }
 
 impl Suite {
