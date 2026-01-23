@@ -194,10 +194,10 @@ mod tests {
             name: name.to_string(),
             var_type: match var_type {
                 "number" => VarType::Number,
-                "json_string" => VarType::JsonString,
-                "json_bool" => VarType::JsonBool,
-                "json_array" => VarType::JsonArray,
-                "json_object" => VarType::JsonObject,
+                "json string" => VarType::JsonString,
+                "json bool" => VarType::JsonBool,
+                "json array" => VarType::JsonArray,
+                "json object" => VarType::JsonObject,
                 _ => VarType::String,
             },
         }
