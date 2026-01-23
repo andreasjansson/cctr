@@ -5,12 +5,15 @@
 //! - Strings: `"hello"`, `"with \"escapes\""`
 //! - Booleans: `true`, `false`
 //! - Arrays: `[1, 2, 3]`, `["a", "b"]`
+//! - Objects: `{"key": value, ...}`
 //! - Arithmetic: `+`, `-`, `*`, `/`, `^`
 //! - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`
 //! - Logical: `and`, `or`, `not`
 //! - String ops: `contains`, `startswith`, `endswith`, `matches`
 //! - Membership: `in`
-//! - Functions: `len(s)`
+//! - Array/object access: `a[0]`, `obj["key"]`, `obj.key`
+//! - Functions: `len(s)`, `type(v)`, `keys(obj)`
+//! - Quantifiers: `expr forall x in arr`
 //!
 //! # Example
 //!
