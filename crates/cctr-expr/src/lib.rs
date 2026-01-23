@@ -423,7 +423,7 @@ fn unary(input: &mut &str) -> ModalResult<Expr> {
             expr: Box::new(e),
         });
     }
-    atom(input)
+    postfix(input)
 }
 
 fn pow(input: &mut &str) -> ModalResult<Expr> {
