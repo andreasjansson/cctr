@@ -248,3 +248,55 @@ having
 * a[0] + a[1] == [1, 2, 3, 4]
 * [] + a[0] == [1, 2]
 * a[0] + [] == [1, 2]
+
+===
+json_array sum min max
+===
+echo '[5, 2, 8, 1, 9]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* sum(a) == 25
+* min(a) == 1
+* max(a) == 9
+
+===
+json_array sum empty
+===
+echo '[]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* sum(a) == 0
+
+===
+json_array sum with floats
+===
+echo '[1.5, 2.5, 3.0]'
+---
+{{ a }}
+---
+with
+* a: json_array
+having
+* sum(a) == 7.0
+
+===
+json_array nested sum
+===
+echo '{"items": [10, 20, 30]}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* sum(o.items) == 60
+* min(o.items) == 10
+* max(o.items) == 30
