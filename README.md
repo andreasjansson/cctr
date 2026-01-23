@@ -349,12 +349,45 @@ with
 * time: number
 ```
 
-Two variable types are supported:
+Seven variable types are supported:
 
 | Type | Matches |
 |------|---------|
 | `number` | Integers and decimals, including negative: `42`, `3.14`, `-17`, `0.001` |
 | `string` | Any text up to the next literal part of the pattern (or end of line) |
+| `json string` | JSON string literal: `"hello"`, `"with \"escapes\""` (value is the string content) |
+| `json bool` | JSON boolean: `true`, `false` |
+| `json array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
+| `json object` | JSON object: `{"name": "alice", "age": 30}` |
+
+JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+
+### JSON types
+
+JSON types are useful when your command outputs JSON data. The captured value is parsed as JSON and can be accessed using array indexing, object property access, and functions.
+
+```
+===
+test json output
+===
+echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
+---
+{{ data }}
+---
+with
+* data: json object
+having
+* len(data.users) == 2
+* data.users[0].name == "alice"
+* type(data.users) == array
+```
+
+Access patterns:
+- Array indexing: `arr[0]`, `arr[1]`
+- String indexing: `str[0]` (first char), `str[1]` (second char)
+- Negative indexing: `arr[-1]` (last element), `str[-1]` (last char)
+- Object property: `obj.name`, `obj.nested.value`
+- Bracket notation: `obj["key-with-dashes"]`
 
 ## Constraints
 
@@ -383,10 +416,10 @@ All constraints must pass for the test to pass.
 |----------|-------------|
 | `==` | Equal |
 | `!=` | Not equal |
-| `<` | Less than |
-| `<=` | Less than or equal |
-| `>` | Greater than |
-| `>=` | Greater than or equal |
+| `<` | Less than (numbers or strings) |
+| `<=` | Less than or equal (numbers or strings) |
+| `>` | Greater than (numbers or strings) |
+| `>=` | Greater than or equal (numbers or strings) |
 
 ```
 having
@@ -394,25 +427,28 @@ having
 * n != 0
 * n >= 10
 * n < 100
+* "apple" < "banana"
 ```
 
 ### Arithmetic operators
 
 | Operator | Description |
 |----------|-------------|
-| `+` | Addition |
+| `+` | Addition (numbers), concatenation (strings, arrays) |
 | `-` | Subtraction |
 | `*` | Multiplication |
 | `/` | Division |
 | `%` | Modulo |
-| `^` or `**` | Exponentiation |
+| `^` | Exponentiation |
 
 ```
 having
 * n == 10 + 5
-* n == 2 ^ 3
+* n ^ 3 == 8
 * total == count * price
 * n % 2 == 0
+* "hello" + " " + "world" == "hello world"
+* [1, 2] + [3, 4] == [1, 2, 3, 4]
 ```
 
 ### Logical operators
@@ -492,14 +528,47 @@ having
 
 | Function | Description |
 |----------|-------------|
-| `len(s)` | Length of string |
+| `len(x)` | Length of string, array, or object |
+| `type(x)` | Type of value: `number`, `string`, `bool`, `null`, `array`, `object` |
+| `keys(obj)` | Array of keys from an object (sorted alphabetically) |
+| `values(obj)` | Array of values from an object (sorted by key) |
+| `sum(arr)` | Sum of numbers in an array |
+| `min(arr)` | Minimum value in a numeric array |
+| `max(arr)` | Maximum value in a numeric array |
+| `abs(n)` | Absolute value of a number |
+| `unique(arr)` | Array with duplicate elements removed (preserves order) |
+| `lower(s)` | Convert string to lowercase |
+| `upper(s)` | Convert string to uppercase |
 
 ```
 having
 * len(name) > 0
-* len(name) <= 50
-* len(short) < len(long)
+* len(arr) == 3
+* type(value) == number
+* type(items) == array
+* keys(obj) == ["a", "b", "c"]
+* values(obj) == [1, 2, 3]
+* sum(numbers) == 100
+* min(scores) >= 0
+* max(scores) <= 100
+* abs(delta) < 0.001
+* unique([1, 2, 2, 3]) == [1, 2, 3]
+* lower("HELLO") == "hello"
+* upper("hello") == "HELLO"
 ```
+
+### Quantifiers
+
+Use `forall` to check that a condition holds for all elements in an array or object:
+
+```
+having
+* x > 0 forall x in numbers
+* len(item.name) > 0 forall item in users
+* type(v) == number forall v in obj
+```
+
+When iterating over an object, `forall` iterates over the values (not the keys).
 
 ### Operator precedence
 
@@ -508,7 +577,7 @@ From highest to lowest:
 1. Parentheses `()`
 2. Function calls `len()`
 3. Unary `-`, `not`
-4. Exponentiation `^`, `**`
+4. Exponentiation `^`
 5. Multiplicative `*`, `/`, `%`
 6. Additive `+`, `-`
 7. Comparison `<`, `<=`, `>`, `>=`, `==`, `!=`

@@ -1,0 +1,11 @@
+===
+json_array index out of bounds
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[10] == 1

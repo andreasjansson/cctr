@@ -1,0 +1,11 @@
+===
+json nested access wrong value
+===
+echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.users[0].name == "charlie"

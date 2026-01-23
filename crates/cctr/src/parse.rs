@@ -5,6 +5,10 @@ use std::path::Path;
 pub enum VarType {
     Number,
     String,
+    JsonString,
+    JsonBool,
+    JsonArray,
+    JsonObject,
 }
 
 #[derive(Debug, Clone)]
@@ -40,7 +44,7 @@ pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
     parse_corpus_content(&content, path)
 }
 
-fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
+pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
     let mut tests = Vec::new();
     let lines: Vec<&str> = content.lines().collect();
     let mut i = 0;
@@ -183,6 +187,10 @@ fn parse_variable_decl(line: &str) -> Option<VariableDecl> {
     let var_type = match type_str.as_str() {
         "number" => VarType::Number,
         "string" => VarType::String,
+        "json string" => VarType::JsonString,
+        "json bool" => VarType::JsonBool,
+        "json array" => VarType::JsonArray,
+        "json object" => VarType::JsonObject,
         _ => return None,
     };
     Some(VariableDecl { name, var_type })

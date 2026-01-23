@@ -1,6 +1,6 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
-use crate::parse::{parse_corpus_file, TestCase};
+use crate::parse::{parse_corpus_content, parse_corpus_file, TestCase};
 use crate::template::TemplateVars;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -277,6 +277,87 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>) -> SuiteResult {
+    let start = Instant::now();
+
+    let stdin_path = PathBuf::from("<stdin>");
+    let tests = match parse_corpus_content(content, &stdin_path) {
+        Ok(t) => t,
+        Err(e) => {
+            let suite = Suite {
+                name: "stdin".to_string(),
+                path: PathBuf::from("."),
+                has_fixture: false,
+                has_setup: false,
+                has_teardown: false,
+                single_file: None,
+            };
+            return SuiteResult {
+                suite,
+                file_results: vec![],
+                setup_error: Some(format!("Failed to parse: {}", e)),
+                elapsed: start.elapsed(),
+            };
+        }
+    };
+
+    let temp_dir = match TempDir::with_prefix("cctr_stdin_") {
+        Ok(d) => d,
+        Err(e) => {
+            let suite = Suite {
+                name: "stdin".to_string(),
+                path: PathBuf::from("."),
+                has_fixture: false,
+                has_setup: false,
+                has_teardown: false,
+                single_file: None,
+            };
+            return SuiteResult {
+                suite,
+                file_results: vec![],
+                setup_error: Some(format!("Failed to create temp dir: {}", e)),
+                elapsed: start.elapsed(),
+            };
+        }
+    };
+
+    let work_dir = temp_dir
+        .path()
+        .canonicalize()
+        .unwrap_or_else(|_| temp_dir.path().to_path_buf());
+
+    let mut vars = TemplateVars::new();
+    vars.set("WORK_DIR", work_dir.to_string_lossy().as_ref());
+
+    let mut results = Vec::new();
+    for test in tests {
+        let result = run_test(&test, &work_dir, "stdin", &vars);
+        if let Some(tx) = progress_tx {
+            let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
+        }
+        results.push(result);
+    }
+
+    let suite = Suite {
+        name: "stdin".to_string(),
+        path: PathBuf::from("."),
+        has_fixture: false,
+        has_setup: false,
+        has_teardown: false,
+        single_file: None,
+    };
+
+    SuiteResult {
+        suite,
+        file_results: vec![FileResult {
+            file_path: stdin_path,
+            results,
+        }],
+        setup_error: None,
+        elapsed: start.elapsed(),
+    }
 }
 
 #[cfg(test)]

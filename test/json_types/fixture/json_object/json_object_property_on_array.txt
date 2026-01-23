@@ -1,0 +1,11 @@
+===
+json_object property on array fails
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a.foo == 1

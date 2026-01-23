@@ -1,0 +1,16 @@
+===
+json_bool passing tests
+===
+cctr {{ FIXTURE_DIR }}/json_bool/passing.txt --no-color 2>&1 | tail -1
+---
+All 7 tests passed in {{ t }}s
+---
+with
+* t: number
+
+===
+json_bool wrong value fails
+===
+cctr {{ FIXTURE_DIR }}/json_bool/json_bool_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+---
+  Error: constraint 'b == false' not satisfied

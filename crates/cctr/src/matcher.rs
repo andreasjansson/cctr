@@ -14,6 +14,8 @@ pub enum MatchError {
     ConstraintFailed { constraint: String, error: String },
     #[error("constraint '{constraint}' not satisfied")]
     ConstraintNotSatisfied { constraint: String },
+    #[error("failed to parse JSON for variable '{name}': {error}")]
+    JsonParse { name: String, error: String },
 }
 
 pub struct Matcher<'a> {
@@ -36,7 +38,7 @@ impl<'a> Matcher<'a> {
             return Ok(false);
         };
 
-        let values = self.extract_values(&caps);
+        let values = self.extract_values(&caps)?;
 
         for constraint in self.constraints {
             match eval_bool(constraint, &values) {
@@ -72,9 +74,17 @@ impl<'a> Matcher<'a> {
             regex_str.push_str(&regex::escape(literal));
 
             if let Some(var) = self.variables.iter().find(|v| v.name == var_name) {
+                // For JSON types, we use a greedy approach that captures balanced brackets/braces.
+                // The actual JSON validation happens in extract_values via serde_json.
                 let capture_pattern = match var.var_type {
                     VarType::Number => r"-?\d+(?:\.\d+)?",
                     VarType::String => r".*?",
+                    VarType::JsonString => r#""(?:[^"\\]|\\.)*""#,
+                    VarType::JsonBool => r"true|false",
+                    // Match balanced brackets - this uses a simple heuristic that works for
+                    // most JSON: capture from [ to the last ] that makes the brackets balanced
+                    VarType::JsonArray => r"\[[\s\S]*\]",
+                    VarType::JsonObject => r"\{[\s\S]*\}",
                 };
                 regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
             } else {
@@ -92,7 +102,7 @@ impl<'a> Matcher<'a> {
         Regex::new(&regex_str)
     }
 
-    fn extract_values(&self, caps: &regex::Captures) -> HashMap<String, Value> {
+    fn extract_values(&self, caps: &regex::Captures) -> Result<HashMap<String, Value>, MatchError> {
         let mut values = HashMap::new();
 
         for var in self.variables {
@@ -104,12 +114,74 @@ impl<'a> Matcher<'a> {
                         Value::Number(n)
                     }
                     VarType::String => Value::String(text.to_string()),
+                    VarType::JsonString => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        match json {
+                            serde_json::Value::String(s) => Value::String(s),
+                            _ => {
+                                return Err(MatchError::JsonParse {
+                                    name: var.name.clone(),
+                                    error: "expected JSON string".to_string(),
+                                })
+                            }
+                        }
+                    }
+                    VarType::JsonBool => {
+                        let b = text == "true";
+                        Value::Bool(b)
+                    }
+                    VarType::JsonArray => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        json_to_value(&json).map_err(|e| MatchError::JsonParse {
+                            name: var.name.clone(),
+                            error: e,
+                        })?
+                    }
+                    VarType::JsonObject => {
+                        let json: serde_json::Value =
+                            serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
+                                name: var.name.clone(),
+                                error: e.to_string(),
+                            })?;
+                        json_to_value(&json).map_err(|e| MatchError::JsonParse {
+                            name: var.name.clone(),
+                            error: e,
+                        })?
+                    }
                 };
                 values.insert(var.name.clone(), value);
             }
         }
 
-        values
+        Ok(values)
+    }
+}
+
+fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
+    match json {
+        serde_json::Value::Null => Ok(Value::Null),
+        serde_json::Value::Bool(b) => Ok(Value::Bool(*b)),
+        serde_json::Value::Number(n) => Ok(Value::Number(n.as_f64().unwrap_or(0.0))),
+        serde_json::Value::String(s) => Ok(Value::String(s.clone())),
+        serde_json::Value::Array(arr) => {
+            let items: Result<Vec<_>, _> = arr.iter().map(json_to_value).collect();
+            Ok(Value::Array(items?))
+        }
+        serde_json::Value::Object(obj) => {
+            let mut map = HashMap::new();
+            for (k, v) in obj {
+                map.insert(k.clone(), json_to_value(v)?);
+            }
+            Ok(Value::Object(map))
+        }
     }
 }
 
@@ -122,6 +194,10 @@ mod tests {
             name: name.to_string(),
             var_type: match var_type {
                 "number" => VarType::Number,
+                "json string" => VarType::JsonString,
+                "json bool" => VarType::JsonBool,
+                "json array" => VarType::JsonArray,
+                "json object" => VarType::JsonObject,
                 _ => VarType::String,
             },
         }
@@ -178,5 +254,81 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints);
 
         assert!(matcher.matches("val: {{ s }}", "val: ").unwrap());
+    }
+
+    #[test]
+    fn test_json_string_match() {
+        let vars = vec![make_var("s", "json string")];
+        let constraints = vec![r#"s == "hello""#.to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
+    }
+
+    #[test]
+    fn test_json_string_length() {
+        let vars = vec![make_var("s", "json string")];
+        let constraints = vec!["len(s) == 5".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
+    }
+
+    #[test]
+    fn test_json_bool_true() {
+        let vars = vec![make_var("b", "json bool")];
+        let constraints = vec!["b == true".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ b }}", "true").unwrap());
+    }
+
+    #[test]
+    fn test_json_bool_false() {
+        let vars = vec![make_var("b", "json bool")];
+        let constraints = vec!["b == false".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ b }}", "false").unwrap());
+    }
+
+    #[test]
+    fn test_json_array_match() {
+        let vars = vec![make_var("a", "json array")];
+        let constraints = vec!["len(a) == 3".to_string(), "a[0] == 1".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
+    }
+
+    #[test]
+    fn test_json_object_match() {
+        let vars = vec![make_var("o", "json object")];
+        let constraints = vec![r#"o["name"] == "alice""#.to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
+            .unwrap());
+    }
+
+    #[test]
+    fn test_json_object_dot_access() {
+        let vars = vec![make_var("o", "json object")];
+        let constraints = vec!["o.age == 30".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
+            .unwrap());
+    }
+
+    #[test]
+    fn test_json_forall() {
+        let vars = vec![make_var("a", "json array")];
+        let constraints = vec!["x <= 3 forall x in a".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
     }
 }

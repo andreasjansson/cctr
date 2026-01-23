@@ -1,0 +1,11 @@
+===
+json_array indexing number fails
+===
+echo '42'
+---
+{{ n }}
+---
+with
+* n: number
+having
+* n[0] == 1

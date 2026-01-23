@@ -1,0 +1,160 @@
+===
+json_string basic match
+===
+echo '"foo"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* s == "foo"
+
+===
+json_string length
+===
+echo '"hello"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* len(s) == 5
+
+===
+json_string with escapes
+===
+echo '"hello \"world\""'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* s contains "world"
+
+===
+json_string empty
+===
+echo '""'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* s == ""
+* len(s) == 0
+
+===
+json_string with newline escape
+===
+printf '"line1\\nline2"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* len(s) == 11
+
+===
+json_string with unicode
+===
+echo '"héllo wörld 你好"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* s contains "héllo"
+
+===
+json_string type check
+===
+echo '"test"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* type(s) == string
+
+===
+json_string in array context
+===
+echo '["a", "b", "c"]'
+---
+{{ arr }}
+---
+with
+* arr: json array
+having
+* arr[0] == "a"
+* type(arr[1]) == string
+
+===
+json_string comparison operators
+===
+echo '{"a": "apple", "b": "banana", "c": "cherry"}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.a < o.b
+* o.b < o.c
+* o.c > o.a
+* o.a <= o.a
+* o.b >= o.b
+* "aaa" < "aab"
+
+===
+json_string indexing
+===
+echo '{"s": "hello"}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.s[0] == "h"
+* o.s[1] == "e"
+* o.s[4] == "o"
+* o.s[-1] == "o"
+* o.s[-2] == "l"
+
+===
+json_string indexing unicode
+===
+echo '{"s": "héllo"}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.s[0] == "h"
+* o.s[1] == "é"
+* o.s[2] == "l"
+* len(o.s) == 5
+
+===
+json_string lower upper functions
+===
+echo '{"s": "HeLLo WoRLd"}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* lower(o.s) == "hello world"
+* upper(o.s) == "HELLO WORLD"
+* lower("ABC") == "abc"
+* upper("xyz") == "XYZ"

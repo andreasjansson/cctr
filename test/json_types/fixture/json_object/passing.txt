@@ -1,0 +1,401 @@
+===
+json_object length
+===
+echo '{"a": 1, "b": 2}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o) == 2
+
+===
+json_object bracket access
+===
+echo '{"name": "alice", "age": 30}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o["name"] == "alice"
+* o["age"] == 30
+
+===
+json_object dot access
+===
+echo '{"name": "bob", "score": 100}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.name == "bob"
+* o.score == 100
+
+===
+json_object nested
+===
+echo '{"user": {"name": "charlie", "tags": [1, 2, 3]}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.user.name == "charlie"
+* len(o.user.tags) == 3
+* o.user.tags[0] == 1
+
+===
+json_object forall values
+===
+echo '{"a": 1, "b": 2, "c": 3}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* x <= 3 forall x in o
+* type(x) == number forall x in o
+
+===
+json_object keys function
+===
+echo '{"x": 1, "y": 2}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(keys(o)) == 2
+
+===
+json_object empty
+===
+echo '{}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o) == 0
+* type(o) == object
+* len(keys(o)) == 0
+
+===
+json_object single key
+===
+echo '{"only": 42}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o) == 1
+* o.only == 42
+
+===
+json_object deeply nested
+===
+echo '{"a": {"b": {"c": {"d": 123}}}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.a.b.c.d == 123
+* type(o.a.b.c) == object
+
+===
+json_object with array values
+===
+echo '{"nums": [1, 2, 3], "strs": ["a", "b"]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o.nums) == 3
+* len(o.strs) == 2
+* o.nums[0] == 1
+* o.strs[1] == "b"
+
+===
+json_object mixed value types
+===
+echo '{"str": "hello", "num": 42, "bool": true, "arr": [1], "obj": {"x": 1}, "null_val": null}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* type(o.str) == string
+* type(o.num) == number
+* type(o.bool) == bool
+* type(o.arr) == array
+* type(o.obj) == object
+
+===
+json_object key with special chars via bracket
+===
+echo '{"my-key": 1, "another.key": 2, "key with spaces": 3}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o["my-key"] == 1
+* o["another.key"] == 2
+* o["key with spaces"] == 3
+
+===
+json_object computed index
+===
+echo '{"item0": 10, "item1": 20, "item2": 30}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o["item0"] == 10
+* o["item1"] == 20
+* o["item2"] == 30
+
+===
+json_object forall on empty
+===
+echo '{}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* x > 1000 forall x in o
+
+===
+json_object nested array access
+===
+echo '{"matrix": [[1, 2], [3, 4]], "lookup": {"inner": [10, 20]}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.matrix[0][0] == 1
+* o.matrix[1][1] == 4
+* o.lookup.inner[0] == 10
+* len(o.matrix) == 2
+* len(o.lookup.inner) == 2
+
+===
+json_object value arithmetic
+===
+echo '{"x": 10, "y": 20, "z": 30}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.x + o.y == 30
+* o.z - o.x == 20
+* o.y * 2 == 40
+
+===
+json_object forall with object values
+===
+echo '{"users": [{"name": "a", "age": 20}, {"name": "b", "age": 25}]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o.users) == 2
+* u.age >= 20 forall u in o.users
+* len(u.name) == 1 forall u in o.users
+
+===
+json_object comparing nested values
+===
+echo '{"first": {"val": 10}, "second": {"val": 10}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.first.val == o.second.val
+
+===
+json_object len of nested
+===
+echo '{"outer": {"inner": [1, 2, 3, 4, 5]}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* len(o.outer.inner) == 5
+* len(o.outer) == 1
+* len(o) == 1
+
+===
+json_object type in forall
+===
+echo '{"items": [1, "two", true]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* type(o.items[0]) == number
+* type(o.items[1]) == string
+* type(o.items[2]) == bool
+
+===
+json_object null value
+===
+echo '{"x": null}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.x == null
+* type(o.x) == null
+
+===
+json_object null in array
+===
+echo '{"items": [1, null, "two"]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.items[1] == null
+* type(o.items[1]) == null
+* o.items[0] != null
+
+===
+json_object null nested
+===
+echo '{"a": {"b": null}}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.a.b == null
+
+===
+json_object keys sorted
+===
+echo '{"zebra": 1, "apple": 2, "mango": 3}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* keys(o) == ["apple", "mango", "zebra"]
+
+===
+json_object values sorted by key
+===
+echo '{"c": 3, "a": 1, "b": 2}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* values(o) == [1, 2, 3]
+
+===
+json_object keys and values correspondence
+===
+echo '{"x": 10, "y": 20, "z": 30}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* keys(o) == ["x", "y", "z"]
+* values(o) == [10, 20, 30]
+* len(keys(o)) == len(values(o))
+
+===
+json_object values with mixed types
+===
+echo '{"a": 1, "b": "two", "c": true}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* values(o) == [1, "two", true]
+
+===
+json_object empty keys and values
+===
+echo '{}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* keys(o) == []
+* values(o) == []
+
+===
+json_object string concatenation
+===
+echo '{"first": "hello", "second": "world"}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* o.first + " " + o.second == "hello world"
+* o.first + o.second == "helloworld"
+
+===
+json_object abs function
+===
+echo '{"a": -5, "b": 3, "c": -2.5}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* abs(o.a) == 5
+* abs(o.b) == 3
+* abs(o.c) == 2.5
+* abs(o.a - o.b) == 8

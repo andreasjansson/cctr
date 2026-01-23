@@ -10,6 +10,7 @@ pub struct Suite {
     pub has_fixture: bool,
     pub has_setup: bool,
     pub has_teardown: bool,
+    pub single_file: Option<PathBuf>,
 }
 
 impl Suite {
@@ -38,10 +39,32 @@ impl Suite {
             has_fixture,
             has_setup,
             has_teardown,
+            single_file: None,
+        }
+    }
+
+    pub fn new_single_file(dir_path: PathBuf, file_path: PathBuf) -> Self {
+        let name = dir_path.to_string_lossy().into_owned();
+        let has_fixture = dir_path.join("fixture").is_dir();
+        let has_setup = dir_path.join("_setup.txt").is_file();
+        let has_teardown = dir_path.join("_teardown.txt").is_file();
+
+        Self {
+            path: dir_path,
+            name,
+            has_fixture,
+            has_setup,
+            has_teardown,
+            single_file: Some(file_path),
         }
     }
 
     pub fn corpus_files(&self) -> Vec<PathBuf> {
+        // If this suite was created for a single file, return just that file
+        if let Some(ref file) = self.single_file {
+            return vec![file.clone()];
+        }
+
         let mut files: Vec<PathBuf> = std::fs::read_dir(&self.path)
             .into_iter()
             .flatten()
@@ -86,6 +109,17 @@ impl Suite {
 }
 
 pub fn discover_suites(root: &Path) -> Result<Vec<Suite>> {
+    // If root is a single file, create a suite containing just that file
+    if root.is_file() {
+        if root.extension().is_some_and(|ext| ext == "txt") {
+            if let Some(parent) = root.parent() {
+                let suite = Suite::new_single_file(parent.to_path_buf(), root.to_path_buf());
+                return Ok(vec![suite]);
+            }
+        }
+        return Ok(vec![]);
+    }
+
     let mut suite_dirs: HashSet<PathBuf> = HashSet::new();
 
     for entry in WalkDir::new(root)

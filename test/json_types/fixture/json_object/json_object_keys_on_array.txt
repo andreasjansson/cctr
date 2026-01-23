@@ -1,0 +1,11 @@
+===
+json_object keys on array fails
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(keys(a)) == 0

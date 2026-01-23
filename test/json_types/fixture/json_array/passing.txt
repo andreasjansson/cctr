@@ -1,0 +1,339 @@
+===
+json_array length
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 3
+
+===
+json_array index access
+===
+echo '[10, 20, 30]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[0] == 10
+* a[1] == 20
+* a[2] == 30
+
+===
+json_array type function
+===
+echo '[1, "hello", true]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* type(a[0]) == number
+* type(a[1]) == string
+* type(a[2]) == bool
+
+===
+json_array forall
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* x <= 3 forall x in a
+* x > 0 forall x in a
+
+===
+json_array nested
+===
+echo '[[1, 2], [3, 4]]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 2
+* len(a[0]) == 2
+* a[0][0] == 1
+* a[1][1] == 4
+
+===
+json_array empty
+===
+echo '[]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 0
+* type(a) == array
+
+===
+json_array single element
+===
+echo '[42]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 1
+* a[0] == 42
+
+===
+json_array deeply nested
+===
+echo '[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[0][0][0] == 1
+* a[0][1][1] == 4
+* a[1][1][0] == 7
+* len(a[0]) == 2
+
+===
+json_array mixed types
+===
+echo '[1, "two", true, null, [3], {"x": 4}]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 6
+* a[0] == 1
+* a[1] == "two"
+* a[2] == true
+* type(a[4]) == array
+* type(a[5]) == object
+* a[4][0] == 3
+* a[5].x == 4
+
+===
+json_array forall with complex predicate
+===
+echo '[2, 4, 6, 8]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* x > 0 and x < 10 forall x in a
+
+===
+json_array forall empty is true
+===
+echo '[]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* x > 1000 forall x in a
+
+===
+json_array in membership
+===
+echo '[1, 2, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[0] in [1, 2, 3]
+* a[1] in [1, 2, 3]
+
+===
+json_array index arithmetic
+===
+echo '[10, 20, 30, 40, 50]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[0] + a[1] == 30
+* a[2] * 2 == 60
+* a[4] - a[3] == 10
+
+===
+json_array contains objects
+===
+echo '[{"name": "alice"}, {"name": "bob"}]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a) == 2
+* a[0].name == "alice"
+* a[1].name == "bob"
+* item.name startswith "a" or item.name startswith "b" forall item in a
+
+===
+json_array len in constraint
+===
+echo '[[1], [1, 2], [1, 2, 3]]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* len(a[0]) == 1
+* len(a[1]) == 2
+* len(a[2]) == 3
+* len(sub) <= 3 forall sub in a
+
+===
+json_array negative indexing
+===
+echo '[1, 2, 3, 4, 5]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[-1] == 5
+* a[-2] == 4
+* a[-5] == 1
+
+===
+json_array negative indexing nested
+===
+echo '[[1, 2], [3, 4]]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[-1][-1] == 4
+* a[-2][-1] == 2
+* a[0][-1] == 2
+
+===
+json_array concatenation
+===
+echo '[[1, 2], [3, 4]]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* a[0] + a[1] == [1, 2, 3, 4]
+* [] + a[0] == [1, 2]
+* a[0] + [] == [1, 2]
+
+===
+json_array sum min max
+===
+echo '[5, 2, 8, 1, 9]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* sum(a) == 25
+* min(a) == 1
+* max(a) == 9
+
+===
+json_array sum empty
+===
+echo '[]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* sum(a) == 0
+
+===
+json_array sum with floats
+===
+echo '[1.5, 2.5, 3.0]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* sum(a) == 7.0
+
+===
+json_array nested sum
+===
+echo '{"items": [10, 20, 30]}'
+---
+{{ o }}
+---
+with
+* o: json object
+having
+* sum(o.items) == 60
+* min(o.items) == 10
+* max(o.items) == 30
+
+===
+json_array unique
+===
+echo '[1, 2, 2, 3, 3, 3, 1]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* unique(a) == [1, 2, 3]
+* len(unique(a)) == 3
+
+===
+json_array unique with strings
+===
+echo '["a", "b", "a", "c", "b"]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* unique(a) == ["a", "b", "c"]
+
+===
+json_array unique preserves order
+===
+echo '[3, 1, 2, 1, 3]'
+---
+{{ a }}
+---
+with
+* a: json array
+having
+* unique(a) == [3, 1, 2]

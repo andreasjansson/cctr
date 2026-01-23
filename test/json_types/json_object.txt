@@ -1,0 +1,51 @@
+===
+json_object passing tests
+===
+cctr {{ FIXTURE_DIR }}/json_object/passing.txt --no-color 2>&1 | tail -1
+---
+All 30 tests passed in {{ t }}s
+---
+with
+* t: number
+
+===
+json_object wrong property fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_object_wrong_property.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+---
+  Error: constraint 'o.name == "bob"' not satisfied
+
+===
+json_object missing key fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_object_missing_key.txt --no-color 2>&1 | grep "constraint.*failed"
+---
+  Error: constraint 'o.missing == "value"' failed: key not found: missing
+
+===
+json_object forall fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_object_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+---
+  Error: constraint 'type(v) == number forall v in o' not satisfied
+
+===
+json_nested wrong value fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_nested_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+---
+  Error: constraint 'o.users[0].name == "charlie"' not satisfied
+
+===
+json_object property on array fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_object_property_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
+---
+  Error: constraint 'a.foo == 1' failed: type error: expected object, got array
+
+===
+json_object keys on array fails
+===
+cctr {{ FIXTURE_DIR }}/json_object/json_object_keys_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
+---
+  Error: constraint 'len(keys(a)) == 0' failed: type error: expected object, got array

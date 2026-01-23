@@ -1,0 +1,11 @@
+===
+json_string wrong value constraint
+===
+echo '"hello"'
+---
+{{ s }}
+---
+with
+* s: json string
+having
+* s == "world"
