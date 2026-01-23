@@ -528,17 +528,32 @@ having
 | Function | Description |
 |----------|-------------|
 | `len(x)` | Length of string, array, or object |
-| `type(x)` | Type of value: `number`, `string`, `bool`, `json_array`, `json_object` |
-| `keys(obj)` | Array of keys from an object |
+| `type(x)` | Type of value: `number`, `string`, `bool`, `null`, `json_array`, `json_object` |
+| `keys(obj)` | Array of keys from an object (sorted alphabetically) |
+| `values(obj)` | Array of values from an object (sorted by key) |
+| `sum(arr)` | Sum of numbers in an array |
+| `min(arr)` | Minimum value in a numeric array |
+| `max(arr)` | Maximum value in a numeric array |
+| `abs(n)` | Absolute value of a number |
+| `unique(arr)` | Array with duplicate elements removed (preserves order) |
+| `lower(s)` | Convert string to lowercase |
+| `upper(s)` | Convert string to uppercase |
 
 ```
 having
 * len(name) > 0
 * len(arr) == 3
-* len(obj) == 2
 * type(value) == number
 * type(items) == json_array
-* len(keys(obj)) > 0
+* keys(obj) == ["a", "b", "c"]
+* values(obj) == [1, 2, 3]
+* sum(numbers) == 100
+* min(scores) >= 0
+* max(scores) <= 100
+* abs(delta) < 0.001
+* unique([1, 2, 2, 3]) == [1, 2, 3]
+* lower("HELLO") == "hello"
+* upper("hello") == "HELLO"
 ```
 
 ### Quantifiers
