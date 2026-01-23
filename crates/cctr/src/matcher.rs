@@ -307,7 +307,9 @@ mod tests {
         let constraints = vec![r#"o["name"] == "alice""#.to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
-        assert!(matcher.matches("{{ o }}", r#"{"name": "alice", "age": 30}"#).unwrap());
+        assert!(matcher
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
+            .unwrap());
     }
 
     #[test]
@@ -316,7 +318,9 @@ mod tests {
         let constraints = vec!["o.age == 30".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
-        assert!(matcher.matches("{{ o }}", r#"{"name": "alice", "age": 30}"#).unwrap());
+        assert!(matcher
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
+            .unwrap());
     }
 
     #[test]

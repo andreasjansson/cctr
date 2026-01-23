@@ -1,6 +1,6 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
-use crate::parse::{parse_corpus_file, parse_corpus_content, TestCase};
+use crate::parse::{parse_corpus_content, parse_corpus_file, TestCase};
 use crate::template::TemplateVars;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -279,12 +279,9 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn run_from_stdin(
-    content: &str,
-    progress_tx: Option<&Sender<ProgressEvent>>,
-) -> SuiteResult {
+pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>) -> SuiteResult {
     let start = Instant::now();
-    
+
     let stdin_path = PathBuf::from("<stdin>");
     let tests = match parse_corpus_content(content, &stdin_path) {
         Ok(t) => t,
@@ -330,7 +327,7 @@ pub fn run_from_stdin(
         .path()
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
-    
+
     let mut vars = TemplateVars::new();
     vars.set("WORK_DIR", work_dir.to_string_lossy().as_ref());
 

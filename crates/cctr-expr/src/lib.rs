@@ -317,9 +317,7 @@ fn var_or_bool_or_func(input: &mut &str) -> ModalResult<Expr> {
         // but when used in type comparison (type(x) == null) it matches as a TypeLiteral
         "null" => Ok(Expr::TypeLiteral(name)),
         // Type keywords
-        "number" | "string" | "bool" | "array" | "object" => {
-            Ok(Expr::TypeLiteral(name))
-        }
+        "number" | "string" | "bool" | "array" | "object" => Ok(Expr::TypeLiteral(name)),
         _ => Ok(Expr::Var(name)),
     }
 }
@@ -375,7 +373,10 @@ fn type_literal(input: &mut &str) -> ModalResult<Expr> {
         if input.starts_with(kw) {
             let after = &(*input)[kw.len()..];
             let next_char = after.chars().next();
-            if next_char.map(|c| c.is_ascii_alphanumeric() || c == '_').unwrap_or(false) {
+            if next_char
+                .map(|c| c.is_ascii_alphanumeric() || c == '_')
+                .unwrap_or(false)
+            {
                 continue;
             }
             *input = after;
@@ -689,7 +690,10 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                         // Negative indexing: -1 is last element, -2 is second to last, etc.
                         let neg_idx = (-i) as usize;
                         if neg_idx > arr.len() {
-                            return Err(EvalError::IndexOutOfBounds { index: i as i64, len: arr.len() });
+                            return Err(EvalError::IndexOutOfBounds {
+                                index: i as i64,
+                                len: arr.len(),
+                            });
                         }
                         arr.len() - neg_idx
                     } else {
@@ -697,7 +701,10 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                     };
                     arr.get(actual_index)
                         .cloned()
-                        .ok_or(EvalError::IndexOutOfBounds { index: i as i64, len: arr.len() })
+                        .ok_or(EvalError::IndexOutOfBounds {
+                            index: i as i64,
+                            len: arr.len(),
+                        })
                 }
                 Value::String(s) => {
                     let i = idx.as_number()?;
@@ -705,15 +712,22 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                     let actual_index = if i < 0.0 {
                         let neg_idx = (-i) as usize;
                         if neg_idx > chars.len() {
-                            return Err(EvalError::IndexOutOfBounds { index: i as i64, len: chars.len() });
+                            return Err(EvalError::IndexOutOfBounds {
+                                index: i as i64,
+                                len: chars.len(),
+                            });
                         }
                         chars.len() - neg_idx
                     } else {
                         i as usize
                     };
-                    chars.get(actual_index)
+                    chars
+                        .get(actual_index)
                         .map(|c| Value::String(c.to_string()))
-                        .ok_or(EvalError::IndexOutOfBounds { index: i as i64, len: chars.len() })
+                        .ok_or(EvalError::IndexOutOfBounds {
+                            index: i as i64,
+                            len: chars.len(),
+                        })
                 }
                 Value::Object(obj) => {
                     let key = idx.as_string()?;
@@ -734,7 +748,11 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
                 .cloned()
                 .ok_or_else(|| EvalError::KeyNotFound(name.clone()))
         }
-        Expr::ForAll { predicate, var, iterable } => {
+        Expr::ForAll {
+            predicate,
+            var,
+            iterable,
+        } => {
             let iter_val = evaluate(iterable, vars)?;
             let items = match &iter_val {
                 Value::Array(arr) => arr.clone(),
@@ -972,19 +990,15 @@ fn eval_binary_op(
     let r = evaluate(right, vars)?;
 
     match op {
-        BinaryOp::Add => {
-            match (&l, &r) {
-                (Value::String(ls), Value::String(rs)) => {
-                    Ok(Value::String(format!("{}{}", ls, rs)))
-                }
-                (Value::Array(la), Value::Array(ra)) => {
-                    let mut result = la.clone();
-                    result.extend(ra.clone());
-                    Ok(Value::Array(result))
-                }
-                _ => Ok(Value::Number(l.as_number()? + r.as_number()?)),
+        BinaryOp::Add => match (&l, &r) {
+            (Value::String(ls), Value::String(rs)) => Ok(Value::String(format!("{}{}", ls, rs))),
+            (Value::Array(la), Value::Array(ra)) => {
+                let mut result = la.clone();
+                result.extend(ra.clone());
+                Ok(Value::Array(result))
             }
-        }
+            _ => Ok(Value::Number(l.as_number()? + r.as_number()?)),
+        },
         BinaryOp::Sub => Ok(Value::Number(l.as_number()? - r.as_number()?)),
         BinaryOp::Mul => Ok(Value::Number(l.as_number()? * r.as_number()?)),
         BinaryOp::Mod => Ok(Value::Number(l.as_number()? % r.as_number()?)),
@@ -999,30 +1013,22 @@ fn eval_binary_op(
         BinaryOp::Pow => Ok(Value::Number(l.as_number()?.powf(r.as_number()?))),
         BinaryOp::Eq => Ok(Value::Bool(values_equal(&l, &r))),
         BinaryOp::Ne => Ok(Value::Bool(!values_equal(&l, &r))),
-        BinaryOp::Lt => {
-            match (&l, &r) {
-                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls < rs)),
-                _ => Ok(Value::Bool(l.as_number()? < r.as_number()?)),
-            }
-        }
-        BinaryOp::Le => {
-            match (&l, &r) {
-                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls <= rs)),
-                _ => Ok(Value::Bool(l.as_number()? <= r.as_number()?)),
-            }
-        }
-        BinaryOp::Gt => {
-            match (&l, &r) {
-                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls > rs)),
-                _ => Ok(Value::Bool(l.as_number()? > r.as_number()?)),
-            }
-        }
-        BinaryOp::Ge => {
-            match (&l, &r) {
-                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls >= rs)),
-                _ => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
-            }
-        }
+        BinaryOp::Lt => match (&l, &r) {
+            (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls < rs)),
+            _ => Ok(Value::Bool(l.as_number()? < r.as_number()?)),
+        },
+        BinaryOp::Le => match (&l, &r) {
+            (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls <= rs)),
+            _ => Ok(Value::Bool(l.as_number()? <= r.as_number()?)),
+        },
+        BinaryOp::Gt => match (&l, &r) {
+            (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls > rs)),
+            _ => Ok(Value::Bool(l.as_number()? > r.as_number()?)),
+        },
+        BinaryOp::Ge => match (&l, &r) {
+            (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls >= rs)),
+            _ => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
+        },
         BinaryOp::In => {
             let arr = r.as_array()?;
             Ok(Value::Bool(arr.iter().any(|v| values_equal(&l, v))))
@@ -1066,7 +1072,8 @@ fn values_equal(a: &Value, b: &Value) -> bool {
         }
         (Value::Object(a), Value::Object(b)) => {
             a.len() == b.len()
-                && a.iter().all(|(k, v)| b.get(k).map(|bv| values_equal(v, bv)).unwrap_or(false))
+                && a.iter()
+                    .all(|(k, v)| b.get(k).map(|bv| values_equal(v, bv)).unwrap_or(false))
         }
         (Value::Type(a), Value::Type(b)) => a == b,
         _ => false,
@@ -1181,11 +1188,14 @@ mod tests {
 
     #[test]
     fn test_array_indexing() {
-        let v = vars(&[("a", Value::Array(vec![
-            Value::Number(10.0),
-            Value::Number(20.0),
-            Value::Number(30.0),
-        ]))]);
+        let v = vars(&[(
+            "a",
+            Value::Array(vec![
+                Value::Number(10.0),
+                Value::Number(20.0),
+                Value::Number(30.0),
+            ]),
+        )]);
         assert!(eval_bool("a[0] == 10", &v).unwrap());
         assert!(eval_bool("a[1] == 20", &v).unwrap());
         assert!(eval_bool("a[2] == 30", &v).unwrap());
@@ -1197,7 +1207,7 @@ mod tests {
         obj.insert("name".to_string(), Value::String("alice".to_string()));
         obj.insert("age".to_string(), Value::Number(30.0));
         let v = vars(&[("o", Value::Object(obj))]);
-        
+
         assert!(eval_bool(r#"o.name == "alice""#, &v).unwrap());
         assert!(eval_bool("o.age == 30", &v).unwrap());
         assert!(eval_bool(r#"o["name"] == "alice""#, &v).unwrap());
@@ -1205,14 +1215,11 @@ mod tests {
 
     #[test]
     fn test_nested_access() {
-        let inner = Value::Array(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-        ]);
+        let inner = Value::Array(vec![Value::Number(1.0), Value::Number(2.0)]);
         let mut obj = HashMap::new();
         obj.insert("items".to_string(), inner);
         let v = vars(&[("o", Value::Object(obj))]);
-        
+
         assert!(eval_bool("o.items[0] == 1", &v).unwrap());
         assert!(eval_bool("o.items[1] == 2", &v).unwrap());
         assert!(eval_bool("len(o.items) == 2", &v).unwrap());
@@ -1226,7 +1233,7 @@ mod tests {
             ("b", Value::Bool(true)),
             ("a", Value::Array(vec![])),
         ]);
-        
+
         assert!(eval_bool("type(n) == number", &v).unwrap());
         assert!(eval_bool("type(s) == string", &v).unwrap());
         assert!(eval_bool("type(b) == bool", &v).unwrap());
@@ -1239,18 +1246,21 @@ mod tests {
         obj.insert("a".to_string(), Value::Number(1.0));
         obj.insert("b".to_string(), Value::Number(2.0));
         let v = vars(&[("o", Value::Object(obj))]);
-        
+
         assert!(eval_bool("len(keys(o)) == 2", &v).unwrap());
     }
 
     #[test]
     fn test_forall_array() {
-        let v = vars(&[("a", Value::Array(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0),
-        ]))]);
-        
+        let v = vars(&[(
+            "a",
+            Value::Array(vec![
+                Value::Number(1.0),
+                Value::Number(2.0),
+                Value::Number(3.0),
+            ]),
+        )]);
+
         assert!(eval_bool("x <= 3 forall x in a", &v).unwrap());
         assert!(eval_bool("x > 0 forall x in a", &v).unwrap());
         assert!(!eval_bool("x > 2 forall x in a", &v).unwrap());
@@ -1263,7 +1273,7 @@ mod tests {
         obj.insert("b".to_string(), Value::Number(2.0));
         obj.insert("c".to_string(), Value::Number(3.0));
         let v = vars(&[("o", Value::Object(obj))]);
-        
+
         assert!(eval_bool("x <= 3 forall x in o", &v).unwrap());
         assert!(eval_bool("type(x) == number forall x in o", &v).unwrap());
     }
@@ -1288,7 +1298,7 @@ mod tests {
         obj.insert("a".to_string(), Value::Number(1.0));
         obj.insert("b".to_string(), Value::Number(2.0));
         let v = vars(&[("o", Value::Object(obj))]);
-        
+
         assert!(eval_bool("len(o) == 2", &v).unwrap());
     }
 
