@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_json_object_dot_access() {
-        let vars = vec![make_var("o", "json_object")];
+        let vars = vec![make_var("o", "json object")];
         let constraints = vec!["o.age == 30".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
