@@ -35,3 +35,10 @@ json_array forall fails
 cctr {{ FIXTURE_DIR }}/json_array/json_array_forall_fails.txt --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
   Error: constraint 'x < 5 forall x in a' not satisfied
+
+===
+json_array out of bounds fails
+===
+cctr {{ FIXTURE_DIR }}/json_array/json_array_out_of_bounds.txt --no-color 2>&1 | grep "constraint.*failed"
+---
+  Error: constraint 'a[10] == 1' failed: index out of bounds: 10 >= 3
