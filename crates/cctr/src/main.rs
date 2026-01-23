@@ -2,10 +2,11 @@ use cctr::cli::Cli;
 use cctr::discover::discover_suites;
 use cctr::output::Output;
 use cctr::parse::parse_corpus_file;
-use cctr::runner::{run_suite, ProgressEvent, SuiteResult};
+use cctr::runner::{run_from_stdin, run_suite, ProgressEvent, SuiteResult};
 use cctr::update::update_corpus_file;
 use clap::Parser;
 use rayon::prelude::*;
+use std::io::Read;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Instant;
@@ -22,6 +23,11 @@ fn main() -> anyhow::Result<()> {
 
     let use_color = !cli.no_color && atty::is(atty::Stream::Stdout);
     let mut output = Output::new(use_color);
+
+    // Check for stdin mode
+    if cli.test_root.as_os_str() == "-" {
+        return run_stdin_mode(&cli, &mut output);
+    }
 
     let root = cli
         .test_root
