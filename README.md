@@ -521,14 +521,32 @@ having
 
 | Function | Description |
 |----------|-------------|
-| `len(s)` | Length of string |
+| `len(x)` | Length of string, array, or object |
+| `type(x)` | Type of value: `number`, `string`, `bool`, `json_array`, `json_object` |
+| `keys(obj)` | Array of keys from an object |
 
 ```
 having
 * len(name) > 0
-* len(name) <= 50
-* len(short) < len(long)
+* len(arr) == 3
+* len(obj) == 2
+* type(value) == number
+* type(items) == json_array
+* len(keys(obj)) > 0
 ```
+
+### Quantifiers
+
+Use `forall` to check that a condition holds for all elements in an array or object:
+
+```
+having
+* x > 0 forall x in numbers
+* len(item.name) > 0 forall item in users
+* type(v) == number forall v in obj
+```
+
+When iterating over an object, `forall` iterates over the values (not the keys).
 
 ### Operator precedence
 
