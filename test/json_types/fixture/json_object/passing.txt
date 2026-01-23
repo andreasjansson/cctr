@@ -371,3 +371,16 @@ with
 having
 * keys(o) == []
 * values(o) == []
+
+===
+json_object string concatenation
+===
+echo '{"first": "hello", "second": "world"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* o.first + " " + o.second == "hello world"
+* o.first + o.second == "helloworld"
