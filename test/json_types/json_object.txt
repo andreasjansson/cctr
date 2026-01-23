@@ -3,7 +3,7 @@ json_object passing tests
 ===
 cctr {{ FIXTURE_DIR }}/json_object/passing.txt --no-color 2>&1 | tail -1
 ---
-All 28 tests passed in {{ t }}s
+All 29 tests passed in {{ t }}s
 ---
 with
 * t: number
