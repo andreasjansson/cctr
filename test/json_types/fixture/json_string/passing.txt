@@ -50,7 +50,7 @@ having
 ===
 json_string with newline escape
 ===
-echo '"line1\nline2"'
+printf '"line1\\nline2"'
 ---
 {{ s }}
 ---
