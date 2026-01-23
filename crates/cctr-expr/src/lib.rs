@@ -842,6 +842,11 @@ fn eval_binary_op(
                 (Value::String(ls), Value::String(rs)) => {
                     Ok(Value::String(format!("{}{}", ls, rs)))
                 }
+                (Value::Array(la), Value::Array(ra)) => {
+                    let mut result = la.clone();
+                    result.extend(ra.clone());
+                    Ok(Value::Array(result))
+                }
                 _ => Ok(Value::Number(l.as_number()? + r.as_number()?)),
             }
         }
