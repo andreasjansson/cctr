@@ -375,11 +375,11 @@ echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
 {{ data }}
 ---
 with
-* data: json_object
+* data: json object
 having
 * len(data.users) == 2
 * data.users[0].name == "alice"
-* type(data.users) == json_array
+* type(data.users) == array
 ```
 
 Access patterns:
