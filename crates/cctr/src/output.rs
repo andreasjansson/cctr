@@ -139,7 +139,7 @@ impl Output {
         sorted_results.sort_by(|a, b| a.suite.name.cmp(&b.suite.name));
 
         for suite_result in &sorted_results {
-            if suite_result.setup_error.is_some() {
+            if let Some(setup_error) = &suite_result.setup_error {
                 let skipped_count = suite_result.suite.test_count();
                 self.set_color(Color::Yellow);
                 write!(self.stdout, "⊘ {}", suite_result.suite.name).unwrap();
@@ -147,7 +147,7 @@ impl Output {
                 writeln!(
                     self.stdout,
                     ": {} ({} tests skipped)",
-                    suite_result.setup_error.as_ref().unwrap(),
+                    setup_error,
                     skipped_count
                 )
                 .unwrap();
