@@ -349,12 +349,41 @@ with
 * time: number
 ```
 
-Two variable types are supported:
+Six variable types are supported:
 
 | Type | Matches |
 |------|---------|
 | `number` | Integers and decimals, including negative: `42`, `3.14`, `-17`, `0.001` |
 | `string` | Any text up to the next literal part of the pattern (or end of line) |
+| `json_string` | JSON string literal: `"hello"`, `"with \"escapes\""` (value is the string content) |
+| `json_bool` | JSON boolean: `true`, `false` |
+| `json_array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
+| `json_object` | JSON object: `{"name": "alice", "age": 30}` |
+
+### JSON types
+
+JSON types are useful when your command outputs JSON data. The captured value is parsed as JSON and can be accessed using array indexing, object property access, and functions.
+
+```
+===
+test json output
+===
+echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
+---
+{{ data }}
+---
+with
+* data: json_object
+having
+* len(data.users) == 2
+* data.users[0].name == "alice"
+* type(data.users) == json_array
+```
+
+Access patterns:
+- Array indexing: `arr[0]`, `arr[1]`
+- Object property: `obj.name`, `obj.nested.value`
+- Bracket notation: `obj["key-with-dashes"]`
 
 ## Constraints
 
