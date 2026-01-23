@@ -86,6 +86,17 @@ impl Suite {
 }
 
 pub fn discover_suites(root: &Path) -> Result<Vec<Suite>> {
+    // If root is a single file, create a suite containing just that file
+    if root.is_file() {
+        if root.extension().is_some_and(|ext| ext == "txt") {
+            if let Some(parent) = root.parent() {
+                let suite = Suite::new_single_file(parent.to_path_buf(), root.to_path_buf());
+                return Ok(vec![suite]);
+            }
+        }
+        return Ok(vec![]);
+    }
+
     let mut suite_dirs: HashSet<PathBuf> = HashSet::new();
 
     for entry in WalkDir::new(root)
