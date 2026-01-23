@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn test_json_string_match() {
-        let vars = vec![make_var("s", "json_string")];
+        let vars = vec![make_var("s", "json string")];
         let constraints = vec![r#"s == "hello""#.to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
