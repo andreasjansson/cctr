@@ -11,6 +11,7 @@ with
 ===
 json_string wrong value fails
 ===
-cctr {{ FIXTURE_DIR }}/json_string/json_string_wrong_value.txt --no-color 2>&1 | grep "constraint.*not satisfied"
+cctr {{ FIXTURE_DIR }}/json_string/json_string_wrong_value.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
 ---
   Error: constraint 's == "world"' not satisfied
+  where s = "hello"
