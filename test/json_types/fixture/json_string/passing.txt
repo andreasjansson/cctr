@@ -112,3 +112,18 @@ having
 * o.a <= o.a
 * o.b >= o.b
 * "aaa" < "aab"
+
+===
+json_string lower upper functions
+===
+echo '{"s": "HeLLo WoRLd"}'
+---
+{{ o }}
+---
+with
+* o: json_object
+having
+* lower(o.s) == "hello world"
+* upper(o.s) == "HELLO WORLD"
+* lower("ABC") == "abc"
+* upper("xyz") == "XYZ"
