@@ -968,4 +968,125 @@ mod tests {
         // Should contain "Users"
         assert!(eval_bool(r#"p contains "Users""#, &v).unwrap());
     }
+
+    #[test]
+    fn test_array_indexing() {
+        let v = vars(&[("a", Value::Array(vec![
+            Value::Number(10.0),
+            Value::Number(20.0),
+            Value::Number(30.0),
+        ]))]);
+        assert!(eval_bool("a[0] == 10", &v).unwrap());
+        assert!(eval_bool("a[1] == 20", &v).unwrap());
+        assert!(eval_bool("a[2] == 30", &v).unwrap());
+    }
+
+    #[test]
+    fn test_object_property_access() {
+        let mut obj = HashMap::new();
+        obj.insert("name".to_string(), Value::String("alice".to_string()));
+        obj.insert("age".to_string(), Value::Number(30.0));
+        let v = vars(&[("o", Value::Object(obj))]);
+        
+        assert!(eval_bool(r#"o.name == "alice""#, &v).unwrap());
+        assert!(eval_bool("o.age == 30", &v).unwrap());
+        assert!(eval_bool(r#"o["name"] == "alice""#, &v).unwrap());
+    }
+
+    #[test]
+    fn test_nested_access() {
+        let inner = Value::Array(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+        ]);
+        let mut obj = HashMap::new();
+        obj.insert("items".to_string(), inner);
+        let v = vars(&[("o", Value::Object(obj))]);
+        
+        assert!(eval_bool("o.items[0] == 1", &v).unwrap());
+        assert!(eval_bool("o.items[1] == 2", &v).unwrap());
+        assert!(eval_bool("len(o.items) == 2", &v).unwrap());
+    }
+
+    #[test]
+    fn test_type_function() {
+        let v = vars(&[
+            ("n", Value::Number(42.0)),
+            ("s", Value::String("hello".to_string())),
+            ("b", Value::Bool(true)),
+            ("a", Value::Array(vec![])),
+        ]);
+        
+        assert!(eval_bool("type(n) == number", &v).unwrap());
+        assert!(eval_bool("type(s) == string", &v).unwrap());
+        assert!(eval_bool("type(b) == bool", &v).unwrap());
+        assert!(eval_bool("type(a) == json_array", &v).unwrap());
+    }
+
+    #[test]
+    fn test_keys_function() {
+        let mut obj = HashMap::new();
+        obj.insert("a".to_string(), Value::Number(1.0));
+        obj.insert("b".to_string(), Value::Number(2.0));
+        let v = vars(&[("o", Value::Object(obj))]);
+        
+        assert!(eval_bool("len(keys(o)) == 2", &v).unwrap());
+    }
+
+    #[test]
+    fn test_forall_array() {
+        let v = vars(&[("a", Value::Array(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0),
+        ]))]);
+        
+        assert!(eval_bool("x <= 3 forall x in a", &v).unwrap());
+        assert!(eval_bool("x > 0 forall x in a", &v).unwrap());
+        assert!(!eval_bool("x > 2 forall x in a", &v).unwrap());
+    }
+
+    #[test]
+    fn test_forall_object() {
+        let mut obj = HashMap::new();
+        obj.insert("a".to_string(), Value::Number(1.0));
+        obj.insert("b".to_string(), Value::Number(2.0));
+        obj.insert("c".to_string(), Value::Number(3.0));
+        let v = vars(&[("o", Value::Object(obj))]);
+        
+        assert!(eval_bool("x <= 3 forall x in o", &v).unwrap());
+        assert!(eval_bool("type(x) == number forall x in o", &v).unwrap());
+    }
+
+    #[test]
+    fn test_object_literal() {
+        let v = vars(&[]);
+        assert!(eval_bool(r#"{"a": 1, "b": 2}.a == 1"#, &v).unwrap());
+        assert!(eval_bool(r#"len({"x": 1, "y": 2}) == 2"#, &v).unwrap());
+    }
+
+    #[test]
+    fn test_type_literal() {
+        let v = vars(&[("n", Value::Number(42.0))]);
+        assert!(eval_bool("type(n) == number", &v).unwrap());
+        assert!(!eval_bool("type(n) == string", &v).unwrap());
+    }
+
+    #[test]
+    fn test_len_object() {
+        let mut obj = HashMap::new();
+        obj.insert("a".to_string(), Value::Number(1.0));
+        obj.insert("b".to_string(), Value::Number(2.0));
+        let v = vars(&[("o", Value::Object(obj))]);
+        
+        assert!(eval_bool("len(o) == 2", &v).unwrap());
+    }
+
+    #[test]
+    fn test_bool_comparison() {
+        let v = vars(&[("b", Value::Bool(true))]);
+        assert!(eval_bool("b == true", &v).unwrap());
+        assert!(eval_bool("b != false", &v).unwrap());
+        assert!(eval_bool("(1 == 1) == true", &v).unwrap());
+    }
 }
