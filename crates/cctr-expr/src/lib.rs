@@ -104,6 +104,7 @@ impl Value {
             Value::Number(_) => "number",
             Value::String(_) => "string",
             Value::Bool(_) => "bool",
+            Value::Null => "null",
             Value::Array(_) => "json_array",
             Value::Object(_) => "json_object",
             Value::Type(_) => "type",
