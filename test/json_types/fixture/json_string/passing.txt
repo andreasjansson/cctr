@@ -50,14 +50,14 @@ having
 ===
 json_string with newline escape
 ===
-echo '"line1\\nline2"'
+echo '"line1\nline2"'
 ---
 {{ s }}
 ---
 with
 * s: json_string
 having
-* len(s) == 12
+* len(s) == 11
 
 ===
 json_string with unicode
