@@ -21,7 +21,7 @@ with
 ===
 stdin test with json
 ===
-printf '===\ntest\n===\necho '"'"'{"x": 1}'"'"'\n---\n{{ o }}\n---\nwith\n* o: json_object\nhaving\n* o.x == 1\n' | cctr - --no-color 2>&1 | tail -1
+printf '===\ntest\n===\necho '\''{"x": 1}'\''\n---\n{{ o }}\n---\nwith\n* o: json_object\nhaving\n* o.x == 1\n' | cctr - --no-color 2>&1 | tail -1
 ---
 All 1 tests passed in {{ t }}s
 ---
