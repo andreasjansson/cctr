@@ -459,14 +459,15 @@ fn pow(input: &mut &str) -> ModalResult<Expr> {
 fn term(input: &mut &str) -> ModalResult<Expr> {
     let init = pow.parse_next(input)?;
 
-    repeat(0.., (ws(one_of(['*', '/'])), pow))
+    repeat(0.., (ws(one_of(['*', '/', '%'])), pow))
         .fold(
             move || init.clone(),
             |acc, (op_char, val): (char, Expr)| {
-                let op = if op_char == '*' {
-                    BinaryOp::Mul
-                } else {
-                    BinaryOp::Div
+                let op = match op_char {
+                    '*' => BinaryOp::Mul,
+                    '/' => BinaryOp::Div,
+                    '%' => BinaryOp::Mod,
+                    _ => unreachable!(),
                 };
                 Expr::BinaryOp {
                     op,
