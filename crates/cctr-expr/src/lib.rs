@@ -930,10 +930,30 @@ fn eval_binary_op(
         BinaryOp::Pow => Ok(Value::Number(l.as_number()?.powf(r.as_number()?))),
         BinaryOp::Eq => Ok(Value::Bool(values_equal(&l, &r))),
         BinaryOp::Ne => Ok(Value::Bool(!values_equal(&l, &r))),
-        BinaryOp::Lt => Ok(Value::Bool(l.as_number()? < r.as_number()?)),
-        BinaryOp::Le => Ok(Value::Bool(l.as_number()? <= r.as_number()?)),
-        BinaryOp::Gt => Ok(Value::Bool(l.as_number()? > r.as_number()?)),
-        BinaryOp::Ge => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
+        BinaryOp::Lt => {
+            match (&l, &r) {
+                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls < rs)),
+                _ => Ok(Value::Bool(l.as_number()? < r.as_number()?)),
+            }
+        }
+        BinaryOp::Le => {
+            match (&l, &r) {
+                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls <= rs)),
+                _ => Ok(Value::Bool(l.as_number()? <= r.as_number()?)),
+            }
+        }
+        BinaryOp::Gt => {
+            match (&l, &r) {
+                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls > rs)),
+                _ => Ok(Value::Bool(l.as_number()? > r.as_number()?)),
+            }
+        }
+        BinaryOp::Ge => {
+            match (&l, &r) {
+                (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls >= rs)),
+                _ => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
+            }
+        }
         BinaryOp::In => {
             let arr = r.as_array()?;
             Ok(Value::Bool(arr.iter().any(|v| values_equal(&l, v))))
