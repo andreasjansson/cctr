@@ -1,0 +1,35 @@
+===
+json_string basic match
+===
+echo '"foo"'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* s == "foo"
+
+===
+json_string length
+===
+echo '"hello"'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* len(s) == 5
+
+===
+json_string with escapes
+===
+echo '"hello \"world\""'
+---
+{{ s }}
+---
+with
+* s: json_string
+having
+* s contains "world"
