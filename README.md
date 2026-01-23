@@ -415,10 +415,10 @@ All constraints must pass for the test to pass.
 |----------|-------------|
 | `==` | Equal |
 | `!=` | Not equal |
-| `<` | Less than |
-| `<=` | Less than or equal |
-| `>` | Greater than |
-| `>=` | Greater than or equal |
+| `<` | Less than (numbers or strings) |
+| `<=` | Less than or equal (numbers or strings) |
+| `>` | Greater than (numbers or strings) |
+| `>=` | Greater than or equal (numbers or strings) |
 
 ```
 having
@@ -426,6 +426,7 @@ having
 * n != 0
 * n >= 10
 * n < 100
+* "apple" < "banana"
 ```
 
 ### Arithmetic operators
