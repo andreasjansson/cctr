@@ -44,7 +44,7 @@ pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
     parse_corpus_content(&content, path)
 }
 
-fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
+pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
     let mut tests = Vec::new();
     let lines: Vec<&str> = content.lines().collect();
     let mut i = 0;
