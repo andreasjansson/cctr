@@ -41,11 +41,11 @@ json_object property on array fails
 ===
 cctr {{ FIXTURE_DIR }}/json_object/json_object_property_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
 ---
-  Error: constraint 'a.foo == 1' failed: type error: expected object, got json_array
+  Error: constraint 'a.foo == 1' failed: type error: expected object, got array
 
 ===
 json_object keys on array fails
 ===
 cctr {{ FIXTURE_DIR }}/json_object/json_object_keys_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
 ---
-  Error: constraint 'len(keys(a)) == 0' failed: type error: expected object, got json_array
+  Error: constraint 'len(keys(a)) == 0' failed: type error: expected object, got array

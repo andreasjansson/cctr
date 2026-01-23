@@ -6,6 +6,6 @@ echo '{"name": "alice", "age": 30}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.name == "bob"

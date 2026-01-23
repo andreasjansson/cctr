@@ -6,6 +6,6 @@ echo '[1, 2, 3]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(keys(a)) == 0

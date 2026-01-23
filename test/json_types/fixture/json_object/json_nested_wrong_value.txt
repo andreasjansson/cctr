@@ -6,6 +6,6 @@ echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.users[0].name == "charlie"

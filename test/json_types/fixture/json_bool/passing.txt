@@ -6,7 +6,7 @@ echo 'true'
 {{ b }}
 ---
 with
-* b: json_bool
+* b: json bool
 having
 * b == true
 
@@ -18,7 +18,7 @@ echo 'false'
 {{ b }}
 ---
 with
-* b: json_bool
+* b: json bool
 having
 * b == false
 * b != true
@@ -31,7 +31,7 @@ echo 'true'
 {{ b }}
 ---
 with
-* b: json_bool
+* b: json bool
 having
 * type(b) == bool
 
@@ -56,7 +56,7 @@ echo '[true, false, true]'
 {{ arr }}
 ---
 with
-* arr: json_array
+* arr: json array
 having
 * arr[0] == true
 * arr[1] == false
@@ -70,7 +70,7 @@ echo '{"active": true, "deleted": false}'
 {{ obj }}
 ---
 with
-* obj: json_object
+* obj: json object
 having
 * obj.active == true
 * obj.deleted == false
@@ -84,7 +84,7 @@ echo 'true'
 {{ b }}
 ---
 with
-* b: json_bool
+* b: json bool
 having
 * not (b == false)
 * not (not b)

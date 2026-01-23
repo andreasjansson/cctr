@@ -6,7 +6,7 @@ echo '[1, 2, 3]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 3
 
@@ -18,7 +18,7 @@ echo '[10, 20, 30]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[0] == 10
 * a[1] == 20
@@ -32,7 +32,7 @@ echo '[1, "hello", true]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * type(a[0]) == number
 * type(a[1]) == string
@@ -46,7 +46,7 @@ echo '[1, 2, 3]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * x <= 3 forall x in a
 * x > 0 forall x in a
@@ -59,7 +59,7 @@ echo '[[1, 2], [3, 4]]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 2
 * len(a[0]) == 2
@@ -74,10 +74,10 @@ echo '[]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 0
-* type(a) == json_array
+* type(a) == array
 
 ===
 json_array single element
@@ -87,7 +87,7 @@ echo '[42]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 1
 * a[0] == 42
@@ -100,7 +100,7 @@ echo '[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[0][0][0] == 1
 * a[0][1][1] == 4
@@ -115,14 +115,14 @@ echo '[1, "two", true, null, [3], {"x": 4}]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 6
 * a[0] == 1
 * a[1] == "two"
 * a[2] == true
-* type(a[4]) == json_array
-* type(a[5]) == json_object
+* type(a[4]) == array
+* type(a[5]) == object
 * a[4][0] == 3
 * a[5].x == 4
 
@@ -134,7 +134,7 @@ echo '[2, 4, 6, 8]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * x > 0 and x < 10 forall x in a
 
@@ -146,7 +146,7 @@ echo '[]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * x > 1000 forall x in a
 
@@ -158,7 +158,7 @@ echo '[1, 2, 3]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[0] in [1, 2, 3]
 * a[1] in [1, 2, 3]
@@ -171,7 +171,7 @@ echo '[10, 20, 30, 40, 50]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[0] + a[1] == 30
 * a[2] * 2 == 60
@@ -185,7 +185,7 @@ echo '[{"name": "alice"}, {"name": "bob"}]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a) == 2
 * a[0].name == "alice"
@@ -200,7 +200,7 @@ echo '[[1], [1, 2], [1, 2, 3]]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * len(a[0]) == 1
 * len(a[1]) == 2
@@ -215,7 +215,7 @@ echo '[1, 2, 3, 4, 5]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[-1] == 5
 * a[-2] == 4
@@ -229,7 +229,7 @@ echo '[[1, 2], [3, 4]]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[-1][-1] == 4
 * a[-2][-1] == 2
@@ -243,7 +243,7 @@ echo '[[1, 2], [3, 4]]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * a[0] + a[1] == [1, 2, 3, 4]
 * [] + a[0] == [1, 2]
@@ -257,7 +257,7 @@ echo '[5, 2, 8, 1, 9]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * sum(a) == 25
 * min(a) == 1
@@ -271,7 +271,7 @@ echo '[]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * sum(a) == 0
 
@@ -283,7 +283,7 @@ echo '[1.5, 2.5, 3.0]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * sum(a) == 7.0
 
@@ -295,7 +295,7 @@ echo '{"items": [10, 20, 30]}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * sum(o.items) == 60
 * min(o.items) == 10
@@ -309,7 +309,7 @@ echo '[1, 2, 2, 3, 3, 3, 1]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * unique(a) == [1, 2, 3]
 * len(unique(a)) == 3
@@ -322,7 +322,7 @@ echo '["a", "b", "a", "c", "b"]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * unique(a) == ["a", "b", "c"]
 
@@ -334,6 +334,6 @@ echo '[3, 1, 2, 1, 3]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * unique(a) == [3, 1, 2]

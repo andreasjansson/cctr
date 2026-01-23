@@ -6,6 +6,6 @@ echo '"hello"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * s == "world"

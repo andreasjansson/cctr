@@ -6,6 +6,6 @@ echo '[1, 2, 10]'
 {{ a }}
 ---
 with
-* a: json_array
+* a: json array
 having
 * x < 5 forall x in a

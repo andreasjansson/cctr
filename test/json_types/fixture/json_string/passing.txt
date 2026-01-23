@@ -6,7 +6,7 @@ echo '"foo"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * s == "foo"
 
@@ -18,7 +18,7 @@ echo '"hello"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * len(s) == 5
 
@@ -30,7 +30,7 @@ echo '"hello \"world\""'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * s contains "world"
 
@@ -42,7 +42,7 @@ echo '""'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * s == ""
 * len(s) == 0
@@ -55,7 +55,7 @@ printf '"line1\\nline2"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * len(s) == 11
 
@@ -67,7 +67,7 @@ echo '"héllo wörld 你好"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * s contains "héllo"
 
@@ -79,7 +79,7 @@ echo '"test"'
 {{ s }}
 ---
 with
-* s: json_string
+* s: json string
 having
 * type(s) == string
 
@@ -91,7 +91,7 @@ echo '["a", "b", "c"]'
 {{ arr }}
 ---
 with
-* arr: json_array
+* arr: json array
 having
 * arr[0] == "a"
 * type(arr[1]) == string
@@ -104,7 +104,7 @@ echo '{"a": "apple", "b": "banana", "c": "cherry"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.a < o.b
 * o.b < o.c
@@ -121,7 +121,7 @@ echo '{"s": "hello"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.s[0] == "h"
 * o.s[1] == "e"
@@ -137,7 +137,7 @@ echo '{"s": "héllo"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.s[0] == "h"
 * o.s[1] == "é"
@@ -152,7 +152,7 @@ echo '{"s": "HeLLo WoRLd"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * lower(o.s) == "hello world"
 * upper(o.s) == "HELLO WORLD"

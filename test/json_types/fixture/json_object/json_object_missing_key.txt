@@ -6,6 +6,6 @@ echo '{"name": "alice"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * o.missing == "value"

@@ -6,6 +6,6 @@ echo 'true'
 {{ b }}
 ---
 with
-* b: json_bool
+* b: json bool
 having
 * b == false

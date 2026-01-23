@@ -27,7 +27,7 @@ json_array wrong type fails
 ===
 cctr {{ FIXTURE_DIR }}/json_array/json_array_wrong_type.txt --no-color 2>&1 | grep "constraint.*not satisfied"
 ---
-  Error: constraint 'type(a) == json_object' not satisfied
+  Error: constraint 'type(a) == object' not satisfied
 
 ===
 json_array forall fails

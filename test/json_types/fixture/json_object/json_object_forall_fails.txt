@@ -6,6 +6,6 @@ echo '{"a": 1, "b": 2, "c": "not a number"}'
 {{ o }}
 ---
 with
-* o: json_object
+* o: json object
 having
 * type(v) == number forall v in o
