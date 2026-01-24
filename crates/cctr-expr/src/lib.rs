@@ -1033,10 +1033,14 @@ fn eval_binary_op(
                 Ok(Value::Bool(haystack.contains(needle)))
             }
             Value::Array(arr) => Ok(Value::Bool(arr.iter().any(|v| values_equal(v, &r)))),
-            _ => Err(format!(
-                "contains requires string or array on left side, got {}",
+            Value::Object(obj) => {
+                let key = r.as_string()?;
+                Ok(Value::Bool(obj.contains_key(key)))
+            }
+            _ => Err(EvalError::Type(format!(
+                "contains requires string, array, or object on left side, got {}",
                 l.type_name()
-            )),
+            ))),
         }
         BinaryOp::StartsWith => {
             let s = l.as_string()?;
