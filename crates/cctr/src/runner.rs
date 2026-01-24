@@ -63,14 +63,17 @@ pub enum ProgressEvent {
     Skip { suite: String, reason: String },
 }
 
-fn run_command(command: &str, work_dir: &Path) -> (String, i32) {
-    let result = Command::new("bash")
-        .arg("-c")
+fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
+    let mut cmd = Command::new("bash");
+    cmd.arg("-c")
         .arg(command)
-        .current_dir(work_dir)
-        .output();
+        .current_dir(work_dir);
+    
+    for (key, value) in env_vars {
+        cmd.env(key, value);
+    }
 
-    match result {
+    match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
