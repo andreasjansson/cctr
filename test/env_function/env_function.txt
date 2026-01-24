@@ -1,9 +1,10 @@
 ===
 env function passing tests
 ===
-cctr {{ FIXTURE_DIR }}/tests/env_function.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests/env_function.txt --no-color 2>&1 | tail -1
 ---
-All 5 tests passed in {{ t }}s
+All {{ n }} tests passed in {{ t }}s
 ---
 where
+* n: number
 * t: number
