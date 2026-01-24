@@ -35,7 +35,7 @@ having
 * ["red", "green", "blue"] contains c
 
 ===
-array does not contain string (negated)
+array does not contain string (shorthand)
 ===
 echo "color: red"
 ---
@@ -44,7 +44,7 @@ color: {{ c }}
 with
 * c: string
 having
-* not (["yellow", "purple", "orange"] contains c)
+* ["yellow", "purple", "orange"] not contains c
 
 ===
 array contains with single element
