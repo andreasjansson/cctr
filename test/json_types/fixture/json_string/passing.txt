@@ -100,7 +100,7 @@ json_string indexing
 ===
 echo '{"s": "hello"}'
 ---
-{{ o: json string }}
+{{ o: json object }}
 ---
 where
 * o.s[0] == "h"
@@ -114,7 +114,7 @@ json_string indexing unicode
 ===
 echo '{"s": "héllo"}'
 ---
-{{ o: json string }}
+{{ o: json object }}
 ---
 where
 * o.s[0] == "h"
@@ -127,7 +127,7 @@ json_string lower upper functions
 ===
 echo '{"s": "HeLLo WoRLd"}'
 ---
-{{ o: json string }}
+{{ o: json object }}
 ---
 where
 * lower(o.s) == "hello world"
