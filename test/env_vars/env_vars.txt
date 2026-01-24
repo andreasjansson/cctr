@@ -1,44 +1,11 @@
 ===
-env var in command
+env vars tests pass
 ===
-echo "home={{ HOME }}"
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
-home={{ HOME }}
-
-===
-env var USER in both command and expected
-===
-echo "user={{ USER }}"
----
-user={{ USER }}
-
-===
-PATH env var expands
-===
-echo "path={{ PATH }}" | cut -c1-10
----
-path={{ PA }}
+All 6 tests passed in {{ t }}s
 ---
 with
-* PA: string
-
-===
-unknown env var left unchanged
-===
-echo '{{ NONEXISTENT_VAR_XYZ123 }}'
----
-{{ NONEXISTENT_VAR_XYZ123 }}
-
-===
-multiple env vars
-===
-echo "{{ USER }}@{{ HOME }}"
----
-{{ USER }}@{{ HOME }}
-
-===
-env var with FIXTURE_DIR
-===
-echo "user={{ USER }} dir={{ FIXTURE_DIR }}" | grep -o "user=[^ ]*"
----
-user={{ USER }}
+* t: number
+having
+* t < 5
