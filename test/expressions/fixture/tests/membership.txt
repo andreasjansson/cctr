@@ -11,7 +11,7 @@ having
 * n in [200, 201, 204, 301, 302]
 
 ===
-number not in array
+number not in array (long form)
 ===
 echo "code: 200"
 ---
@@ -21,6 +21,18 @@ with
 * n: number
 having
 * not (n in [400, 401, 403, 404, 500])
+
+===
+number not in array (shorthand)
+===
+echo "code: 200"
+---
+code: {{ n }}
+---
+with
+* n: number
+having
+* n not in [400, 401, 403, 404, 500]
 
 ===
 string in array
@@ -35,7 +47,7 @@ having
 * c in ["red", "green", "blue"]
 
 ===
-string not in array
+string not in array (long form)
 ===
 echo "color: red"
 ---
@@ -45,6 +57,18 @@ with
 * c: string
 having
 * not (c in ["yellow", "purple", "orange"])
+
+===
+string not in array (shorthand)
+===
+echo "color: red"
+---
+color: {{ c }}
+---
+with
+* c: string
+having
+* c not in ["yellow", "purple", "orange"]
 
 ===
 in with single element
