@@ -477,22 +477,13 @@ having
 
 | Operator | Description |
 |----------|-------------|
-| `contains` | Substring match |
 | `startswith` | Prefix match |
 | `endswith` | Suffix match |
 
 ```
 having
-* message contains "error"
 * path startswith "/usr"
 * filename endswith ".txt"
-```
-
-Combine with `not`:
-
-```
-having
-* not (message contains "fatal")
 ```
 
 ### Regular expressions
