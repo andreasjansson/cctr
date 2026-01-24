@@ -671,10 +671,7 @@ Only tests without variables are updated. Tests with variables must be updated m
 
 ## Development
 
-```bash
-./script/test      # Run unit tests and corpus tests
-./script/install   # Build and install
-```
+See [DEVELOPMENT.md](DEVELOPMENT.md) for development setup, test structure, and contribution guidelines.
 
 ## License
 
