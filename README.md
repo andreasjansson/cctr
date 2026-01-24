@@ -163,7 +163,7 @@ When a suite has a fixture:
 
 - The entire `fixture/` directory is copied to a temp directory
 - Tests run with that temp directory as the working directory
-- The `{{ FIXTURE_DIR }}` variable points to this location
+- The `$CCTR_FIXTURE_DIR` environment variable points to this location
 - Changes made during tests don't affect the original fixture
 - The temp directory is cleaned up after the suite completes
 
