@@ -1,0 +1,162 @@
+===
+duck type integer
+===
+echo "42"
+---
+{{ x }}
+---
+where
+* x == 42
+* x > 0
+* type(x) == number
+
+===
+duck type negative integer
+===
+echo "-17"
+---
+{{ x }}
+---
+where
+* x == -17
+* x < 0
+* type(x) == number
+
+===
+duck type float
+===
+echo "3.14159"
+---
+{{ x }}
+---
+where
+* x > 3
+* x < 4
+* type(x) == number
+
+===
+duck type true
+===
+echo "true"
+---
+{{ x }}
+---
+where
+* x == true
+* type(x) == bool
+
+===
+duck type false
+===
+echo "false"
+---
+{{ x }}
+---
+where
+* x == false
+* type(x) == bool
+
+===
+duck type null
+===
+echo "null"
+---
+{{ x }}
+---
+where
+* x == null
+* type(x) == null
+
+===
+duck type json array
+===
+echo "[1, 2, 3]"
+---
+{{ x }}
+---
+where
+* len(x) == 3
+* x[0] == 1
+* type(x) == array
+
+===
+duck type json object
+===
+echo '{"name": "alice", "age": 30}'
+---
+{{ x }}
+---
+where
+* x.name == "alice"
+* x.age == 30
+* type(x) == object
+
+===
+duck type string fallback
+===
+echo "hello world"
+---
+{{ x }}
+---
+where
+* x == "hello world"
+* type(x) == string
+
+===
+duck type string with special chars
+===
+echo "foo@bar.com"
+---
+{{ x }}
+---
+where
+* x contains "@"
+* type(x) == string
+
+===
+duck type number without constraint
+===
+echo "value: 100"
+---
+value: {{ n }}
+
+===
+duck type string without constraint
+===
+echo "msg: hello"
+---
+msg: {{ s }}
+
+===
+duck type in multi-variable pattern
+===
+echo "count: 5 name: bob"
+---
+count: {{ n }} name: {{ s }}
+---
+where
+* n == 5
+* s == "bob"
+
+===
+duck type preserves json string content
+===
+echo '"hello"'
+---
+{{ x }}
+---
+where
+* x == "hello"
+* type(x) == string
+
+===
+duck type nested json
+===
+echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
+---
+{{ data }}
+---
+where
+* len(data.users) == 2
+* data.users[0].name == "alice"
+* data.users[1].name == "bob"
