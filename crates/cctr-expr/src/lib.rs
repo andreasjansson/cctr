@@ -1069,7 +1069,7 @@ fn eval_binary_op(
                 expected: "string, array, or object",
                 got: l.type_name(),
             }),
-        }
+        },
         BinaryOp::StartsWith => {
             let s = l.as_string()?;
             let prefix = r.as_string()?;
