@@ -248,34 +248,6 @@ fn expected_block(input: &mut &str) -> ModalResult<String> {
     Ok(lines.join("\n"))
 }
 
-fn var_type(input: &mut &str) -> ModalResult<VarType> {
-    alt((
-        "number".value(VarType::Number),
-        "string".value(VarType::String),
-    ))
-    .parse_next(input)
-}
-
-fn variable_decl(input: &mut &str) -> ModalResult<Variable> {
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let _ = opt('*').parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-
-    let name: &str =
-        take_while(1.., |c: char| c.is_ascii_alphanumeric() || c == '_').parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    ':'.parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let vtype = var_type.parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    opt_newline.parse_next(input)?;
-
-    Ok(Variable {
-        name: name.to_string(),
-        var_type: vtype,
-    })
-}
-
 fn constraint_line(input: &mut &str) -> ModalResult<String> {
     let _ = take_while(0.., ' ').parse_next(input)?;
     let _ = opt('*').parse_next(input)?;
@@ -285,37 +257,26 @@ fn constraint_line(input: &mut &str) -> ModalResult<String> {
     opt_newline.parse_next(input)?;
 
     let trimmed = content.trim();
-    if trimmed.is_empty() || trimmed == "with" || trimmed == "having" {
+    if trimmed.is_empty() || trimmed == "where" {
         Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
     } else {
         Ok(trimmed.to_string())
     }
 }
 
-fn with_having_section(input: &mut &str) -> ModalResult<(Vec<Variable>, Vec<String>)> {
+fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
     dash_sep.parse_next(input)?;
     opt_newline.parse_next(input)?;
 
-    // "with" line
+    // "where" line
     let _ = take_while(0.., ' ').parse_next(input)?;
-    "with".parse_next(input)?;
+    "where".parse_next(input)?;
     opt_newline.parse_next(input)?;
 
-    // Variable declarations
-    let variables: Vec<Variable> = repeat(0.., variable_decl).parse_next(input)?;
+    // Constraints
+    let constraints: Vec<String> = repeat(0.., constraint_line).parse_next(input)?;
 
-    // "having" section (optional)
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let has_having: Option<&str> = opt("having").parse_next(input)?;
-
-    let constraints = if has_having.is_some() {
-        opt_newline.parse_next(input)?;
-        repeat(0.., constraint_line).parse_next(input)?
-    } else {
-        Vec::new()
-    };
-
-    Ok((variables, constraints))
+    Ok(constraints)
 }
 
 fn test_case(input: &mut &str) -> ModalResult<TestCase> {
