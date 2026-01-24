@@ -122,13 +122,19 @@ fn duck_type_value(text: &str) -> Value {
 pub struct Matcher<'a> {
     variables: &'a [VariableDecl],
     constraints: &'a [String],
+    env_vars: &'a [(String, String)],
 }
 
 impl<'a> Matcher<'a> {
-    pub fn new(variables: &'a [VariableDecl], constraints: &'a [String]) -> Self {
+    pub fn new(
+        variables: &'a [VariableDecl],
+        constraints: &'a [String],
+        env_vars: &'a [(String, String)],
+    ) -> Self {
         Self {
             variables,
             constraints,
+            env_vars,
         }
     }
 
@@ -140,6 +146,11 @@ impl<'a> Matcher<'a> {
         let Some(caps) = regex.captures(actual) else {
             return Ok(false);
         };
+
+        // Set CCTR_* env vars so env() function can access them
+        for (key, value) in self.env_vars {
+            std::env::set_var(key, value);
+        }
 
         let values = self.extract_values(&caps)?;
         let bindings = self.format_bindings(&values);
