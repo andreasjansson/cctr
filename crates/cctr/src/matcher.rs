@@ -106,9 +106,11 @@ fn duck_type_value(text: &str) -> Value {
         return Value::Null;
     }
     
-    // Try number
+    // Try number (reject infinity/nan which aren't valid JSON)
     if let Ok(n) = trimmed.parse::<f64>() {
-        return Value::Number(n);
+        if n.is_finite() {
+            return Value::Number(n);
+        }
     }
     
     // Fall back to string
