@@ -1,5 +1,5 @@
 ===
-number in array
+array contains number
 ===
 echo "code: 200"
 ---
@@ -8,10 +8,10 @@ code: {{ n }}
 with
 * n: number
 having
-* n in [200, 201, 204, 301, 302]
+* [200, 201, 204, 301, 302] contains n
 
 ===
-number not in array (long form)
+array does not contain number (negated)
 ===
 echo "code: 200"
 ---
@@ -20,22 +20,10 @@ code: {{ n }}
 with
 * n: number
 having
-* not (n in [400, 401, 403, 404, 500])
+* not ([400, 401, 403, 404, 500] contains n)
 
 ===
-number not in array (shorthand)
-===
-echo "code: 200"
----
-code: {{ n }}
----
-with
-* n: number
-having
-* n not in [400, 401, 403, 404, 500]
-
-===
-string in array
+array contains string
 ===
 echo "color: red"
 ---
@@ -44,10 +32,10 @@ color: {{ c }}
 with
 * c: string
 having
-* c in ["red", "green", "blue"]
+* ["red", "green", "blue"] contains c
 
 ===
-string not in array (long form)
+array does not contain string (negated)
 ===
 echo "color: red"
 ---
@@ -56,22 +44,10 @@ color: {{ c }}
 with
 * c: string
 having
-* not (c in ["yellow", "purple", "orange"])
+* not (["yellow", "purple", "orange"] contains c)
 
 ===
-string not in array (shorthand)
-===
-echo "color: red"
----
-color: {{ c }}
----
-with
-* c: string
-having
-* c not in ["yellow", "purple", "orange"]
-
-===
-in with single element
+array contains with single element
 ===
 echo "val: 42"
 ---
@@ -80,10 +56,10 @@ val: {{ n }}
 with
 * n: number
 having
-* n in [42]
+* [42] contains n
 
 ===
-in with mixed check
+array contains with mixed check
 ===
 echo "status: active count: 5"
 ---
@@ -93,5 +69,33 @@ with
 * s: string
 * n: number
 having
-* s in ["active", "inactive", "pending"]
-* n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+* ["active", "inactive", "pending"] contains s
+* [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] contains n
+
+===
+object contains key
+===
+echo '{"name": "alice", "age": 30}'
+---
+{{ data }}
+---
+with
+* data: json object
+having
+* data contains "name"
+* data contains "age"
+* not (data contains "email")
+
+===
+string contains substring (unchanged)
+===
+echo "hello world"
+---
+{{ s }}
+---
+with
+* s: string
+having
+* s contains "world"
+* s contains "hello"
+* not (s contains "goodbye")
