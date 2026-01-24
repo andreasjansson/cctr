@@ -1164,7 +1164,7 @@ mod tests {
 
     #[test]
     fn test_object_contains_key() {
-        let mut obj = std::collections::BTreeMap::new();
+        let mut obj = HashMap::new();
         obj.insert("name".to_string(), Value::String("alice".to_string()));
         obj.insert("age".to_string(), Value::Number(30.0));
         let v = vars(&[("o", Value::Object(obj))]);
