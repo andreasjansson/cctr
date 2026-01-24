@@ -334,7 +334,7 @@ three
 
 ## Variables
 
-Variables capture dynamic parts of the output. Declare them in a `with` section and reference them in the expected output using `{{ name }}` syntax.
+Variables capture dynamic parts of the output using `{{ name }}` or `{{ name: type }}` syntax. Types can be specified inline or omitted for automatic duck-typing.
 
 ```
 ===
@@ -342,14 +342,42 @@ process stats
 ===
 ./stats-command
 ---
-Processed {{ count }} items in {{ time }} seconds
+Processed {{ count: number }} items in {{ time: number }} seconds
 ---
-with
-* count: number
-* time: number
+where
+* count > 0
+* time < 60
 ```
 
-Seven variable types are supported:
+### Duck typing
+
+When no type is specified, cctr automatically infers the type from the captured value:
+
+```
+===
+auto-typed variable
+===
+echo "count: 42"
+---
+count: {{ n }}
+---
+where
+* n == 42
+* type(n) == number
+```
+
+Duck typing uses the following priority:
+1. JSON object (starts with `{`)
+2. JSON array (starts with `[`)
+3. JSON string (starts with `"`)
+4. Boolean (`true` or `false`)
+5. Null (`null`)
+6. Number (valid numeric format)
+7. String (fallback)
+
+### Explicit types
+
+Seven variable types can be specified explicitly:
 
 | Type | Matches |
 |------|---------|
@@ -360,7 +388,7 @@ Seven variable types are supported:
 | `json array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
 | `json object` | JSON object: `{"name": "alice", "age": 30}` |
 
-JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+Type annotations can have flexible whitespace: `{{ x:number }}`, `{{ x: number }}`, `{{ x : number }}` are all valid.
 
 ### JSON types
 
@@ -372,11 +400,9 @@ test json output
 ===
 echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
 ---
-{{ data }}
+{{ data: json object }}
 ---
-with
-* data: json object
-having
+where
 * len(data.users) == 2
 * data.users[0].name == "alice"
 * type(data.users) == array
@@ -389,9 +415,11 @@ Access patterns:
 - Object property: `obj.name`, `obj.nested.value`
 - Bracket notation: `obj["key-with-dashes"]`
 
+JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+
 ## Constraints
 
-Add a `having` section to validate captured variables with expressions:
+Add a `where` section to validate captured variables with expressions:
 
 ```
 ===
@@ -401,9 +429,7 @@ timing must be reasonable
 ---
 Took {{ ms }}ms
 ---
-with
-* ms: number
-having
+where
 * ms > 0
 * ms < 5000
 ```
