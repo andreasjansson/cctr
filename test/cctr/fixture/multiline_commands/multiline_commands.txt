@@ -60,11 +60,13 @@ a
 b
 
 ===
-here string
+here document
 ===
-cat <<< "hello from here string"
+cat << EOF
+hello from here doc
+EOF
 ---
-hello from here string
+hello from here doc
 
 ===
 arithmetic expansion
@@ -106,9 +108,9 @@ subshell grouping
 /tmp
 
 ===
-brace expansion echo
+echo multiple args
 ===
-echo {a,b,c}
+echo a b c
 ---
 a b c
 
