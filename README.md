@@ -573,7 +573,7 @@ From highest to lowest:
 5. Multiplicative `*`, `/`, `%`
 6. Additive `+`, `-`
 7. Comparison `<`, `<=`, `>`, `>=`, `==`, `!=`
-8. String/membership `contains`, `startswith`, `endswith`, `matches`, `in`
+8. String/membership `contains`, `startswith`, `endswith`, `matches`
 9. Logical `and`
 10. Logical `or`
 
