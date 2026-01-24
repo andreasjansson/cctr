@@ -3,9 +3,7 @@ json_object forall fails for some values
 ===
 echo '{"a": 1, "b": 2, "c": "not a number"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * type(v) == number forall v in o

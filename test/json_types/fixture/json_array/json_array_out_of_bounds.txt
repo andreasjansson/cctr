@@ -3,9 +3,7 @@ json_array index out of bounds
 ===
 echo '[1, 2, 3]'
 ---
-{{ a }}
+{{ a: json array }}
 ---
-with
-* a: json array
-having
+where
 * a[10] == 1

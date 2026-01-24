@@ -1,6 +1,6 @@
 ===
 read from fixture directory
 ===
-cat {{ FIXTURE_DIR }}/data.txt
+cat $CCTR_FIXTURE_DIR/data.txt
 ---
 hello from fixture

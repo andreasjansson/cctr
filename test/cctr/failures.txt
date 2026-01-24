@@ -1,18 +1,16 @@
 ===
 failing test reports failure count
 ===
-cctr {{ FIXTURE_DIR }}/failing --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/failing --no-color 2>&1 | tail -1
 ---
 Summary: 0 passed, 1 failed, 0 skipped in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5
 
 ===
 failing test exits non-zero
 ===
-cctr {{ FIXTURE_DIR }}/failing --no-color >/dev/null 2>&1; echo "exit: $?"
+cctr $CCTR_FIXTURE_DIR/failing --no-color >/dev/null 2>&1; echo "exit: $?"
 ---
 exit: 1

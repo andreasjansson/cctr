@@ -3,9 +3,7 @@ json_bool wrong value constraint
 ===
 echo 'true'
 ---
-{{ b }}
+{{ b: json bool }}
 ---
-with
-* b: json bool
-having
+where
 * b == false

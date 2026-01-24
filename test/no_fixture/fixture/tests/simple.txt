@@ -44,7 +44,7 @@ yes
 ===
 work dir exists
 ===
-test -d {{ WORK_DIR }} && echo exists
+test -d $CCTR_WORK_DIR && echo exists
 ---
 exists
 

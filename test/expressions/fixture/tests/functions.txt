@@ -5,9 +5,7 @@ echo "word: hello"
 ---
 word: {{ s }}
 ---
-with
-* s: string
-having
+where
 * len(s) == 5
 
 ===
@@ -17,9 +15,7 @@ echo "text: abcdefghij"
 ---
 text: {{ t }}
 ---
-with
-* t: string
-having
+where
 * len(t) == 10
 * len(t) > 5
 * len(t) < 20
@@ -31,9 +27,7 @@ echo "name: alice"
 ---
 name: {{ n }}
 ---
-with
-* n: string
-having
+where
 * len(n) + 5 == 10
 * len(n) * 2 == 10
 
@@ -44,9 +38,7 @@ echo "data: x"
 ---
 data: {{ d }}
 ---
-with
-* d: string
-having
+where
 * len(d) > 0
 * len(d) >= 1
 
@@ -57,10 +49,7 @@ echo "short: ab long: abcdefgh"
 ---
 short: {{ s }} long: {{ l }}
 ---
-with
-* s: string
-* l: string
-having
+where
 * len(s) < len(l)
 * len(l) - len(s) == 6
 * len(s) + len(l) == 10

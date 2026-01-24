@@ -1,7 +1,7 @@
 ===
 list tests in passing suite
 ===
-cctr {{ FIXTURE_DIR }}/passing --list
+cctr $CCTR_FIXTURE_DIR/passing --list
 ---
 
 passing
@@ -13,7 +13,7 @@ passing
 ===
 list tests in with_setup suite
 ===
-cctr {{ FIXTURE_DIR }}/with_setup --list
+cctr $CCTR_FIXTURE_DIR/with_setup --list
 ---
 
 with_setup [setup]

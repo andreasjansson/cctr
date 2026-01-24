@@ -1,34 +1,29 @@
 ===
 fixture directory is copied and accessible
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep "read_fixture:" | head -2
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep "read_fixture:" | head -2
 ---
 ✓ tests/read_fixture: read from fixture dir {{ t1 }}s
 ✓ tests/read_fixture: fixture dir is copied {{ t2 }}s
 ---
-with
-* t1: number
-* t2: number
-having
+where
 * t1 < 5
 * t2 < 5
 
 ===
 all fixture tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5
 
 ===
 list mode shows fixture tests
 ===
-cctr {{ FIXTURE_DIR }}/tests --list
+cctr $CCTR_FIXTURE_DIR/tests --list
 ---
 
 tests [fixture]

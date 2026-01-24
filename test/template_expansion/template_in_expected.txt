@@ -1,11 +1,9 @@
 ===
 template expansion tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
 All 5 tests passed in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5

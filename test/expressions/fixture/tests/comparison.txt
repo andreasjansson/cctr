@@ -5,9 +5,7 @@ echo "value: 42"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n == 42
 
 ===
@@ -17,9 +15,7 @@ echo "value: 42"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n != 0
 * n != 100
 
@@ -30,9 +26,7 @@ echo "value: 5"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n < 10
 * n < 100
 
@@ -43,9 +37,7 @@ echo "value: 10"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n <= 10
 * n <= 100
 
@@ -56,9 +48,7 @@ echo "value: 50"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n > 0
 * n > 49
 
@@ -69,9 +59,7 @@ echo "value: 100"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n >= 100
 * n >= 0
 
@@ -82,9 +70,7 @@ echo "value: 50"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n > 0 and n < 100
 * n >= 50 and n <= 50
 
@@ -95,9 +81,7 @@ echo "value: 10"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n == 5 + 5
 * n < 20 - 5
 * n > 2 * 3

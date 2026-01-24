@@ -1,7 +1,7 @@
 ===
 update mode output format
 ===
-cctr {{ FIXTURE_DIR }}/tests -u --no-color 2>&1
+cctr $CCTR_FIXTURE_DIR/tests -u --no-color 2>&1
 ---
 .U
 
@@ -19,16 +19,10 @@ Updated:
 
 Summary: 1 left unchanged, 1 updated, 0 skipped in {{ time2 }}s
 ---
-with
-* path: string
-* relpath: string
-* time1: number
-* time2: number
-
 ===
 file is actually updated
 ===
-cat {{ FIXTURE_DIR }}/tests/needs_update.txt
+cat $CCTR_FIXTURE_DIR/tests/needs_update.txt
 ---
 ===
 wrong output

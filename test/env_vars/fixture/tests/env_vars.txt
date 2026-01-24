@@ -19,9 +19,6 @@ echo "path={{ PATH }}" | cut -c1-10
 ---
 path={{ PA }}
 ---
-with
-* PA: string
-
 ===
 unknown env var left unchanged
 ===
@@ -39,6 +36,6 @@ echo "{{ USER }}@{{ HOME }}"
 ===
 env var with FIXTURE_DIR
 ===
-echo "user={{ USER }} dir={{ FIXTURE_DIR }}" | grep -o "user=[^ ]*"
+echo "user={{ USER }} dir=$CCTR_FIXTURE_DIR" | grep -o "user=[^ ]*"
 ---
 user={{ USER }}
