@@ -1234,9 +1234,34 @@ mod tests {
     }
 
     #[test]
+    fn test_negated_string_operators() {
+        let v = vars(&[("s", Value::String("hello world".to_string()))]);
+        assert!(eval_bool(r#"s not contains "foo""#, &v).unwrap());
+        assert!(!eval_bool(r#"s not contains "world""#, &v).unwrap());
+        assert!(eval_bool(r#"s not startswith "foo""#, &v).unwrap());
+        assert!(!eval_bool(r#"s not startswith "hello""#, &v).unwrap());
+        assert!(eval_bool(r#"s not endswith "foo""#, &v).unwrap());
+        assert!(!eval_bool(r#"s not endswith "world""#, &v).unwrap());
+    }
+
+    #[test]
     fn test_regex_matches() {
         let v = vars(&[("s", Value::String("hello123".to_string()))]);
         assert!(eval_bool(r#"s matches /^hello\d+$/"#, &v).unwrap());
+    }
+
+    #[test]
+    fn test_negated_regex_matches() {
+        let v = vars(&[("s", Value::String("hello123".to_string()))]);
+        assert!(eval_bool(r#"s not matches /^foo/"#, &v).unwrap());
+        assert!(!eval_bool(r#"s not matches /^hello\d+$/"#, &v).unwrap());
+    }
+
+    #[test]
+    fn test_negated_array_contains() {
+        let v = vars(&[("n", Value::Number(5.0))]);
+        assert!(eval_bool("[1, 2, 3] not contains n", &v).unwrap());
+        assert!(!eval_bool("[4, 5, 6] not contains n", &v).unwrap());
     }
 
     #[test]
