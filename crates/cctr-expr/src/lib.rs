@@ -656,7 +656,8 @@ fn expr(input: &mut &str) -> ModalResult<Expr> {
 }
 
 pub fn parse(input: &str) -> Result<Expr, EvalError> {
-    let mut input = input.trim();
+    let original_input = input.trim();
+    let mut input = original_input;
     match expr.parse_next(&mut input) {
         Ok(e) => {
             let remaining = input.trim();
@@ -664,12 +665,50 @@ pub fn parse(input: &str) -> Result<Expr, EvalError> {
                 Ok(e)
             } else {
                 Err(EvalError::ParseError(format!(
-                    "unexpected trailing input: {:?}",
+                    "unexpected trailing input: '{}'",
                     remaining
                 )))
             }
         }
-        Err(e) => Err(EvalError::ParseError(format!("{:?}", e))),
+        Err(_) => {
+            // Provide helpful error messages for common mistakes
+            if original_input.starts_with('#') {
+                Err(EvalError::ParseError(
+                    "comments are not supported (lines starting with '#' are treated as constraints)".to_string()
+                ))
+            } else if original_input.contains("//") {
+                Err(EvalError::ParseError(
+                    "comments are not supported ('// ...' is not valid)".to_string()
+                ))
+            } else if original_input.is_empty() {
+                Err(EvalError::ParseError("empty constraint".to_string()))
+            } else {
+                // Try to give a hint about what went wrong
+                let first_word = original_input.split_whitespace().next().unwrap_or("");
+                if !first_word.chars().next().map(|c| c.is_alphabetic() || c == '_').unwrap_or(false)
+                    && !first_word.starts_with('(')
+                    && !first_word.starts_with('-')
+                    && !first_word.starts_with('"')
+                    && !first_word.starts_with('[')
+                    && !first_word.starts_with('{')
+                    && !first_word.chars().next().map(|c| c.is_numeric()).unwrap_or(false)
+                {
+                    Err(EvalError::ParseError(format!(
+                        "invalid syntax near '{}' - constraints must be expressions like 'x > 0' or 'len(arr) == 3'",
+                        first_word
+                    )))
+                } else {
+                    Err(EvalError::ParseError(format!(
+                        "invalid expression syntax in '{}'",
+                        if original_input.len() > 50 {
+                            format!("{}...", &original_input[..50])
+                        } else {
+                            original_input.to_string()
+                        }
+                    )))
+                }
+            }
+        }
     }
 }
 
