@@ -527,6 +527,30 @@ fn cmp_op(input: &mut &str) -> ModalResult<BinaryOp> {
         ">=".value(BinaryOp::Ge),
         "<".value(BinaryOp::Lt),
         ">".value(BinaryOp::Gt),
+        (
+            terminated("not", peek_non_ident),
+            multispace1,
+            terminated("contains", peek_non_ident),
+        )
+            .value(BinaryOp::NotContains),
+        (
+            terminated("not", peek_non_ident),
+            multispace1,
+            terminated("startswith", peek_non_ident),
+        )
+            .value(BinaryOp::NotStartsWith),
+        (
+            terminated("not", peek_non_ident),
+            multispace1,
+            terminated("endswith", peek_non_ident),
+        )
+            .value(BinaryOp::NotEndsWith),
+        (
+            terminated("not", peek_non_ident),
+            multispace1,
+            terminated("matches", peek_non_ident),
+        )
+            .value(BinaryOp::NotMatches),
         terminated("contains", peek_non_ident).value(BinaryOp::Contains),
         terminated("startswith", peek_non_ident).value(BinaryOp::StartsWith),
         terminated("endswith", peek_non_ident).value(BinaryOp::EndsWith),
