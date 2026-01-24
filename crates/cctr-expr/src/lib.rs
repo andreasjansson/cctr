@@ -1026,6 +1026,21 @@ fn eval_func_call(
             }
             Ok(Value::Array(result))
         }
+        "env" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let var_name = val.as_string()?;
+            match std::env::var(var_name) {
+                Ok(value) => Ok(Value::String(value)),
+                Err(_) => Ok(Value::Null),
+            }
+        }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
 }
