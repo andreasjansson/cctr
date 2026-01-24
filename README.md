@@ -562,6 +562,7 @@ where
 | `unique(arr)` | Array with duplicate elements removed (preserves order) |
 | `lower(s)` | Convert string to lowercase |
 | `upper(s)` | Convert string to uppercase |
+| `env(name)` | Get environment variable value (returns `null` if not set) |
 
 ```
 where
@@ -578,6 +579,7 @@ where
 * unique([1, 2, 2, 3]) == [1, 2, 3]
 * lower("HELLO") == "hello"
 * upper("hello") == "HELLO"
+* env("HOME") startswith "/"
 ```
 
 ### Quantifiers
