@@ -515,13 +515,13 @@ having
 
 ### Array membership
 
-Check if a value is in a set using `in`:
+Check if a value is in a set using `in` or `not in`:
 
 ```
 having
 * status in ["ok", "success", "completed"]
 * code in [200, 201, 204, 301, 302]
-* not (code in [400, 401, 403, 404, 500])
+* code not in [400, 401, 403, 404, 500]
 ```
 
 ### Functions
