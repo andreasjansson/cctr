@@ -1055,37 +1055,61 @@ fn eval_binary_op(
             (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls >= rs)),
             _ => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
         },
-        BinaryOp::Contains => match &l {
-            Value::String(haystack) => {
-                let needle = r.as_string()?;
-                Ok(Value::Bool(haystack.contains(needle)))
-            }
-            Value::Array(arr) => Ok(Value::Bool(arr.iter().any(|v| values_equal(v, &r)))),
-            Value::Object(obj) => {
-                let key = r.as_string()?;
-                Ok(Value::Bool(obj.contains_key(key)))
-            }
-            _ => Err(EvalError::TypeError {
-                expected: "string, array, or object",
-                got: l.type_name(),
-            }),
-        },
-        BinaryOp::StartsWith => {
+        BinaryOp::Contains | BinaryOp::NotContains => {
+            let result = match &l {
+                Value::String(haystack) => {
+                    let needle = r.as_string()?;
+                    haystack.contains(needle)
+                }
+                Value::Array(arr) => arr.iter().any(|v| values_equal(v, &r)),
+                Value::Object(obj) => {
+                    let key = r.as_string()?;
+                    obj.contains_key(key)
+                }
+                _ => {
+                    return Err(EvalError::TypeError {
+                        expected: "string, array, or object",
+                        got: l.type_name(),
+                    })
+                }
+            };
+            Ok(Value::Bool(if op == BinaryOp::NotContains {
+                !result
+            } else {
+                result
+            }))
+        }
+        BinaryOp::StartsWith | BinaryOp::NotStartsWith => {
             let s = l.as_string()?;
             let prefix = r.as_string()?;
-            Ok(Value::Bool(s.starts_with(prefix)))
+            let result = s.starts_with(prefix);
+            Ok(Value::Bool(if op == BinaryOp::NotStartsWith {
+                !result
+            } else {
+                result
+            }))
         }
-        BinaryOp::EndsWith => {
+        BinaryOp::EndsWith | BinaryOp::NotEndsWith => {
             let s = l.as_string()?;
             let suffix = r.as_string()?;
-            Ok(Value::Bool(s.ends_with(suffix)))
+            let result = s.ends_with(suffix);
+            Ok(Value::Bool(if op == BinaryOp::NotEndsWith {
+                !result
+            } else {
+                result
+            }))
         }
-        BinaryOp::Matches => {
+        BinaryOp::Matches | BinaryOp::NotMatches => {
             let s = l.as_string()?;
             let pattern = r.as_string()?;
             let re =
                 regex::Regex::new(pattern).map_err(|e| EvalError::InvalidRegex(e.to_string()))?;
-            Ok(Value::Bool(re.is_match(s)))
+            let result = re.is_match(s);
+            Ok(Value::Bool(if op == BinaryOp::NotMatches {
+                !result
+            } else {
+                result
+            }))
         }
         BinaryOp::And | BinaryOp::Or => unreachable!(),
     }
