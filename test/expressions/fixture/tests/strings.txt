@@ -38,7 +38,20 @@ having
 * s contains " "
 
 ===
-not contains
+not contains (shorthand)
+===
+echo "msg: hello world"
+---
+msg: {{ s }}
+---
+with
+* s: string
+having
+* s not contains "foo"
+* s not contains "bar"
+
+===
+not contains (long form)
 ===
 echo "msg: hello world"
 ---
@@ -49,6 +62,45 @@ with
 having
 * not (s contains "foo")
 * not (s contains "bar")
+
+===
+not startswith
+===
+echo "path: /usr/local/bin"
+---
+path: {{ p }}
+---
+with
+* p: string
+having
+* p not startswith "/home"
+* p not startswith "/var"
+
+===
+not endswith
+===
+echo "file: document.pdf"
+---
+file: {{ f }}
+---
+with
+* f: string
+having
+* f not endswith ".txt"
+* f not endswith ".doc"
+
+===
+not matches
+===
+echo "id: abc123"
+---
+id: {{ id }}
+---
+with
+* id: string
+having
+* id not matches /^[0-9]+$/
+* id not matches /^[A-Z]+$/
 
 ===
 startswith
