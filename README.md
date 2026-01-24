@@ -50,7 +50,6 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Membership with contains](#membership-with-contains)
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
-- [Built-in variables](#built-in-variables)
 - [Environment variables](#environment-variables)
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
