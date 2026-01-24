@@ -69,3 +69,15 @@ having
 * t1 < 5
 * t2 < 5
 * t3 < 5
+
+===
+run multiline shell command tests
+===
+cctr {{ FIXTURE_DIR }}/multiline_commands --no-color 2>&1 | tail -1
+---
+All 19 tests passed in {{ t }}s
+---
+with
+* t: number
+having
+* t < 10
