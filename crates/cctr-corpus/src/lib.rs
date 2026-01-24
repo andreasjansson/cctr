@@ -17,14 +17,16 @@
 //! ===
 //! some_command
 //! ---
-//! Completed in {{ time }}s
+//! Completed in {{ time: number }}s
 //! ---
-//! with
-//! * time: number
-//! having
+//! where
 //! * time > 0
 //! * time < 60
 //! ```
+//!
+//! Types can be specified inline in placeholders: `{{ x }}`, `{{ x: number }}`,
+//! `{{ x:string }}`, `{{ x : json object }}`. If no type is given, the type is
+//! inferred from the matched value using duck-typing.
 
 use std::path::Path;
 use thiserror::Error;
@@ -39,7 +41,8 @@ use winnow::token::{take_till, take_while};
 #[derive(Debug, Clone, PartialEq)]
 pub enum Segment {
     Literal(String),
-    Placeholder(String),
+    /// Placeholder with name and optional type annotation
+    Placeholder { name: String, var_type: Option<VarType> },
 }
 
 /// Variable type for pattern matching.
@@ -47,13 +50,17 @@ pub enum Segment {
 pub enum VarType {
     Number,
     String,
+    JsonString,
+    JsonBool,
+    JsonArray,
+    JsonObject,
 }
 
-/// A declared variable with name and type.
+/// A declared variable with name and optional type (None means duck-typed).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Variable {
     pub name: String,
-    pub var_type: VarType,
+    pub var_type: Option<VarType>,
 }
 
 /// A single test case parsed from a corpus file.
