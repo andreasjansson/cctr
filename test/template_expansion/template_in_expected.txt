@@ -3,7 +3,7 @@ template expansion tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
-All 5 tests passed in {{ t }}s
+All 6 tests passed in {{ t }}s
 ---
 where
 * t < 5
