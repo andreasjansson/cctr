@@ -1,0 +1,16 @@
+===
+all duck typing tests pass
+===
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
+---
+All 16 tests passed in {{ t }}s
+---
+where
+* t < 10
+
+===
+duck typing verbose output
+===
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep "^✓" | wc -l | tr -d ' '
+---
+17
