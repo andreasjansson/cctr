@@ -179,9 +179,13 @@ pub enum BinaryOp {
     And,
     Or,
     Contains,
+    NotContains,
     StartsWith,
+    NotStartsWith,
     EndsWith,
+    NotEndsWith,
     Matches,
+    NotMatches,
 }
 
 #[derive(Error, Debug, Clone, PartialEq)]
