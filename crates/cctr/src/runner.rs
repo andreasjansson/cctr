@@ -85,32 +85,30 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
     }
 }
 
-fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, vars: &TemplateVars) -> TestResult {
+fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, env_vars: &[(String, String)]) -> TestResult {
     let start = Instant::now();
 
-    let command = vars.apply(&test.command);
-    let (actual_output, exit_code) = run_command(&command, work_dir);
+    // Commands run as-is with CCTR_* env vars injected
+    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars);
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
         // Simple mode: exact match or exit-only
-        let expected = vars.apply(&test.expected_output);
+        let expected = &test.expected_output;
         if expected.is_empty() {
-            (exit_code == 0, None, expected)
+            (exit_code == 0, None, expected.clone())
         } else {
-            (actual_output == expected, None, expected)
+            (actual_output == *expected, None, expected.clone())
         }
     } else {
-        // Pattern matching mode
-        let var_names = test.variable_names();
-        let expected_pattern = vars.apply_except(&test.expected_output, &var_names);
+        // Pattern matching mode - strip type annotations from expected for display
         let matcher = Matcher::new(&test.variables, &test.constraints);
-        let result = match matcher.matches(&expected_pattern, &actual_output) {
+        let result = match matcher.matches(&test.expected_output, &actual_output) {
             Ok(true) => (true, None),
             Ok(false) => (false, None),
             Err(e) => (false, Some(e.to_string())),
         };
-        (result.0, result.1, expected_pattern)
+        (result.0, result.1, test.expected_output.clone())
     };
 
     TestResult {
