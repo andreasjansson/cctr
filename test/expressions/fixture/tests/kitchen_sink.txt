@@ -19,7 +19,7 @@ having
 * age == 30
 * score > 90 and score <= 100
 * score == 95.5
-* status in ["active", "inactive"]
+* ["active", "inactive"] contains status
 * status == "active"
 * not (age < 0)
 * not (score < 0 or score > 100)
