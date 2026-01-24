@@ -5,9 +5,7 @@ echo "Completed in 1.5s"
 ---
 Completed in {{ n }}s
 ---
-with
-* n: number
-having
+where
 * n > 0
 * n < 60
 
@@ -18,9 +16,7 @@ echo "Error: file not found"
 ---
 Error: {{ msg }}
 ---
-with
-* msg: string
-having
+where
 * msg contains "not found"
 
 ===
@@ -30,10 +26,7 @@ echo "Processed 42 items in 1.5 seconds"
 ---
 Processed {{ count }} items in {{ time }} seconds
 ---
-with
-* count: number
-* time: number
-having
+where
 * count > 0
 * time > 0
 * time < 10

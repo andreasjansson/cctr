@@ -656,7 +656,8 @@ fn expr(input: &mut &str) -> ModalResult<Expr> {
 }
 
 pub fn parse(input: &str) -> Result<Expr, EvalError> {
-    let mut input = input.trim();
+    let original_input = input.trim();
+    let mut input = original_input;
     match expr.parse_next(&mut input) {
         Ok(e) => {
             let remaining = input.trim();
@@ -664,12 +665,58 @@ pub fn parse(input: &str) -> Result<Expr, EvalError> {
                 Ok(e)
             } else {
                 Err(EvalError::ParseError(format!(
-                    "unexpected trailing input: {:?}",
+                    "unexpected trailing input: '{}'",
                     remaining
                 )))
             }
         }
-        Err(e) => Err(EvalError::ParseError(format!("{:?}", e))),
+        Err(_) => {
+            // Provide helpful error messages for common mistakes
+            if original_input.starts_with('#') {
+                Err(EvalError::ParseError(
+                    "comments are not supported (lines starting with '#' are treated as constraints)".to_string()
+                ))
+            } else if original_input.contains("//") {
+                Err(EvalError::ParseError(
+                    "comments are not supported ('// ...' is not valid)".to_string(),
+                ))
+            } else if original_input.is_empty() {
+                Err(EvalError::ParseError("empty constraint".to_string()))
+            } else {
+                // Try to give a hint about what went wrong
+                let first_word = original_input.split_whitespace().next().unwrap_or("");
+                if !first_word
+                    .chars()
+                    .next()
+                    .map(|c| c.is_alphabetic() || c == '_')
+                    .unwrap_or(false)
+                    && !first_word.starts_with('(')
+                    && !first_word.starts_with('-')
+                    && !first_word.starts_with('"')
+                    && !first_word.starts_with('[')
+                    && !first_word.starts_with('{')
+                    && !first_word
+                        .chars()
+                        .next()
+                        .map(|c| c.is_numeric())
+                        .unwrap_or(false)
+                {
+                    Err(EvalError::ParseError(format!(
+                        "invalid syntax near '{}' - constraints must be expressions like 'x > 0' or 'len(arr) == 3'",
+                        first_word
+                    )))
+                } else {
+                    Err(EvalError::ParseError(format!(
+                        "invalid expression syntax in '{}'",
+                        if original_input.len() > 50 {
+                            format!("{}...", &original_input[..50])
+                        } else {
+                            original_input.to_string()
+                        }
+                    )))
+                }
+            }
+        }
     }
 }
 
@@ -987,6 +1034,21 @@ fn eval_func_call(
             }
             Ok(Value::Array(result))
         }
+        "env" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            let var_name = val.as_string()?;
+            match std::env::var(var_name) {
+                Ok(value) => Ok(Value::String(value)),
+                Err(_) => Ok(Value::Null),
+            }
+        }
         _ => Err(EvalError::UndefinedFunction(name.to_string())),
     }
 }
@@ -1027,7 +1089,14 @@ fn eval_binary_op(
         },
         BinaryOp::Sub => Ok(Value::Number(l.as_number()? - r.as_number()?)),
         BinaryOp::Mul => Ok(Value::Number(l.as_number()? * r.as_number()?)),
-        BinaryOp::Mod => Ok(Value::Number(l.as_number()? % r.as_number()?)),
+        BinaryOp::Mod => {
+            let divisor = r.as_number()?;
+            if divisor == 0.0 {
+                Err(EvalError::DivisionByZero)
+            } else {
+                Ok(Value::Number(l.as_number()? % divisor))
+            }
+        }
         BinaryOp::Div => {
             let divisor = r.as_number()?;
             if divisor == 0.0 {
@@ -1407,5 +1476,17 @@ mod tests {
         assert!(eval_bool("b == true", &v).unwrap());
         assert!(eval_bool("b != false", &v).unwrap());
         assert!(eval_bool("(1 == 1) == true", &v).unwrap());
+    }
+
+    #[test]
+    fn test_env_function() {
+        std::env::set_var("CCTR_TEST_VAR", "test_value");
+        let v = vars(&[]);
+        assert!(eval_bool(r#"env("CCTR_TEST_VAR") == "test_value""#, &v).unwrap());
+        assert!(eval_bool(r#"type(env("CCTR_TEST_VAR")) == string"#, &v).unwrap());
+        // Non-existent env var returns null
+        assert!(eval_bool(r#"env("CCTR_NONEXISTENT_VAR_12345") == null"#, &v).unwrap());
+        assert!(eval_bool(r#"type(env("CCTR_NONEXISTENT_VAR_12345")) == null"#, &v).unwrap());
+        std::env::remove_var("CCTR_TEST_VAR");
     }
 }

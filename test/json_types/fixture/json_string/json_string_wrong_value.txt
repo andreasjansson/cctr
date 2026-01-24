@@ -3,9 +3,7 @@ json_string wrong value constraint
 ===
 echo '"hello"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * s == "world"

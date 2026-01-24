@@ -1,0 +1,7 @@
+===
+env function passing tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/env_function.txt --no-color 2>&1 | tail -1
+---
+All {{ n: number }} tests passed in {{ t: number }}s
+---

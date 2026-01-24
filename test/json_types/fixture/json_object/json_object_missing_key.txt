@@ -3,9 +3,7 @@ json_object missing key access
 ===
 echo '{"name": "alice"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * o.missing == "value"

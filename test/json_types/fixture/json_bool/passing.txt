@@ -3,11 +3,9 @@ json_bool true
 ===
 echo 'true'
 ---
-{{ b }}
+{{ b: json bool }}
 ---
-with
-* b: json bool
-having
+where
 * b == true
 
 ===
@@ -15,11 +13,9 @@ json_bool false
 ===
 echo 'false'
 ---
-{{ b }}
+{{ b: json bool }}
 ---
-with
-* b: json bool
-having
+where
 * b == false
 * b != true
 
@@ -28,11 +24,9 @@ json_bool type check
 ===
 echo 'true'
 ---
-{{ b }}
+{{ b: json bool }}
 ---
-with
-* b: json bool
-having
+where
 * type(b) == bool
 
 ===
@@ -40,11 +34,9 @@ json_bool in expression result
 ===
 echo '5'
 ---
-{{ n }}
+{{ n: number }}
 ---
-with
-* n: number
-having
+where
 * (n > 3) == true
 * (n < 3) == false
 
@@ -53,11 +45,9 @@ json_bool in array
 ===
 echo '[true, false, true]'
 ---
-{{ arr }}
+{{ arr: json array }}
 ---
-with
-* arr: json array
-having
+where
 * arr[0] == true
 * arr[1] == false
 * type(arr[0]) == bool
@@ -67,11 +57,9 @@ json_bool in object
 ===
 echo '{"active": true, "deleted": false}'
 ---
-{{ obj }}
+{{ obj: json object }}
 ---
-with
-* obj: json object
-having
+where
 * obj.active == true
 * obj.deleted == false
 * obj.active != obj.deleted
@@ -81,10 +69,8 @@ json_bool not operator
 ===
 echo 'true'
 ---
-{{ b }}
+{{ b: json bool }}
 ---
-with
-* b: json bool
-having
+where
 * not (b == false)
 * not (not b)

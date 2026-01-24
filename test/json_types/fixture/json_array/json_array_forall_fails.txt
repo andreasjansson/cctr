@@ -3,9 +3,7 @@ json_array forall fails for some elements
 ===
 echo '[1, 2, 10]'
 ---
-{{ a }}
+{{ a: json array }}
 ---
-with
-* a: json array
-having
+where
 * x < 5 forall x in a

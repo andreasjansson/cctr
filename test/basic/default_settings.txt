@@ -1,7 +1,7 @@
 ===
 Run a basic successful cctr test
 ===
-cctr {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1
+cctr $CCTR_FIXTURE_DIR/test/corpus --no-color 2>&1
 ---
 .F
 
@@ -18,10 +18,7 @@ Failures:
 
 Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
-with
-* suite_time: number
-* total_time: number
-having
+where
 * suite_time < 5
 * total_time < 5
 * suite_time <= total_time
@@ -29,7 +26,7 @@ having
 ===
 list mode shows tests
 ===
-cctr {{ FIXTURE_DIR }}/test/corpus --list
+cctr $CCTR_FIXTURE_DIR/test/corpus --list
 ---
 
 corpus [fixture]
@@ -41,18 +38,16 @@ corpus [fixture]
 ===
 verbose mode shows timing
 ===
-cctr {{ FIXTURE_DIR }}/test/corpus --no-color -v 2>&1 | grep 'corpus/cat_correct:' | head -1
+cctr $CCTR_FIXTURE_DIR/test/corpus --no-color -v 2>&1 | grep 'corpus/cat_correct:' | head -1
 ---
 ✓ corpus/cat_correct: Test cat with correct output {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5
 
 ===
 non-verbose mode shows dots
 ===
-cctr {{ FIXTURE_DIR }}/test/corpus --no-color 2>&1 | head -1
+cctr $CCTR_FIXTURE_DIR/test/corpus --no-color 2>&1 | head -1
 ---
 .F

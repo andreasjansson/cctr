@@ -5,9 +5,7 @@ echo "value: 50"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n > 0 and n < 100
 
 ===
@@ -17,9 +15,7 @@ echo "value: 5"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n < 10 or n > 100
 
 ===
@@ -29,9 +25,7 @@ echo "value: 200"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n < 10 or n > 100
 
 ===
@@ -41,9 +35,7 @@ echo "value: 50"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * not (n < 0)
 * not (n > 100)
 
@@ -54,9 +46,7 @@ echo "value: 25"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * (n > 10 and n < 30) or n == 100
 * not (n < 0 or n > 50)
 
@@ -67,9 +57,7 @@ echo "value: 5"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n < 10 or n > 20 and n < 30
 
 ===
@@ -79,9 +67,7 @@ echo "value: 42"
 ---
 value: {{ n }}
 ---
-with
-* n: number
-having
+where
 * not not (n == 42)
 
 ===
@@ -91,9 +77,6 @@ echo "x: 10 y: 20"
 ---
 x: {{ x }} y: {{ y }}
 ---
-with
-* x: number
-* y: number
-having
+where
 * x < y and y > x
 * not (x > y) and not (y < x)

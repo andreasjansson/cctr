@@ -50,7 +50,6 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Membership with contains](#membership-with-contains)
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
-- [Built-in variables](#built-in-variables)
 - [Environment variables](#environment-variables)
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
@@ -164,7 +163,7 @@ When a suite has a fixture:
 
 - The entire `fixture/` directory is copied to a temp directory
 - Tests run with that temp directory as the working directory
-- The `{{ FIXTURE_DIR }}` variable points to this location
+- The `$CCTR_FIXTURE_DIR` environment variable points to this location
 - Changes made during tests don't affect the original fixture
 - The temp directory is cleaned up after the suite completes
 
@@ -334,7 +333,7 @@ three
 
 ## Variables
 
-Variables capture dynamic parts of the output. Declare them in a `with` section and reference them in the expected output using `{{ name }}` syntax.
+Variables capture dynamic parts of the output using `{{ name }}` or `{{ name: type }}` syntax. Types can be specified inline or omitted for automatic duck-typing.
 
 ```
 ===
@@ -342,14 +341,42 @@ process stats
 ===
 ./stats-command
 ---
-Processed {{ count }} items in {{ time }} seconds
+Processed {{ count: number }} items in {{ time: number }} seconds
 ---
-with
-* count: number
-* time: number
+where
+* count > 0
+* time < 60
 ```
 
-Seven variable types are supported:
+### Duck typing
+
+When no type is specified, cctr automatically infers the type from the captured value:
+
+```
+===
+auto-typed variable
+===
+echo "count: 42"
+---
+count: {{ n }}
+---
+where
+* n == 42
+* type(n) == number
+```
+
+Duck typing uses the following priority:
+1. JSON object (starts with `{`)
+2. JSON array (starts with `[`)
+3. JSON string (starts with `"`)
+4. Boolean (`true` or `false`)
+5. Null (`null`)
+6. Number (valid numeric format)
+7. String (fallback)
+
+### Explicit types
+
+Seven variable types can be specified explicitly:
 
 | Type | Matches |
 |------|---------|
@@ -360,7 +387,7 @@ Seven variable types are supported:
 | `json array` | JSON array: `[1, 2, 3]`, `["a", "b"]` |
 | `json object` | JSON object: `{"name": "alice", "age": 30}` |
 
-JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+Type annotations can have flexible whitespace: `{{ x:number }}`, `{{ x: number }}`, `{{ x : number }}` are all valid.
 
 ### JSON types
 
@@ -372,11 +399,9 @@ test json output
 ===
 echo '{"users": [{"name": "alice"}, {"name": "bob"}]}'
 ---
-{{ data }}
+{{ data: json object }}
 ---
-with
-* data: json object
-having
+where
 * len(data.users) == 2
 * data.users[0].name == "alice"
 * type(data.users) == array
@@ -389,9 +414,11 @@ Access patterns:
 - Object property: `obj.name`, `obj.nested.value`
 - Bracket notation: `obj["key-with-dashes"]`
 
+JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+
 ## Constraints
 
-Add a `having` section to validate captured variables with expressions:
+Add a `where` section to validate captured variables with expressions:
 
 ```
 ===
@@ -401,9 +428,7 @@ timing must be reasonable
 ---
 Took {{ ms }}ms
 ---
-with
-* ms: number
-having
+where
 * ms > 0
 * ms < 5000
 ```
@@ -422,7 +447,7 @@ All constraints must pass for the test to pass.
 | `>=` | Greater than or equal (numbers or strings) |
 
 ```
-having
+where
 * n == 42
 * n != 0
 * n >= 10
@@ -442,7 +467,7 @@ having
 | `^` | Exponentiation |
 
 ```
-having
+where
 * n == 10 + 5
 * n ^ 3 == 8
 * total == count * price
@@ -460,7 +485,7 @@ having
 | `not` | Logical NOT |
 
 ```
-having
+where
 * n > 0 and n < 100
 * status == "ok" or status == "success"
 * not (n < 0)
@@ -469,7 +494,7 @@ having
 Use parentheses to control evaluation order:
 
 ```
-having
+where
 * (a > 0 and b > 0) or c == 0
 ```
 
@@ -483,7 +508,7 @@ having
 | `not endswith` | Negated suffix match |
 
 ```
-having
+where
 * path startswith "/usr"
 * filename endswith ".txt"
 * path not startswith "/home"
@@ -495,7 +520,7 @@ having
 Use `matches` with a regex literal (surrounded by `/`):
 
 ```
-having
+where
 * id matches /^[a-z]+[0-9]+$/
 * email matches /^[^@]+@[^@]+\.[^@]+$/
 * version matches /^\d+\.\d+\.\d+$/
@@ -505,7 +530,7 @@ having
 Escape special regex characters with backslash:
 
 ```
-having
+where
 * expr matches /^\(a\+b\)\*c$/
 ```
 
@@ -514,7 +539,7 @@ having
 The `contains` operator works uniformly for strings, arrays, and objects:
 
 ```
-having
+where
 * message contains "error"              # substring in string
 * ["ok", "success"] contains status     # element in array
 * config contains "debug"               # key in object
@@ -537,9 +562,10 @@ having
 | `unique(arr)` | Array with duplicate elements removed (preserves order) |
 | `lower(s)` | Convert string to lowercase |
 | `upper(s)` | Convert string to uppercase |
+| `env(name)` | Get environment variable value (returns `null` if not set) |
 
 ```
-having
+where
 * len(name) > 0
 * len(arr) == 3
 * type(value) == number
@@ -553,6 +579,7 @@ having
 * unique([1, 2, 2, 3]) == [1, 2, 3]
 * lower("HELLO") == "hello"
 * upper("hello") == "HELLO"
+* env("HOME") startswith "/"
 ```
 
 ### Quantifiers
@@ -560,7 +587,7 @@ having
 Use `forall` to check that a condition holds for all elements in an array or object:
 
 ```
-having
+where
 * x > 0 forall x in numbers
 * len(item.name) > 0 forall item in users
 * type(v) == number forall v in obj
@@ -583,65 +610,40 @@ From highest to lowest:
 9. Logical `and`
 10. Logical `or`
 
-## Built-in variables
+## Environment variables
 
-These variables are automatically available in both commands and expected output:
+cctr injects special environment variables that your commands can use:
 
 | Variable | Description |
 |----------|-------------|
-| `{{ WORK_DIR }}` | Temporary directory where tests run |
-| `{{ FIXTURE_DIR }}` | Location of copied fixture files (same as `WORK_DIR` when fixture exists) |
+| `$CCTR_WORK_DIR` | Temporary directory where tests run |
+| `$CCTR_FIXTURE_DIR` | Location of copied fixture files (same as `CCTR_WORK_DIR` when fixture exists) |
 
-Use `FIXTURE_DIR` to reference test data:
+Use `$CCTR_FIXTURE_DIR` to reference test data:
 
 ```
 ===
 read config
 ===
-cat {{ FIXTURE_DIR }}/config.json
+cat "$CCTR_FIXTURE_DIR/config.json"
 ---
 {"debug": true}
 ```
 
-Use `WORK_DIR` to write temporary files:
+Use `$CCTR_WORK_DIR` to write temporary files:
 
 ```
 ===
 create and read file
 ===
-echo "hello" > {{ WORK_DIR }}/temp.txt && cat {{ WORK_DIR }}/temp.txt
+echo "hello" > "$CCTR_WORK_DIR/temp.txt" && cat "$CCTR_WORK_DIR/temp.txt"
 ---
 hello
 ```
 
-When a fixture exists, `FIXTURE_DIR` and `WORK_DIR` point to the same location (the fixture is copied into the work directory).
+When a fixture exists, `CCTR_FIXTURE_DIR` and `CCTR_WORK_DIR` point to the same location (the fixture is copied into the work directory).
 
-## Environment variables
-
-Environment variables can be used in both commands and expected output using the same `{{ VAR_NAME }}` syntax:
-
-```
-===
-use home directory
-===
-echo "home={{ HOME }}"
----
-home={{ HOME }}
-
-===
-current user
-===
-whoami
----
-{{ USER }}
-```
-
-This is useful for:
-- Testing commands that output paths or user-specific information
-- Configuring tests based on the environment
-- Avoiding hardcoded values that differ between machines
-
-Environment variables are expanded after built-in variables (`WORK_DIR`, `FIXTURE_DIR`), so built-in variables take precedence if there's a name conflict. Unknown variables (not set in the environment) are left unchanged.
+Standard shell environment variables (`$HOME`, `$USER`, `$PATH`, etc.) are also available as usual.
 
 ## Parallel execution
 

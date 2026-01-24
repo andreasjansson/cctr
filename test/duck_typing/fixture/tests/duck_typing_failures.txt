@@ -1,0 +1,79 @@
+===
+duck typed number used as string fails
+===
+echo "42"
+---
+{{ x }}
+---
+where
+* x startswith "4"
+
+===
+duck typed number regex fails
+===
+echo "12345"
+---
+{{ x }}
+---
+where
+* x matches /^\d+$/
+
+===
+duck typed bool arithmetic fails
+===
+echo "true"
+---
+{{ x }}
+---
+where
+* x + 1 == 2
+
+===
+duck typed string comparison with number fails
+===
+echo "hello"
+---
+{{ x }}
+---
+where
+* x > 5
+
+===
+duck typed array used as object fails
+===
+echo "[1, 2, 3]"
+---
+{{ x }}
+---
+where
+* x.foo == 1
+
+===
+duck typed object used as array index fails
+===
+echo '{"a": 1}'
+---
+{{ x }}
+---
+where
+* x[0] == 1
+
+===
+duck typed null arithmetic fails
+===
+echo "null"
+---
+{{ x }}
+---
+where
+* x + 1 == 1
+
+===
+duck typed object keys on array fails
+===
+echo "[1, 2, 3]"
+---
+{{ x }}
+---
+where
+* len(keys(x)) == 0

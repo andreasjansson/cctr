@@ -1,7 +1,7 @@
 ===
 run passing tests
 ===
-cctr {{ FIXTURE_DIR }}/passing --no-color
+cctr $CCTR_FIXTURE_DIR/passing --no-color
 ---
 ...
 
@@ -9,27 +9,20 @@ cctr {{ FIXTURE_DIR }}/passing --no-color
 
 All 3 tests passed in {{ t2 }}s
 ---
-with
-* t1: number
-* t2: number
-having
+where
 * t1 < 5
 * t2 < 5
 
 ===
 run passing tests verbose
 ===
-cctr {{ FIXTURE_DIR }}/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
+cctr $CCTR_FIXTURE_DIR/passing --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
 ---
 ✓ passing/simple: echo test {{ t1 }}s
 ✓ passing/simple: true returns success {{ t2 }}s
 ✓ passing/simple: multiline output {{ t3 }}s
 ---
-with
-* t1: number
-* t2: number
-* t3: number
-having
+where
 * t1 < 5
 * t2 < 5
 * t3 < 5
@@ -37,7 +30,7 @@ having
 ===
 run tests with fixture support
 ===
-cctr {{ FIXTURE_DIR }}/with_fixture --no-color
+cctr $CCTR_FIXTURE_DIR/with_fixture --no-color
 ---
 .
 
@@ -45,27 +38,20 @@ cctr {{ FIXTURE_DIR }}/with_fixture --no-color
 
 All 1 tests passed in {{ t2 }}s
 ---
-with
-* t1: number
-* t2: number
-having
+where
 * t1 < 5
 * t2 < 5
 
 ===
 run tests with setup
 ===
-cctr {{ FIXTURE_DIR }}/with_setup --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
+cctr $CCTR_FIXTURE_DIR/with_setup --no-color -v 2>&1 | grep -E '^[✓✗]' | head -3
 ---
 ✓ with_setup/_setup: create marker file {{ t1 }}s
 ✓ with_setup/uses_setup: marker file exists from setup {{ t2 }}s
 ✓ with_setup: 2/2 tests passed in {{ t3 }}s
 ---
-with
-* t1: number
-* t2: number
-* t3: number
-having
+where
 * t1 < 5
 * t2 < 5
 * t3 < 5
@@ -73,11 +59,9 @@ having
 ===
 run multiline shell command tests
 ===
-cctr {{ FIXTURE_DIR }}/multiline_commands --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/multiline_commands --no-color 2>&1 | tail -1
 ---
 All 19 tests passed in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 10

@@ -1,17 +1,13 @@
 ===
 setup runs before tests
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -E 'tests/_setup:|tests/use_setup:|tests/_teardown:'
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -E 'tests/_setup:|tests/use_setup:|tests/_teardown:'
 ---
 ✓ tests/_setup: create marker file {{ t1 }}s
 ✓ tests/use_setup: verify setup ran {{ t2 }}s
 ✓ tests/_teardown: cleanup marker {{ t3 }}s
 ---
-with
-* t1: number
-* t2: number
-* t3: number
-having
+where
 * t1 < 5
 * t2 < 5
 * t3 < 5
@@ -19,19 +15,17 @@ having
 ===
 all tests pass with setup teardown
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
 All 3 tests passed in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5
 
 ===
 list mode shows setup and teardown
 ===
-cctr {{ FIXTURE_DIR }}/tests --list
+cctr $CCTR_FIXTURE_DIR/tests --list
 ---
 
 tests [setup, teardown]

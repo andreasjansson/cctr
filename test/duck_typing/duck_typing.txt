@@ -1,0 +1,40 @@
+===
+all duck typing passing tests pass
+===
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing.txt --no-color 2>&1 | tail -1
+---
+All 18 tests passed in {{ t }}s
+---
+where
+* t < 10
+
+===
+duck typing verbose output
+===
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing.txt --no-color -v 2>&1 | grep "^✓" | wc -l | tr -d ' '
+---
+19
+
+===
+all duck typing failure tests fail
+===
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep "0 passed, 8 failed"
+---
+Summary: 0 passed, 8 failed, 0 skipped in {{ t }}s
+---
+where
+* t < 10
+
+===
+duck typed number as string fails with type error
+===
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep "startswith.*expected string.*got number"
+---
+  Error: constraint 'x startswith "4"' failed: type error: expected string, got number
+
+===
+duck typed array property access fails
+===
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep "x.foo.*expected object.*got array"
+---
+  Error: constraint 'x.foo == 1' failed: type error: expected object, got array

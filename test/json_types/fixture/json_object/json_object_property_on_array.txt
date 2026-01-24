@@ -3,9 +3,7 @@ json_object property on array fails
 ===
 echo '[1, 2, 3]'
 ---
-{{ a }}
+{{ a: json array }}
 ---
-with
-* a: json array
-having
+where
 * a.foo == 1

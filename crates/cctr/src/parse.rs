@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
 use std::path::Path;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum VarType {
     Number,
     String,
@@ -14,7 +14,7 @@ pub enum VarType {
 #[derive(Debug, Clone)]
 pub struct VariableDecl {
     pub name: String,
-    pub var_type: VarType,
+    pub var_type: Option<VarType>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +42,98 @@ pub fn parse_corpus_file(path: &Path) -> Result<Vec<TestCase>> {
     })?;
 
     parse_corpus_content(&content, path)
+}
+
+/// Parse a type annotation string into a VarType
+fn parse_type_annotation(type_str: &str) -> Option<VarType> {
+    match type_str.to_lowercase().as_str() {
+        "number" => Some(VarType::Number),
+        "string" => Some(VarType::String),
+        "json string" => Some(VarType::JsonString),
+        "json bool" => Some(VarType::JsonBool),
+        "json array" => Some(VarType::JsonArray),
+        "json object" => Some(VarType::JsonObject),
+        _ => None,
+    }
+}
+
+const RESERVED_KEYWORDS: &[&str] = &[
+    "true",
+    "false",
+    "null",
+    "and",
+    "or",
+    "not",
+    "in",
+    "forall",
+    "contains",
+    "startswith",
+    "endswith",
+    "matches",
+    "len",
+    "type",
+    "keys",
+    "values",
+    "sum",
+    "min",
+    "max",
+    "abs",
+    "unique",
+    "lower",
+    "upper",
+    "number",
+    "string",
+    "bool",
+    "array",
+    "object",
+];
+
+fn is_reserved_keyword(name: &str) -> bool {
+    RESERVED_KEYWORDS.contains(&name)
+}
+
+/// Parse a placeholder content like "name" or "name: type" or "name : type"
+fn parse_placeholder(content: &str) -> (String, Option<VarType>) {
+    let content = content.trim();
+    if let Some(colon_pos) = content.find(':') {
+        let name = content[..colon_pos].trim().to_string();
+        let type_str = content[colon_pos + 1..].trim();
+        (name, parse_type_annotation(type_str))
+    } else {
+        (content.to_string(), None)
+    }
+}
+
+/// Extract variables from expected output by finding {{ ... }} placeholders
+fn extract_variables_from_expected(
+    expected: &str,
+) -> std::result::Result<Vec<VariableDecl>, String> {
+    let mut variables = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    let mut remaining = expected;
+
+    while let Some(start) = remaining.find("{{") {
+        if let Some(end) = remaining[start..].find("}}") {
+            let content = &remaining[start + 2..start + end];
+            let (name, var_type) = parse_placeholder(content);
+            if !name.is_empty() {
+                if is_reserved_keyword(&name) {
+                    return Err(format!(
+                        "'{}' is a reserved keyword and cannot be used as a variable name",
+                        name
+                    ));
+                }
+                if seen.insert(name.clone()) {
+                    variables.push(VariableDecl { name, var_type });
+                }
+            }
+            remaining = &remaining[start + end + 2..];
+        } else {
+            break;
+        }
+    }
+
+    Ok(variables)
 }
 
 pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
@@ -101,47 +193,32 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
         }
 
         // Parse expected output, which ends at:
-        // - A second `---` followed by `with` (pattern matching mode)
+        // - A second `---` followed by `where` (constraints section)
         // - Next test header `===`
         // - End of file
         i += 1;
         let mut expected_lines = Vec::new();
-        let mut variables = Vec::new();
         let mut constraints = Vec::new();
 
         while i < lines.len() {
-            // Check for second `---` that starts with/having section
+            // Check for second `---` that starts where section or ends expected output
             if is_dash_separator(lines[i]) {
                 let next_idx = i + 1;
-                if next_idx < lines.len() && lines[next_idx].trim() == "with" {
-                    // Found with/having section
+                if next_idx < lines.len() && lines[next_idx].trim() == "where" {
+                    // Found where section
                     i = next_idx + 1;
 
-                    // Parse variable declarations
-                    while i < lines.len() {
+                    // Parse constraints
+                    while i < lines.len() && !is_header_separator(lines[i]) {
                         let line = lines[i].trim();
-                        if line == "having" || is_header_separator(lines[i]) {
-                            break;
-                        }
-                        if let Some(var) = parse_variable_decl(line) {
-                            variables.push(var);
+                        if let Some(constraint) = parse_constraint(line) {
+                            constraints.push(constraint);
                         }
                         i += 1;
                     }
-
-                    // Parse constraints (if we're at "having")
-                    if i < lines.len() && lines[i].trim() == "having" {
-                        i += 1;
-                        while i < lines.len() && !is_header_separator(lines[i]) {
-                            let line = lines[i].trim();
-                            if let Some(constraint) = parse_constraint(line) {
-                                constraints.push(constraint);
-                            }
-                            i += 1;
-                        }
-                    }
-                    break;
                 }
+                // Either way, --- ends the expected output
+                break;
             }
 
             // Check for next test header
@@ -159,11 +236,23 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
         }
 
         let end_line = i;
+        let expected_output = expected_lines.join("\n");
+
+        // Extract variables from expected output placeholders
+        let variables = match extract_variables_from_expected(&expected_output) {
+            Ok(vars) => vars,
+            Err(e) => {
+                return Err(Error::ParseCorpus {
+                    path: path.to_path_buf(),
+                    message: format!("line {}: {}", start_line, e),
+                });
+            }
+        };
 
         tests.push(TestCase {
             name,
             command,
-            expected_output: expected_lines.join("\n"),
+            expected_output,
             file_path: path.to_path_buf(),
             start_line,
             end_line,
@@ -173,27 +262,6 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
     }
 
     Ok(tests)
-}
-
-fn parse_variable_decl(line: &str) -> Option<VariableDecl> {
-    // Parse "* name: type" or "name: type"
-    let line = line.trim_start_matches('*').trim();
-    let parts: Vec<&str> = line.splitn(2, ':').collect();
-    if parts.len() != 2 {
-        return None;
-    }
-    let name = parts[0].trim().to_string();
-    let type_str = parts[1].trim().to_lowercase();
-    let var_type = match type_str.as_str() {
-        "number" => VarType::Number,
-        "string" => VarType::String,
-        "json string" => VarType::JsonString,
-        "json bool" => VarType::JsonBool,
-        "json array" => VarType::JsonArray,
-        "json object" => VarType::JsonObject,
-        _ => return None,
-    };
-    Some(VariableDecl { name, var_type })
 }
 
 fn parse_constraint(line: &str) -> Option<String> {
@@ -314,7 +382,7 @@ true
     }
 
     #[test]
-    fn test_parse_with_variables() {
+    fn test_parse_with_inline_type() {
         let mut file = NamedTempFile::new().unwrap();
         write!(
             file,
@@ -323,20 +391,17 @@ timing test
 ===
 time_command
 ---
-Completed in {{{{ n }}}}s
----
-with
-* n: number
+Completed in {{{{ n: number }}}}s
 "#
         )
         .unwrap();
 
         let tests = parse_corpus_file(file.path()).unwrap();
         assert_eq!(tests.len(), 1);
-        assert_eq!(tests[0].expected_output, "Completed in {{ n }}s");
+        assert_eq!(tests[0].expected_output, "Completed in {{ n: number }}s");
         assert_eq!(tests[0].variables.len(), 1);
         assert_eq!(tests[0].variables[0].name, "n");
-        assert_eq!(tests[0].variables[0].var_type, VarType::Number);
+        assert_eq!(tests[0].variables[0].var_type, Some(VarType::Number));
     }
 
     #[test]
@@ -349,11 +414,9 @@ timing test
 ===
 time_command
 ---
-Completed in {{{{ n }}}}s
+Completed in {{{{ n: number }}}}s
 ---
-with
-* n: number
-having
+where
 * n > 0
 * n < 60
 "#
@@ -378,13 +441,9 @@ multi var test
 ===
 some_command
 ---
-{{{{ count }}}} items in {{{{ time }}}}s: {{{{ msg }}}}
+{{{{ count: number }}}} items in {{{{ time: number }}}}s: {{{{ msg: string }}}}
 ---
-with
-* count: number
-* time: number
-* msg: string
-having
+where
 * count > 0
 * time < 10
 "#
@@ -397,7 +456,32 @@ having
         assert_eq!(tests[0].variables[0].name, "count");
         assert_eq!(tests[0].variables[1].name, "time");
         assert_eq!(tests[0].variables[2].name, "msg");
-        assert_eq!(tests[0].variables[2].var_type, VarType::String);
+        assert_eq!(tests[0].variables[2].var_type, Some(VarType::String));
+    }
+
+    #[test]
+    fn test_parse_duck_typed_variable() {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(
+            file,
+            r#"===
+duck typed
+===
+echo "val: 42"
+---
+val: {{{{ x }}}}
+---
+where
+* x > 0
+"#
+        )
+        .unwrap();
+
+        let tests = parse_corpus_file(file.path()).unwrap();
+        assert_eq!(tests.len(), 1);
+        assert_eq!(tests[0].variables.len(), 1);
+        assert_eq!(tests[0].variables[0].name, "x");
+        assert_eq!(tests[0].variables[0].var_type, None); // Duck-typed
     }
 
     #[test]
@@ -410,11 +494,9 @@ empty string
 ===
 echo "val: "
 ---
-val: {{{{ s }}}}
+val: {{{{ s: string }}}}
 ---
-with
-* s: string
-having
+where
 * len(s) == 0
 "#
         )
@@ -423,10 +505,10 @@ having
         let tests = parse_corpus_file(file.path()).unwrap();
         assert_eq!(tests.len(), 1);
         assert_eq!(tests[0].name, "empty string");
-        assert_eq!(tests[0].expected_output, "val: {{ s }}");
+        assert_eq!(tests[0].expected_output, "val: {{ s: string }}");
         assert_eq!(tests[0].variables.len(), 1, "should have 1 variable");
         assert_eq!(tests[0].variables[0].name, "s");
-        assert_eq!(tests[0].variables[0].var_type, VarType::String);
+        assert_eq!(tests[0].variables[0].var_type, Some(VarType::String));
         assert_eq!(tests[0].constraints.len(), 1);
         assert_eq!(tests[0].constraints[0], "len(s) == 0");
     }

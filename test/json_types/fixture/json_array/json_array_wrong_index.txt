@@ -3,9 +3,7 @@ json_array wrong index value
 ===
 echo '[1, 2, 3]'
 ---
-{{ a }}
+{{ a: json array }}
 ---
-with
-* a: json array
-having
+where
 * a[0] == 999

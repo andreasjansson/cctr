@@ -3,9 +3,7 @@ json_array indexing number fails
 ===
 echo '42'
 ---
-{{ n }}
+{{ n: number }}
 ---
-with
-* n: number
-having
+where
 * n[0] == 1

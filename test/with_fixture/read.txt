@@ -1,18 +1,16 @@
 ===
 with_fixture tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t }}s
 ---
-with
-* t: number
-having
+where
 * t < 5
 
 ===
 list shows fixture marker
 ===
-cctr {{ FIXTURE_DIR }}/tests --list | grep -c fixture
+cctr $CCTR_FIXTURE_DIR/tests --list | grep -c fixture
 ---
 2

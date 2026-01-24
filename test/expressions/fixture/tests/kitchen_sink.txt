@@ -5,12 +5,7 @@ echo "name: alice age: 30 score: 95.5 status: active"
 ---
 name: {{ name }} age: {{ age }} score: {{ score }} status: {{ status }}
 ---
-with
-* name: string
-* age: number
-* score: number
-* status: string
-having
+where
 * len(name) == 5
 * name startswith "a"
 * name endswith "e"
@@ -34,9 +29,7 @@ echo "x: 10"
 ---
 x: {{ n }}
 ---
-with
-* n: number
-having
+where
 * ((n > 5) and (n < 15)) or ((n > 100) and (n < 200))
 * (((n + 5) * 2) - 10) == 20
 
@@ -47,9 +40,7 @@ echo "v: 50"
 ---
 v: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n == 50
 * n != 49
 * n < 51
@@ -64,9 +55,7 @@ echo "s: hello_world_test"
 ---
 s: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s == "hello_world_test"
 * s != "other"
 * s contains "world"
@@ -81,11 +70,7 @@ echo "a: 10 b: 20 c: 30"
 ---
 a: {{ a }} b: {{ b }} c: {{ c }}
 ---
-with
-* a: number
-* b: number
-* c: number
-having
+where
 * a < b
 * b < c
 * a + b + c == 60
@@ -100,8 +85,6 @@ echo "flag: 1"
 ---
 flag: {{ n }}
 ---
-with
-* n: number
-having
+where
 * n == 1 or (1 / 0 == 0)
 * not (n == 0 and (1 / 0 == 0))

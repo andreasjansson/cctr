@@ -1,34 +1,47 @@
 ===
-FIXTURE_DIR expands in command
+CCTR_FIXTURE_DIR env var is set
 ===
-echo "path={{ FIXTURE_DIR }}"
+test -n "$CCTR_FIXTURE_DIR" && echo "set"
 ---
-path={{ FIXTURE_DIR }}
+set
 
 ===
-WORK_DIR expands in command
+CCTR_WORK_DIR env var is set
 ===
-echo "path={{ WORK_DIR }}"
+test -n "$CCTR_WORK_DIR" && echo "set"
 ---
-path={{ WORK_DIR }}
+set
 
 ===
-both expand in expected output
+can read fixture file using CCTR_FIXTURE_DIR
 ===
-echo "fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}"
+cat "$CCTR_FIXTURE_DIR/data.txt"
 ---
-fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}
+test data
 
 ===
-pwd matches FIXTURE_DIR
+pwd is CCTR_FIXTURE_DIR
 ===
-pwd
+test "$(pwd)" = "$CCTR_FIXTURE_DIR" && echo "match"
 ---
-{{ FIXTURE_DIR }}
+match
 
 ===
-realpath resolves to same as FIXTURE_DIR
+variable capture with duck typing
 ===
-realpath .
+echo "count: 42"
 ---
-{{ FIXTURE_DIR }}
+count: {{ n }}
+---
+where
+* n == 42
+
+===
+variable capture with explicit type
+===
+echo "name: alice"
+---
+name: {{ s: string }}
+---
+where
+* s == "alice"

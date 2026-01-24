@@ -3,9 +3,7 @@ json_array wrong length
 ===
 echo '[1, 2, 3]'
 ---
-{{ a }}
+{{ a: json array }}
 ---
-with
-* a: json array
-having
+where
 * len(a) == 5

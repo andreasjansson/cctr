@@ -3,9 +3,7 @@ json_object wrong property value
 ===
 echo '{"name": "alice", "age": 30}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * o.name == "bob"

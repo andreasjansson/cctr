@@ -3,11 +3,9 @@ number variable match
 ===
 echo "Result: 42"
 ---
-Result: {{ n }}
+Result: {{ n: number }}
 ---
-with
-* n: number
-having
+where
 * n == 42
 
 ===
@@ -15,11 +13,9 @@ number constraint pass
 ===
 echo "Time: 0.5"
 ---
-Time: {{ t }}
+Time: {{ t: number }}
 ---
-with
-* t: number
-having
+where
 * t > 0
 * t < 1
 
@@ -28,9 +24,7 @@ number constraint fail
 ===
 echo "Time: 2.0"
 ---
-Time: {{ t }}
+Time: {{ t: number }}
 ---
-with
-* t: number
-having
+where
 * t < 1

@@ -1,22 +1,19 @@
 ===
 number variable tests first two pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep 'tests/numbers:' | head -2
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep 'tests/numbers:' | head -2
 ---
 ✓ tests/numbers: number variable match {{ t1 }}s
 ✓ tests/numbers: number constraint pass {{ t2 }}s
 ---
-with
-* t1: number
-* t2: number
-having
+where
 * t1 < 5
 * t2 < 5
 
 ===
 number constraint failure detected
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep -A1 "constraint.*not satisfied" | head -2
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | grep -A1 "constraint.*not satisfied" | head -2
 ---
   Error: constraint 't < 1' not satisfied
   where t = 2
@@ -24,17 +21,13 @@ cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | grep -A1 "constraint.*not satisfi
 ===
 string variable tests pass
 ===
-cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep 'tests/strings:' | head -3
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep 'tests/strings:' | head -3
 ---
 ✓ tests/strings: string variable match {{ t1 }}s
 ✓ tests/strings: string startswith {{ t2 }}s
 ✓ tests/strings: string endswith {{ t3 }}s
 ---
-with
-* t1: number
-* t2: number
-* t3: number
-having
+where
 * t1 < 5
 * t2 < 5
 * t3 < 5
@@ -42,7 +35,7 @@ having
 ===
 list mode shows variable test names
 ===
-cctr {{ FIXTURE_DIR }}/tests --list
+cctr $CCTR_FIXTURE_DIR/tests --list
 ---
 
 tests

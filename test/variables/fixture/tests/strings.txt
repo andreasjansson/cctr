@@ -3,11 +3,9 @@ string variable match
 ===
 echo "Error: file not found"
 ---
-Error: {{ msg }}
+Error: {{ msg: string }}
 ---
-with
-* msg: string
-having
+where
 * msg contains "not found"
 
 ===
@@ -15,11 +13,9 @@ string startswith
 ===
 echo "Error: connection refused"
 ---
-Error: {{ msg }}
+Error: {{ msg: string }}
 ---
-with
-* msg: string
-having
+where
 * msg startswith "connection"
 
 ===
@@ -27,9 +23,7 @@ string endswith
 ===
 echo "Status: completed"
 ---
-Status: {{ s }}
+Status: {{ s: string }}
 ---
-with
-* s: string
-having
+where
 * s endswith "completed"

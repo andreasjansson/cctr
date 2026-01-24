@@ -8,6 +8,6 @@ Hello from fixture
 ===
 use FIXTURE_DIR variable
 ===
-cat {{ FIXTURE_DIR }}/sample.txt
+cat $CCTR_FIXTURE_DIR/sample.txt
 ---
 Hello from fixture

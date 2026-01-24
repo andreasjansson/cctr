@@ -1,0 +1,66 @@
+===
+env function returns string for existing var HOME
+===
+echo "$HOME"
+---
+{{ home }}
+---
+where
+* env("HOME") == home
+* type(env("HOME")) == string
+* len(env("HOME")) > 0
+
+===
+env function returns string for USER
+===
+echo "$USER"
+---
+{{ user }}
+---
+where
+* env("USER") == user
+* type(env("USER")) == string
+
+===
+env function returns null for non-existent var
+===
+echo "test"
+---
+test
+---
+where
+* env("CCTR_NONEXISTENT_VAR_xyz123") == null
+* type(env("CCTR_NONEXISTENT_VAR_xyz123")) == null
+
+===
+env function with string operators
+===
+echo "$HOME"
+---
+{{ home }}
+---
+where
+* env("HOME") startswith "/"
+* env("HOME") not contains "NONEXISTENT"
+
+===
+env function can access CCTR_WORK_DIR
+===
+echo "workdir set"
+---
+workdir set
+---
+where
+* env("CCTR_WORK_DIR") contains "cctr"
+* env("CCTR_WORK_DIR") startswith "/"
+
+===
+env function can access CCTR_FIXTURE_DIR
+===
+echo "$CCTR_FIXTURE_DIR"
+---
+{{ dir }}
+---
+where
+* env("CCTR_FIXTURE_DIR") == dir
+* env("CCTR_FIXTURE_DIR") contains "/"

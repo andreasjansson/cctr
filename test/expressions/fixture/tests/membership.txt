@@ -5,9 +5,7 @@ echo "code: 200"
 ---
 code: {{ n }}
 ---
-with
-* n: number
-having
+where
 * [200, 201, 204, 301, 302] contains n
 
 ===
@@ -17,9 +15,7 @@ echo "code: 200"
 ---
 code: {{ n }}
 ---
-with
-* n: number
-having
+where
 * [400, 401, 403, 404, 500] not contains n
 
 ===
@@ -29,9 +25,7 @@ echo "color: red"
 ---
 color: {{ c }}
 ---
-with
-* c: string
-having
+where
 * ["red", "green", "blue"] contains c
 
 ===
@@ -41,9 +35,7 @@ echo "color: red"
 ---
 color: {{ c }}
 ---
-with
-* c: string
-having
+where
 * ["yellow", "purple", "orange"] not contains c
 
 ===
@@ -53,9 +45,7 @@ echo "val: 42"
 ---
 val: {{ n }}
 ---
-with
-* n: number
-having
+where
 * [42] contains n
 
 ===
@@ -65,10 +55,7 @@ echo "status: active count: 5"
 ---
 status: {{ s }} count: {{ n }}
 ---
-with
-* s: string
-* n: number
-having
+where
 * ["active", "inactive", "pending"] contains s
 * [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] contains n
 
@@ -79,9 +66,7 @@ echo '{"name": "alice", "age": 30}'
 ---
 {{ data }}
 ---
-with
-* data: json object
-having
+where
 * data contains "name"
 * data contains "age"
 * data not contains "email"
@@ -93,9 +78,7 @@ echo "hello world"
 ---
 {{ s }}
 ---
-with
-* s: string
-having
+where
 * s contains "world"
 * s contains "hello"
 * s not contains "goodbye"

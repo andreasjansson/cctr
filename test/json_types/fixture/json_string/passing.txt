@@ -3,11 +3,9 @@ json_string basic match
 ===
 echo '"foo"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * s == "foo"
 
 ===
@@ -15,11 +13,9 @@ json_string length
 ===
 echo '"hello"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * len(s) == 5
 
 ===
@@ -27,11 +23,9 @@ json_string with escapes
 ===
 echo '"hello \"world\""'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * s contains "world"
 
 ===
@@ -39,11 +33,9 @@ json_string empty
 ===
 echo '""'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * s == ""
 * len(s) == 0
 
@@ -52,11 +44,9 @@ json_string with newline escape
 ===
 printf '"line1\\nline2"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * len(s) == 11
 
 ===
@@ -64,11 +54,9 @@ json_string with unicode
 ===
 echo '"héllo wörld 你好"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * s contains "héllo"
 
 ===
@@ -76,11 +64,9 @@ json_string type check
 ===
 echo '"test"'
 ---
-{{ s }}
+{{ s: json string }}
 ---
-with
-* s: json string
-having
+where
 * type(s) == string
 
 ===
@@ -88,11 +74,9 @@ json_string in array context
 ===
 echo '["a", "b", "c"]'
 ---
-{{ arr }}
+{{ arr: json array }}
 ---
-with
-* arr: json array
-having
+where
 * arr[0] == "a"
 * type(arr[1]) == string
 
@@ -101,11 +85,9 @@ json_string comparison operators
 ===
 echo '{"a": "apple", "b": "banana", "c": "cherry"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * o.a < o.b
 * o.b < o.c
 * o.c > o.a
@@ -118,11 +100,9 @@ json_string indexing
 ===
 echo '{"s": "hello"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * o.s[0] == "h"
 * o.s[1] == "e"
 * o.s[4] == "o"
@@ -134,11 +114,9 @@ json_string indexing unicode
 ===
 echo '{"s": "héllo"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * o.s[0] == "h"
 * o.s[1] == "é"
 * o.s[2] == "l"
@@ -149,11 +127,9 @@ json_string lower upper functions
 ===
 echo '{"s": "HeLLo WoRLd"}'
 ---
-{{ o }}
+{{ o: json object }}
 ---
-with
-* o: json object
-having
+where
 * lower(o.s) == "hello world"
 * upper(o.s) == "HELLO WORLD"
 * lower("ABC") == "abc"

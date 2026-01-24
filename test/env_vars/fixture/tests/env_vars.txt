@@ -1,44 +1,31 @@
 ===
-env var in command
+CCTR_WORK_DIR is set
 ===
-echo "home={{ HOME }}"
+test -n "$CCTR_WORK_DIR"
 ---
-home={{ HOME }}
 
 ===
-env var USER in both command and expected
+CCTR_WORK_DIR exists
 ===
-echo "user={{ USER }}"
+test -d "$CCTR_WORK_DIR"
 ---
-user={{ USER }}
 
 ===
-PATH env var expands
+shell env vars work normally
 ===
-echo "path={{ PATH }}" | cut -c1-10
+echo "home=$HOME" | grep -o "home="
 ---
-path={{ PA }}
----
-with
-* PA: string
+home=
 
 ===
-unknown env var left unchanged
+CCTR_FIXTURE_DIR is set when fixture exists
 ===
-echo '{{ NONEXISTENT_VAR_XYZ123 }}'
+test -n "$CCTR_FIXTURE_DIR"
 ---
-{{ NONEXISTENT_VAR_XYZ123 }}
 
 ===
-multiple env vars
+can write to CCTR_WORK_DIR
 ===
-echo "{{ USER }}@{{ HOME }}"
+echo "test" > "$CCTR_WORK_DIR/testfile.txt" && cat "$CCTR_WORK_DIR/testfile.txt"
 ---
-{{ USER }}@{{ HOME }}
-
-===
-env var with FIXTURE_DIR
-===
-echo "user={{ USER }} dir={{ FIXTURE_DIR }}" | grep -o "user=[^ ]*"
----
-user={{ USER }}
+test

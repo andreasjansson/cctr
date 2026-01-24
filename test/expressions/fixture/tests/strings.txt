@@ -5,9 +5,7 @@ echo "msg: hello"
 ---
 msg: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s == "hello"
 
 ===
@@ -17,9 +15,7 @@ echo "msg: hello"
 ---
 msg: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s != "world"
 * s != ""
 
@@ -30,9 +26,7 @@ echo "msg: hello world"
 ---
 msg: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s contains "world"
 * s contains "hello"
 * s contains " "
@@ -44,9 +38,7 @@ echo "msg: hello world"
 ---
 msg: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s not contains "foo"
 * s not contains "bar"
 
@@ -57,9 +49,7 @@ echo "msg: hello world"
 ---
 msg: {{ s }}
 ---
-with
-* s: string
-having
+where
 * not (s contains "foo")
 * not (s contains "bar")
 
@@ -70,9 +60,7 @@ echo "path: /usr/local/bin"
 ---
 path: {{ p }}
 ---
-with
-* p: string
-having
+where
 * p not startswith "/home"
 * p not startswith "/var"
 
@@ -83,9 +71,7 @@ echo "file: document.pdf"
 ---
 file: {{ f }}
 ---
-with
-* f: string
-having
+where
 * f not endswith ".txt"
 * f not endswith ".doc"
 
@@ -96,9 +82,7 @@ echo "id: abc123"
 ---
 id: {{ id }}
 ---
-with
-* id: string
-having
+where
 * id not matches /^[0-9]+$/
 * id not matches /^[A-Z]+$/
 
@@ -109,9 +93,7 @@ echo "path: /usr/local/bin"
 ---
 path: {{ p }}
 ---
-with
-* p: string
-having
+where
 * p startswith "/"
 * p startswith "/usr"
 * p startswith "/usr/local"
@@ -123,9 +105,7 @@ echo "file: document.pdf"
 ---
 file: {{ f }}
 ---
-with
-* f: string
-having
+where
 * f endswith ".pdf"
 * f endswith "pdf"
 * f endswith "document.pdf"
@@ -137,9 +117,7 @@ echo "id: abc123"
 ---
 id: {{ id }}
 ---
-with
-* id: string
-having
+where
 * id matches /^[a-z]+[0-9]+$/
 
 ===
@@ -147,11 +125,9 @@ matches regex digits
 ===
 echo "num: 12345"
 ---
-num: {{ n }}
+num: {{ n: string }}
 ---
-with
-* n: string
-having
+where
 * n matches /^\d+$/
 * n matches /^[0-9]{5}$/
 
@@ -162,9 +138,7 @@ echo "status: success"
 ---
 status: {{ s }}
 ---
-with
-* s: string
-having
+where
 * s matches /^(success|failure|pending)$/
 
 ===
@@ -174,9 +148,7 @@ echo "message: hello beautiful world"
 ---
 message: {{ m }}
 ---
-with
-* m: string
-having
+where
 * m contains "beautiful"
 * m startswith "hello"
 * m endswith "world"
@@ -188,9 +160,7 @@ echo "email: user@example.com"
 ---
 email: {{ e }}
 ---
-with
-* e: string
-having
+where
 * e contains "@"
 * e endswith ".com"
 * e matches /^[^@]+@[^@]+\.[^@]+$/

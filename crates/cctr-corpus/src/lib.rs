@@ -17,14 +17,16 @@
 //! ===
 //! some_command
 //! ---
-//! Completed in {{ time }}s
+//! Completed in {{ time: number }}s
 //! ---
-//! with
-//! * time: number
-//! having
+//! where
 //! * time > 0
 //! * time < 60
 //! ```
+//!
+//! Types can be specified inline in placeholders: `{{ x }}`, `{{ x: number }}`,
+//! `{{ x:string }}`, `{{ x : json object }}`. If no type is given, the type is
+//! inferred from the matched value using duck-typing.
 
 use std::path::Path;
 use thiserror::Error;
@@ -39,7 +41,11 @@ use winnow::token::{take_till, take_while};
 #[derive(Debug, Clone, PartialEq)]
 pub enum Segment {
     Literal(String),
-    Placeholder(String),
+    /// Placeholder with name and optional type annotation
+    Placeholder {
+        name: String,
+        var_type: Option<VarType>,
+    },
 }
 
 /// Variable type for pattern matching.
@@ -47,13 +53,17 @@ pub enum Segment {
 pub enum VarType {
     Number,
     String,
+    JsonString,
+    JsonBool,
+    JsonArray,
+    JsonObject,
 }
 
-/// A declared variable with name and type.
+/// A declared variable with name and optional type (None means duck-typed).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Variable {
     pub name: String,
-    pub var_type: VarType,
+    pub var_type: Option<VarType>,
 }
 
 /// A single test case parsed from a corpus file.
@@ -98,6 +108,19 @@ pub fn parse_content(content: &str) -> Result<Vec<TestCase>, ParseError> {
 
 // ============ Segment Parsing ============
 
+/// Parse a type annotation string into a VarType
+fn parse_type_annotation(type_str: &str) -> Option<VarType> {
+    match type_str.to_lowercase().as_str() {
+        "number" => Some(VarType::Number),
+        "string" => Some(VarType::String),
+        "json string" => Some(VarType::JsonString),
+        "json bool" => Some(VarType::JsonBool),
+        "json array" => Some(VarType::JsonArray),
+        "json object" => Some(VarType::JsonObject),
+        _ => None,
+    }
+}
+
 pub fn parse_segments(input: &str) -> Vec<Segment> {
     let mut result = Vec::new();
     let mut remaining = input;
@@ -108,8 +131,16 @@ pub fn parse_segments(input: &str) -> Vec<Segment> {
                 result.push(Segment::Literal(remaining[..start].to_string()));
             }
             if let Some(end) = remaining[start..].find("}}") {
-                let name = remaining[start + 2..start + end].trim().to_string();
-                result.push(Segment::Placeholder(name));
+                let content = remaining[start + 2..start + end].trim();
+                // Check for inline type annotation: "name : type" or "name: type" or "name :type"
+                let (name, var_type) = if let Some(colon_pos) = content.find(':') {
+                    let name = content[..colon_pos].trim().to_string();
+                    let type_str = content[colon_pos + 1..].trim();
+                    (name, parse_type_annotation(type_str))
+                } else {
+                    (content.to_string(), None)
+                };
+                result.push(Segment::Placeholder { name, var_type });
                 remaining = &remaining[start + end + 2..];
             } else {
                 result.push(Segment::Literal(remaining.to_string()));
@@ -220,34 +251,6 @@ fn expected_block(input: &mut &str) -> ModalResult<String> {
     Ok(lines.join("\n"))
 }
 
-fn var_type(input: &mut &str) -> ModalResult<VarType> {
-    alt((
-        "number".value(VarType::Number),
-        "string".value(VarType::String),
-    ))
-    .parse_next(input)
-}
-
-fn variable_decl(input: &mut &str) -> ModalResult<Variable> {
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let _ = opt('*').parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-
-    let name: &str =
-        take_while(1.., |c: char| c.is_ascii_alphanumeric() || c == '_').parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    ':'.parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let vtype = var_type.parse_next(input)?;
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    opt_newline.parse_next(input)?;
-
-    Ok(Variable {
-        name: name.to_string(),
-        var_type: vtype,
-    })
-}
-
 fn constraint_line(input: &mut &str) -> ModalResult<String> {
     let _ = take_while(0.., ' ').parse_next(input)?;
     let _ = opt('*').parse_next(input)?;
@@ -257,37 +260,45 @@ fn constraint_line(input: &mut &str) -> ModalResult<String> {
     opt_newline.parse_next(input)?;
 
     let trimmed = content.trim();
-    if trimmed.is_empty() || trimmed == "with" || trimmed == "having" {
+    if trimmed.is_empty() || trimmed == "where" {
         Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
     } else {
         Ok(trimmed.to_string())
     }
 }
 
-fn with_having_section(input: &mut &str) -> ModalResult<(Vec<Variable>, Vec<String>)> {
+fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
     dash_sep.parse_next(input)?;
     opt_newline.parse_next(input)?;
 
-    // "with" line
+    // "where" line
     let _ = take_while(0.., ' ').parse_next(input)?;
-    "with".parse_next(input)?;
+    "where".parse_next(input)?;
     opt_newline.parse_next(input)?;
 
-    // Variable declarations
-    let variables: Vec<Variable> = repeat(0.., variable_decl).parse_next(input)?;
+    // Constraints
+    let constraints: Vec<String> = repeat(0.., constraint_line).parse_next(input)?;
 
-    // "having" section (optional)
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let has_having: Option<&str> = opt("having").parse_next(input)?;
+    Ok(constraints)
+}
 
-    let constraints = if has_having.is_some() {
-        opt_newline.parse_next(input)?;
-        repeat(0.., constraint_line).parse_next(input)?
-    } else {
-        Vec::new()
-    };
+/// Extract variables from segments (placeholders with their optional types)
+fn extract_variables(segments: &[Segment]) -> Vec<Variable> {
+    let mut seen = std::collections::HashSet::new();
+    let mut variables = Vec::new();
 
-    Ok((variables, constraints))
+    for segment in segments {
+        if let Segment::Placeholder { name, var_type } = segment {
+            if seen.insert(name.clone()) {
+                variables.push(Variable {
+                    name: name.clone(),
+                    var_type: *var_type,
+                });
+            }
+        }
+    }
+
+    variables
 }
 
 fn test_case(input: &mut &str) -> ModalResult<TestCase> {
@@ -314,17 +325,18 @@ fn test_case(input: &mut &str) -> ModalResult<TestCase> {
     // Expected output
     let expected_str = expected_block.parse_next(input)?;
 
-    // Optional with/having section
-    let (variables, constraints) = opt(with_having_section)
-        .parse_next(input)?
-        .unwrap_or_default();
+    // Optional where section (constraints only, variables extracted from segments)
+    let constraints = opt(where_section).parse_next(input)?.unwrap_or_default();
 
     skip_blank_lines.parse_next(input)?;
+
+    let expected = parse_segments(&expected_str);
+    let variables = extract_variables(&expected);
 
     Ok(TestCase {
         description,
         command: parse_segments(&command_str),
-        expected: parse_segments(&expected_str),
+        expected,
         variables,
         constraints,
         start_line: 1, // Would need more work to track accurately
@@ -356,8 +368,59 @@ mod tests {
             segments,
             vec![
                 Segment::Literal("hello ".to_string()),
-                Segment::Placeholder("name".to_string()),
+                Segment::Placeholder {
+                    name: "name".to_string(),
+                    var_type: None
+                },
             ]
+        );
+    }
+
+    #[test]
+    fn test_parse_segments_placeholder_with_type() {
+        let segments = parse_segments("count: {{ n: number }}");
+        assert_eq!(
+            segments,
+            vec![
+                Segment::Literal("count: ".to_string()),
+                Segment::Placeholder {
+                    name: "n".to_string(),
+                    var_type: Some(VarType::Number)
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_parse_segments_placeholder_type_variations() {
+        // No spaces
+        let s1 = parse_segments("{{ x:number }}");
+        assert_eq!(
+            s1,
+            vec![Segment::Placeholder {
+                name: "x".to_string(),
+                var_type: Some(VarType::Number)
+            }]
+        );
+
+        // Spaces around colon
+        let s2 = parse_segments("{{ x : string }}");
+        assert_eq!(
+            s2,
+            vec![Segment::Placeholder {
+                name: "x".to_string(),
+                var_type: Some(VarType::String)
+            }]
+        );
+
+        // Json types
+        let s3 = parse_segments("{{ data : json object }}");
+        assert_eq!(
+            s3,
+            vec![Segment::Placeholder {
+                name: "data".to_string(),
+                var_type: Some(VarType::JsonObject)
+            }]
         );
     }
 
@@ -367,9 +430,15 @@ mod tests {
         assert_eq!(
             segments,
             vec![
-                Segment::Placeholder("a".to_string()),
+                Segment::Placeholder {
+                    name: "a".to_string(),
+                    var_type: None
+                },
                 Segment::Literal(" + ".to_string()),
-                Segment::Placeholder("b".to_string()),
+                Segment::Placeholder {
+                    name: "b".to_string(),
+                    var_type: None
+                },
             ]
         );
     }
@@ -397,17 +466,15 @@ hello
     }
 
     #[test]
-    fn test_parse_with_variables() {
+    fn test_parse_with_inline_types() {
         let content = r#"===
 timing test
 ===
 time_command
 ---
-Completed in {{ n }}s
+Completed in {{ n: number }}s
 ---
-with
-* n: number
-having
+where
 * n > 0
 * n < 60
 "#;
@@ -417,14 +484,36 @@ having
             tests[0].expected,
             vec![
                 Segment::Literal("Completed in ".to_string()),
-                Segment::Placeholder("n".to_string()),
+                Segment::Placeholder {
+                    name: "n".to_string(),
+                    var_type: Some(VarType::Number)
+                },
                 Segment::Literal("s".to_string()),
             ]
         );
         assert_eq!(tests[0].variables.len(), 1);
         assert_eq!(tests[0].variables[0].name, "n");
-        assert_eq!(tests[0].variables[0].var_type, VarType::Number);
+        assert_eq!(tests[0].variables[0].var_type, Some(VarType::Number));
         assert_eq!(tests[0].constraints, vec!["n > 0", "n < 60"]);
+    }
+
+    #[test]
+    fn test_parse_without_type_annotation() {
+        let content = r#"===
+duck typed
+===
+some_command
+---
+value: {{ x }}
+---
+where
+* x > 0
+"#;
+        let tests = parse_content(content).unwrap();
+        assert_eq!(tests.len(), 1);
+        assert_eq!(tests[0].variables.len(), 1);
+        assert_eq!(tests[0].variables[0].name, "x");
+        assert_eq!(tests[0].variables[0].var_type, None); // Duck-typed
     }
 
     #[test]

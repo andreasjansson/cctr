@@ -58,11 +58,11 @@ The top-level `json_array.txt` contains tests like:
 ===
 json_array passing tests
 ===
-cctr {{ FIXTURE_DIR }}/json_array/passing.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/json_array/passing.txt --no-color 2>&1 | tail -1
 ---
 All 25 tests passed in {{ t }}s
 ---
-with
+where
 * t: number
 ```
 
@@ -82,7 +82,7 @@ test/cctr/
         data.txt                    # Data file for the inner test
 ```
 
-The inner test `read_fixture.txt` can use `{{ FIXTURE_DIR }}` to access `data.txt`.
+The inner test `read_fixture.txt` can use `$CCTR_FIXTURE_DIR` to access `data.txt`.
 
 ### Important: All Top-Level Tests Must Call cctr
 
@@ -91,7 +91,7 @@ Every top-level test file (directly under `test/*/`) must call `cctr` as a comma
 **Correct pattern:**
 ```
 test/feature/
-  feature.txt           # Calls: cctr {{ FIXTURE_DIR }}/tests ...
+  feature.txt           # Calls: cctr $CCTR_FIXTURE_DIR/tests ...
   fixture/
     tests/
       actual_tests.txt  # Contains actual test cases
