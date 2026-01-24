@@ -125,7 +125,7 @@ matches regex digits
 ===
 echo "num: 12345"
 ---
-num: {{ n }}
+num: {{ n: string }}
 ---
 where
 * n matches /^\d+$/
