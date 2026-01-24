@@ -367,9 +367,36 @@ mod tests {
             segments,
             vec![
                 Segment::Literal("hello ".to_string()),
-                Segment::Placeholder("name".to_string()),
+                Segment::Placeholder { name: "name".to_string(), var_type: None },
             ]
         );
+    }
+
+    #[test]
+    fn test_parse_segments_placeholder_with_type() {
+        let segments = parse_segments("count: {{ n: number }}");
+        assert_eq!(
+            segments,
+            vec![
+                Segment::Literal("count: ".to_string()),
+                Segment::Placeholder { name: "n".to_string(), var_type: Some(VarType::Number) },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_parse_segments_placeholder_type_variations() {
+        // No spaces
+        let s1 = parse_segments("{{ x:number }}");
+        assert_eq!(s1, vec![Segment::Placeholder { name: "x".to_string(), var_type: Some(VarType::Number) }]);
+        
+        // Spaces around colon
+        let s2 = parse_segments("{{ x : string }}");
+        assert_eq!(s2, vec![Segment::Placeholder { name: "x".to_string(), var_type: Some(VarType::String) }]);
+        
+        // Json types
+        let s3 = parse_segments("{{ data : json object }}");
+        assert_eq!(s3, vec![Segment::Placeholder { name: "data".to_string(), var_type: Some(VarType::JsonObject) }]);
     }
 
     #[test]
@@ -378,9 +405,9 @@ mod tests {
         assert_eq!(
             segments,
             vec![
-                Segment::Placeholder("a".to_string()),
+                Segment::Placeholder { name: "a".to_string(), var_type: None },
                 Segment::Literal(" + ".to_string()),
-                Segment::Placeholder("b".to_string()),
+                Segment::Placeholder { name: "b".to_string(), var_type: None },
             ]
         );
     }
@@ -408,17 +435,15 @@ hello
     }
 
     #[test]
-    fn test_parse_with_variables() {
+    fn test_parse_with_inline_types() {
         let content = r#"===
 timing test
 ===
 time_command
 ---
-Completed in {{ n }}s
+Completed in {{ n: number }}s
 ---
-with
-* n: number
-having
+where
 * n > 0
 * n < 60
 "#;
@@ -428,14 +453,33 @@ having
             tests[0].expected,
             vec![
                 Segment::Literal("Completed in ".to_string()),
-                Segment::Placeholder("n".to_string()),
+                Segment::Placeholder { name: "n".to_string(), var_type: Some(VarType::Number) },
                 Segment::Literal("s".to_string()),
             ]
         );
         assert_eq!(tests[0].variables.len(), 1);
         assert_eq!(tests[0].variables[0].name, "n");
-        assert_eq!(tests[0].variables[0].var_type, VarType::Number);
+        assert_eq!(tests[0].variables[0].var_type, Some(VarType::Number));
         assert_eq!(tests[0].constraints, vec!["n > 0", "n < 60"]);
+    }
+
+    #[test]
+    fn test_parse_without_type_annotation() {
+        let content = r#"===
+duck typed
+===
+some_command
+---
+value: {{ x }}
+---
+where
+* x > 0
+"#;
+        let tests = parse_content(content).unwrap();
+        assert_eq!(tests.len(), 1);
+        assert_eq!(tests[0].variables.len(), 1);
+        assert_eq!(tests[0].variables[0].name, "x");
+        assert_eq!(tests[0].variables[0].var_type, None); // Duck-typed
     }
 
     #[test]
