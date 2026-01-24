@@ -15,4 +15,4 @@ list shows fixture marker
 ===
 cctr {{ FIXTURE_DIR }}/tests --list | grep -c fixture
 ---
-1
+2
