@@ -64,7 +64,7 @@ pub enum ProgressEvent {
 }
 
 fn run_command(command: &str, work_dir: &Path) -> (String, i32) {
-    let result = Command::new("sh")
+    let result = Command::new("bash")
         .arg("-c")
         .arg(command)
         .current_dir(work_dir)
