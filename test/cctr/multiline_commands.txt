@@ -54,7 +54,7 @@ result: nested
 ===
 pipe chain
 ===
-echo -e "c\na\nb" | sort | head -2
+printf "c\na\nb\n" | sort | head -2
 ---
 a
 b
