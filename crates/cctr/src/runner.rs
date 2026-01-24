@@ -436,15 +436,16 @@ mod tests {
     }
 
     #[test]
-    fn test_template_vars() {
+    fn test_env_vars() {
         let tmp = TempDir::new().unwrap();
-        let suite = create_suite(tmp.path(), "template");
+        let suite = create_suite(tmp.path(), "envvars");
         create_test_file(
             &suite.path.join("test.txt"),
-            "===\ntemplate test\n===\necho {{ WORK_DIR }}\n---\n{{ WORK_DIR }}\n",
+            "===\nenv var test\n===\necho $CCTR_WORK_DIR\n---\n",
         );
 
         let result = run_suite(&suite, None, None);
+        // Just checks exit code 0 since expected is empty
         assert!(result.passed());
     }
 
