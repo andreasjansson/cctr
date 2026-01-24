@@ -120,11 +120,11 @@ MY_VAR=test sh -c 'echo $MY_VAR'
 test
 
 ===
-read from process substitution
+command output as input
 ===
-cat <(echo "from process sub")
+echo "from echo" | cat
 ---
-from process sub
+from echo
 
 ===
 case statement
