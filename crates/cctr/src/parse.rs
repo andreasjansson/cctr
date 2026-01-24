@@ -213,7 +213,17 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
         let expected_output = expected_lines.join("\n");
 
         // Extract variables from expected output placeholders
-        let variables = extract_variables_from_expected(&expected_output);
+        let variables = match extract_variables_from_expected(&expected_output) {
+            Ok(vars) => vars,
+            Err(e) => {
+                return Err(anyhow::anyhow!(
+                    "{}:{}: {}",
+                    path.display(),
+                    start_line,
+                    e
+                ));
+            }
+        };
 
         tests.push(TestCase {
             name,
