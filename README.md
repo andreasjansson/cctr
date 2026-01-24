@@ -479,11 +479,15 @@ having
 |----------|-------------|
 | `startswith` | Prefix match |
 | `endswith` | Suffix match |
+| `not startswith` | Negated prefix match |
+| `not endswith` | Negated suffix match |
 
 ```
 having
 * path startswith "/usr"
 * filename endswith ".txt"
+* path not startswith "/home"
+* filename not endswith ".bak"
 ```
 
 ### Regular expressions
