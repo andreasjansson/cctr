@@ -90,7 +90,8 @@ fn extract_variables_from_expected(expected: &str) -> Vec<VariableDecl> {
         if let Some(end) = remaining[start..].find("}}") {
             let content = &remaining[start + 2..start + end];
             let (name, var_type) = parse_placeholder(content);
-            if !name.is_empty() && seen.insert(name.clone()) {
+            // Skip empty names and reserved keywords
+            if !name.is_empty() && !is_reserved_keyword(&name) && seen.insert(name.clone()) {
                 variables.push(VariableDecl { name, var_type });
             }
             remaining = &remaining[start + end + 2..];
