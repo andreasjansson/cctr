@@ -216,12 +216,10 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
         let variables = match extract_variables_from_expected(&expected_output) {
             Ok(vars) => vars,
             Err(e) => {
-                return Err(anyhow::anyhow!(
-                    "{}:{}: {}",
-                    path.display(),
-                    start_line,
-                    e
-                ));
+                return Err(Error::ParseCorpus {
+                    path: path.to_path_buf(),
+                    message: format!("line {}: {}", start_line, e),
+                });
             }
         };
 
