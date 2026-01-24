@@ -1149,22 +1149,28 @@ mod tests {
     }
 
     #[test]
-    fn test_in_operator() {
+    fn test_array_contains() {
         let v = vars(&[("n", Value::Number(2.0))]);
-        assert!(eval_bool("n in [1, 2, 3]", &v).unwrap());
-        assert!(!eval_bool("n in [4, 5, 6]", &v).unwrap());
+        assert!(eval_bool("[1, 2, 3] contains n", &v).unwrap());
+        assert!(!eval_bool("[4, 5, 6] contains n", &v).unwrap());
     }
 
     #[test]
-    fn test_not_in_operator() {
+    fn test_array_not_contains() {
         let v = vars(&[("n", Value::Number(5.0))]);
-        assert!(eval_bool("n not in [1, 2, 3]", &v).unwrap());
-        assert!(!eval_bool("n not in [4, 5, 6]", &v).unwrap());
-        // Verify it's equivalent to not (x in y)
-        assert_eq!(
-            eval_bool("n not in [1, 2, 3]", &v).unwrap(),
-            eval_bool("not (n in [1, 2, 3])", &v).unwrap()
-        );
+        assert!(eval_bool("not ([1, 2, 3] contains n)", &v).unwrap());
+        assert!(!eval_bool("not ([4, 5, 6] contains n)", &v).unwrap());
+    }
+
+    #[test]
+    fn test_object_contains_key() {
+        let mut obj = std::collections::BTreeMap::new();
+        obj.insert("name".to_string(), Value::String("alice".to_string()));
+        obj.insert("age".to_string(), Value::Number(30.0));
+        let v = vars(&[("o", Value::Object(obj))]);
+        assert!(eval_bool("o contains \"name\"", &v).unwrap());
+        assert!(eval_bool("o contains \"age\"", &v).unwrap());
+        assert!(!eval_bool("o contains \"email\"", &v).unwrap());
     }
 
     #[test]
