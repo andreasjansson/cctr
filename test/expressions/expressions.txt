@@ -1,9 +1,9 @@
 ===
-all 80 expression tests pass
+all 84 expression tests pass
 ===
 cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
-All 80 tests passed in {{ t }}s
+All 84 tests passed in {{ t }}s
 ---
 with
 * t: number
@@ -15,7 +15,7 @@ verbose shows all tests running
 ===
 cctr {{ FIXTURE_DIR }}/tests --no-color -v 2>&1 | grep -c "^✓" | tr -d ' '
 ---
-81
+85
 
 ===
 no failures in expression tests
