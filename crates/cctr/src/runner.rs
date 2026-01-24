@@ -126,7 +126,7 @@ fn run_corpus_file(
     file_path: &Path,
     work_dir: &Path,
     suite_name: &str,
-    vars: &TemplateVars,
+    env_vars: &[(String, String)],
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> FileResult {
@@ -148,7 +148,7 @@ fn run_corpus_file(
                 continue;
             }
         }
-        let result = run_test(&test, work_dir, suite_name, vars);
+        let result = run_test(&test, work_dir, suite_name, env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
