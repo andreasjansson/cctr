@@ -9,7 +9,7 @@
 
 ## Test Structure
 
-cctr uses itself to test itself (dogfooding). The test suite lives in `test/` and has a specific structure that can be confusing at first.
+cctr uses cctr to test itself. The test suite lives in `test/` and has a specific structure that can be confusing at first.
 
 ### The Two-Level Pattern
 
@@ -84,16 +84,26 @@ test/cctr/
 
 The inner test `read_fixture.txt` can use `{{ FIXTURE_DIR }}` to access `data.txt`.
 
-### Simple Tests (No Inner Level)
+### Important: All Top-Level Tests Must Call cctr
 
-Some suites don't need the two-level pattern:
+Every top-level test file (directly under `test/*/`) must call `cctr` as a command. This ensures we're always testing cctr's behavior, not just shell commands.
 
+**Correct pattern:**
 ```
-test/no_fixture/
-  simple.txt    # Direct tests of shell commands, no cctr invocation
+test/feature/
+  feature.txt           # Calls: cctr {{ FIXTURE_DIR }}/tests ...
+  fixture/
+    tests/
+      actual_tests.txt  # Contains actual test cases
 ```
 
-These test basic cctr functionality directly (echo, exit codes, etc.) without calling cctr recursively.
+**Wrong pattern:**
+```
+test/feature/
+  feature.txt           # Contains: echo hello  ← WRONG! Should call cctr
+```
+
+If you need to test shell behavior (echo, pipes, loops), put those in a fixture and have the top-level test verify they pass via cctr.
 
 ### Test Categories
 
