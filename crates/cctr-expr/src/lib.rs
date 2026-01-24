@@ -1469,4 +1469,16 @@ mod tests {
         assert!(eval_bool("b != false", &v).unwrap());
         assert!(eval_bool("(1 == 1) == true", &v).unwrap());
     }
+
+    #[test]
+    fn test_env_function() {
+        std::env::set_var("CCTR_TEST_VAR", "test_value");
+        let v = vars(&[]);
+        assert!(eval_bool(r#"env("CCTR_TEST_VAR") == "test_value""#, &v).unwrap());
+        assert!(eval_bool(r#"type(env("CCTR_TEST_VAR")) == string"#, &v).unwrap());
+        // Non-existent env var returns null
+        assert!(eval_bool(r#"env("CCTR_NONEXISTENT_VAR_12345") == null"#, &v).unwrap());
+        assert!(eval_bool(r#"type(env("CCTR_NONEXISTENT_VAR_12345")) == null"#, &v).unwrap());
+        std::env::remove_var("CCTR_TEST_VAR");
+    }
 }
