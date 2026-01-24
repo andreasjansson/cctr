@@ -1,0 +1,55 @@
+===
+env function returns string for existing var
+===
+export CCTR_TEST_VAR="hello world" && echo "value: $CCTR_TEST_VAR"
+---
+value: {{ v }}
+---
+where
+* env("CCTR_TEST_VAR") == "hello world"
+* type(env("CCTR_TEST_VAR")) == string
+
+===
+env function returns null for non-existent var
+===
+echo "test"
+---
+test
+---
+where
+* env("CCTR_NONEXISTENT_VAR_xyz123") == null
+* type(env("CCTR_NONEXISTENT_VAR_xyz123")) == null
+
+===
+env function with HOME
+===
+echo "$HOME"
+---
+{{ home }}
+---
+where
+* env("HOME") == home
+* len(env("HOME")) > 0
+
+===
+env function combined with other expressions
+===
+export CCTR_NUM="42" && echo "num: $CCTR_NUM"
+---
+num: {{ n }}
+---
+where
+* env("CCTR_NUM") == "42"
+* env("CCTR_NUM") startswith "4"
+* env("CCTR_NUM") endswith "2"
+
+===
+env function with contains
+===
+export CCTR_PATH="/usr/local/bin" && echo "path: $CCTR_PATH"
+---
+path: {{ p }}
+---
+where
+* env("CCTR_PATH") contains "local"
+* env("CCTR_PATH") not contains "windows"
