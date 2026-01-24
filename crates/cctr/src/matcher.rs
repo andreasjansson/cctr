@@ -231,7 +231,7 @@ impl<'a> Matcher<'a> {
         regex_str.push_str(&regex::escape(&pattern[last_end..]));
         let regex_str = format!("(?s)^{}$", regex_str);
 
-        Regex::new(&regex_str)
+        Ok(Regex::new(&regex_str)?)
     }
 
     fn extract_values(&self, caps: &regex::Captures) -> Result<HashMap<String, Value>, MatchError> {
