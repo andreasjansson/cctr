@@ -160,3 +160,36 @@ where
 * len(data.users) == 2
 * data.users[0].name == "alice"
 * data.users[1].name == "bob"
+
+===
+duck type Infinity as string
+===
+echo "Infinity"
+---
+{{ x }}
+---
+where
+* type(x) == string
+* x == "Infinity"
+
+===
+duck type NaN as string
+===
+echo "NaN"
+---
+{{ x }}
+---
+where
+* type(x) == string
+* x == "NaN"
+
+===
+duck type -Infinity as string
+===
+echo "-Infinity"
+---
+{{ x }}
+---
+where
+* type(x) == string
+* x == "-Infinity"
