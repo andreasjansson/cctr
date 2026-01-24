@@ -3,7 +3,7 @@ all duck typing passing tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests/duck_typing.txt --no-color 2>&1 | tail -1
 ---
-All 15 tests passed in {{ t }}s
+All 18 tests passed in {{ t }}s
 ---
 where
 * t < 10
@@ -13,7 +13,7 @@ duck typing verbose output
 ===
 cctr $CCTR_FIXTURE_DIR/tests/duck_typing.txt --no-color -v 2>&1 | grep "^✓" | wc -l | tr -d ' '
 ---
-16
+19
 
 ===
 all duck typing failure tests fail
