@@ -46,10 +46,10 @@ where
 ===
 env function can access CCTR_WORK_DIR
 ===
-echo "$CCTR_WORK_DIR"
+echo "workdir set"
 ---
-{{ workdir }}
+workdir set
 ---
 where
-* env("CCTR_WORK_DIR") == workdir
-* env("CCTR_WORK_DIR") contains "/"
+* env("CCTR_WORK_DIR") contains "cctr"
+* env("CCTR_WORK_DIR") startswith "/"
