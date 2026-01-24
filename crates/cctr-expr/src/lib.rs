@@ -1027,18 +1027,16 @@ fn eval_binary_op(
             (Value::String(ls), Value::String(rs)) => Ok(Value::Bool(ls >= rs)),
             _ => Ok(Value::Bool(l.as_number()? >= r.as_number()?)),
         },
-        BinaryOp::In => {
-            let arr = r.as_array()?;
-            Ok(Value::Bool(arr.iter().any(|v| values_equal(&l, v))))
-        }
-        BinaryOp::NotIn => {
-            let arr = r.as_array()?;
-            Ok(Value::Bool(!arr.iter().any(|v| values_equal(&l, v))))
-        }
-        BinaryOp::Contains => {
-            let haystack = l.as_string()?;
-            let needle = r.as_string()?;
-            Ok(Value::Bool(haystack.contains(needle)))
+        BinaryOp::Contains => match &l {
+            Value::String(haystack) => {
+                let needle = r.as_string()?;
+                Ok(Value::Bool(haystack.contains(needle)))
+            }
+            Value::Array(arr) => Ok(Value::Bool(arr.iter().any(|v| values_equal(v, &r)))),
+            _ => Err(format!(
+                "contains requires string or array on left side, got {}",
+                l.type_name()
+            )),
         }
         BinaryOp::StartsWith => {
             let s = l.as_string()?;
