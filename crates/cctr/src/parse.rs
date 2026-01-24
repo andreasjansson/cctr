@@ -57,6 +57,17 @@ fn parse_type_annotation(type_str: &str) -> Option<VarType> {
     }
 }
 
+const RESERVED_KEYWORDS: &[&str] = &[
+    "true", "false", "null", "and", "or", "not", "in", "forall",
+    "contains", "startswith", "endswith", "matches",
+    "len", "type", "keys", "values", "sum", "min", "max", "abs", "unique", "lower", "upper",
+    "number", "string", "bool", "array", "object",
+];
+
+fn is_reserved_keyword(name: &str) -> bool {
+    RESERVED_KEYWORDS.contains(&name)
+}
+
 /// Parse a placeholder content like "name" or "name: type" or "name : type"
 fn parse_placeholder(content: &str) -> (String, Option<VarType>) {
     let content = content.trim();
