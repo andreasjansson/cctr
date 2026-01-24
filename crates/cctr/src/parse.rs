@@ -81,7 +81,7 @@ fn parse_placeholder(content: &str) -> (String, Option<VarType>) {
 }
 
 /// Extract variables from expected output by finding {{ ... }} placeholders
-fn extract_variables_from_expected(expected: &str) -> Vec<VariableDecl> {
+fn extract_variables_from_expected(expected: &str) -> std::result::Result<Vec<VariableDecl>, String> {
     let mut variables = Vec::new();
     let mut seen = std::collections::HashSet::new();
     let mut remaining = expected;
@@ -90,9 +90,16 @@ fn extract_variables_from_expected(expected: &str) -> Vec<VariableDecl> {
         if let Some(end) = remaining[start..].find("}}") {
             let content = &remaining[start + 2..start + end];
             let (name, var_type) = parse_placeholder(content);
-            // Skip empty names and reserved keywords
-            if !name.is_empty() && !is_reserved_keyword(&name) && seen.insert(name.clone()) {
-                variables.push(VariableDecl { name, var_type });
+            if !name.is_empty() {
+                if is_reserved_keyword(&name) {
+                    return Err(format!(
+                        "'{}' is a reserved keyword and cannot be used as a variable name",
+                        name
+                    ));
+                }
+                if seen.insert(name.clone()) {
+                    variables.push(VariableDecl { name, var_type });
+                }
             }
             remaining = &remaining[start + end + 2..];
         } else {
@@ -100,7 +107,7 @@ fn extract_variables_from_expected(expected: &str) -> Vec<VariableDecl> {
         }
     }
 
-    variables
+    Ok(variables)
 }
 
 pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>> {
