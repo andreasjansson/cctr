@@ -187,8 +187,11 @@ pub fn run_suite(
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
     let work_dir = work_dir.as_path();
-    let mut vars = TemplateVars::new();
-    vars.set("WORK_DIR", work_dir.to_string_lossy().as_ref());
+    
+    // Build environment variables to inject
+    let mut env_vars = vec![
+        ("CCTR_WORK_DIR".to_string(), work_dir.to_string_lossy().to_string()),
+    ];
 
     if suite.has_fixture {
         let fixture_src = suite.path.join("fixture");
@@ -200,7 +203,7 @@ pub fn run_suite(
                 elapsed: start.elapsed(),
             };
         }
-        vars.set("FIXTURE_DIR", work_dir.to_string_lossy().as_ref());
+        env_vars.push(("CCTR_FIXTURE_DIR".to_string(), work_dir.to_string_lossy().to_string()));
     }
 
     if suite.has_setup {
@@ -209,7 +212,7 @@ pub fn run_suite(
             &setup_file,
             work_dir,
             &suite.name,
-            &vars,
+            &env_vars,
             None, // Setup always runs all tests regardless of pattern
             progress_tx,
         );
@@ -232,7 +235,7 @@ pub fn run_suite(
             &corpus_file,
             work_dir,
             &suite.name,
-            &vars,
+            &env_vars,
             pattern,
             progress_tx,
         );
@@ -245,7 +248,7 @@ pub fn run_suite(
             &teardown_file,
             work_dir,
             &suite.name,
-            &vars,
+            &env_vars,
             None, // Teardown always runs all tests regardless of pattern
             progress_tx,
         );
