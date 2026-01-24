@@ -29,7 +29,7 @@
 
 use std::collections::HashMap;
 use thiserror::Error;
-use winnow::ascii::{digit1, multispace0};
+use winnow::ascii::{digit1, multispace0, multispace1};
 use winnow::combinator::{alt, delimited, opt, preceded, repeat, separated, terminated};
 use winnow::error::ContextError;
 use winnow::prelude::*;
