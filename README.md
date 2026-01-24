@@ -518,7 +518,8 @@ having
 * message contains "error"              # substring in string
 * ["ok", "success"] contains status     # element in array
 * config contains "debug"               # key in object
-* not (["error", "fail"] contains status)  # negated membership
+* message not contains "fatal"          # negated (shorthand)
+* ["error", "fail"] not contains status # negated array membership
 ```
 
 ### Functions
