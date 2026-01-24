@@ -63,6 +63,58 @@ fn format_value(value: &Value) -> String {
     }
 }
 
+/// Duck-type a captured string value into the appropriate Value type.
+/// Priority: json object > json array > json string > json bool > number > string
+fn duck_type_value(text: &str) -> Value {
+    let trimmed = text.trim();
+    
+    // Try JSON object
+    if trimmed.starts_with('{') {
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(trimmed) {
+            if let Ok(v) = json_to_value(&json) {
+                return v;
+            }
+        }
+    }
+    
+    // Try JSON array
+    if trimmed.starts_with('[') {
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(trimmed) {
+            if let Ok(v) = json_to_value(&json) {
+                return v;
+            }
+        }
+    }
+    
+    // Try JSON string
+    if trimmed.starts_with('"') {
+        if let Ok(serde_json::Value::String(s)) = serde_json::from_str::<serde_json::Value>(trimmed) {
+            return Value::String(s);
+        }
+    }
+    
+    // Try JSON bool
+    if trimmed == "true" {
+        return Value::Bool(true);
+    }
+    if trimmed == "false" {
+        return Value::Bool(false);
+    }
+    
+    // Try null
+    if trimmed == "null" {
+        return Value::Null;
+    }
+    
+    // Try number
+    if let Ok(n) = trimmed.parse::<f64>() {
+        return Value::Number(n);
+    }
+    
+    // Fall back to string
+    Value::String(text.to_string())
+}
+
 pub struct Matcher<'a> {
     variables: &'a [VariableDecl],
     constraints: &'a [String],
@@ -77,7 +129,9 @@ impl<'a> Matcher<'a> {
     }
 
     pub fn matches(&self, pattern: &str, actual: &str) -> Result<bool, MatchError> {
-        let regex = self.build_regex(pattern)?;
+        // Strip inline type annotations from pattern for regex matching
+        let clean_pattern = self.strip_type_annotations(pattern);
+        let regex = self.build_regex(&clean_pattern)?;
 
         let Some(caps) = regex.captures(actual) else {
             return Ok(false);
@@ -105,6 +159,12 @@ impl<'a> Matcher<'a> {
         }
 
         Ok(true)
+    }
+
+    /// Strip type annotations from placeholders: {{ x: number }} -> {{ x }}
+    fn strip_type_annotations(&self, pattern: &str) -> String {
+        let re = Regex::new(r"\{\{\s*(\w+)\s*:\s*[^}]+\}\}").unwrap();
+        re.replace_all(pattern, "{{ $1 }}").to_string()
     }
 
     fn format_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
@@ -136,14 +196,14 @@ impl<'a> Matcher<'a> {
                 // For JSON types, we use a greedy approach that captures balanced brackets/braces.
                 // The actual JSON validation happens in extract_values via serde_json.
                 let capture_pattern = match var.var_type {
-                    VarType::Number => r"-?\d+(?:\.\d+)?",
-                    VarType::String => r".*?",
-                    VarType::JsonString => r#""(?:[^"\\]|\\.)*""#,
-                    VarType::JsonBool => r"true|false",
-                    // Match balanced brackets - this uses a simple heuristic that works for
-                    // most JSON: capture from [ to the last ] that makes the brackets balanced
-                    VarType::JsonArray => r"\[[\s\S]*\]",
-                    VarType::JsonObject => r"\{[\s\S]*\}",
+                    Some(VarType::Number) => r"-?\d+(?:\.\d+)?",
+                    Some(VarType::String) => r".*?",
+                    Some(VarType::JsonString) => r#""(?:[^"\\]|\\.)*""#,
+                    Some(VarType::JsonBool) => r"true|false",
+                    Some(VarType::JsonArray) => r"\[[\s\S]*\]",
+                    Some(VarType::JsonObject) => r"\{[\s\S]*\}",
+                    // Duck-typed: match anything (greedy but stops at next literal)
+                    None => r".*?",
                 };
                 regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
             } else {
@@ -168,12 +228,12 @@ impl<'a> Matcher<'a> {
             if let Some(m) = caps.name(&var.name) {
                 let text = m.as_str();
                 let value = match var.var_type {
-                    VarType::Number => {
+                    Some(VarType::Number) => {
                         let n: f64 = text.parse().unwrap_or(0.0);
                         Value::Number(n)
                     }
-                    VarType::String => Value::String(text.to_string()),
-                    VarType::JsonString => {
+                    Some(VarType::String) => Value::String(text.to_string()),
+                    Some(VarType::JsonString) => {
                         let json: serde_json::Value =
                             serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
                                 name: var.name.clone(),
@@ -189,11 +249,11 @@ impl<'a> Matcher<'a> {
                             }
                         }
                     }
-                    VarType::JsonBool => {
+                    Some(VarType::JsonBool) => {
                         let b = text == "true";
                         Value::Bool(b)
                     }
-                    VarType::JsonArray => {
+                    Some(VarType::JsonArray) => {
                         let json: serde_json::Value =
                             serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
                                 name: var.name.clone(),
@@ -204,7 +264,7 @@ impl<'a> Matcher<'a> {
                             error: e,
                         })?
                     }
-                    VarType::JsonObject => {
+                    Some(VarType::JsonObject) => {
                         let json: serde_json::Value =
                             serde_json::from_str(text).map_err(|e| MatchError::JsonParse {
                                 name: var.name.clone(),
@@ -215,6 +275,8 @@ impl<'a> Matcher<'a> {
                             error: e,
                         })?
                     }
+                    // Duck-typed: infer from value
+                    None => duck_type_value(text),
                 };
                 values.insert(var.name.clone(), value);
             }
@@ -248,23 +310,23 @@ fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
 mod tests {
     use super::*;
 
-    fn make_var(name: &str, var_type: &str) -> VariableDecl {
+    fn make_var(name: &str, var_type: Option<&str>) -> VariableDecl {
         VariableDecl {
             name: name.to_string(),
-            var_type: match var_type {
+            var_type: var_type.map(|t| match t {
                 "number" => VarType::Number,
                 "json string" => VarType::JsonString,
                 "json bool" => VarType::JsonBool,
                 "json array" => VarType::JsonArray,
                 "json object" => VarType::JsonObject,
                 _ => VarType::String,
-            },
+            }),
         }
     }
 
     #[test]
     fn test_simple_number_match() {
-        let vars = vec![make_var("n", "number")];
+        let vars = vec![make_var("n", Some("number"))];
         let constraints = vec![];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -275,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_constraint_pass() {
-        let vars = vec![make_var("n", "number")];
+        let vars = vec![make_var("n", Some("number"))];
         let constraints = vec!["n > 0".to_string(), "n < 1".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -284,7 +346,7 @@ mod tests {
 
     #[test]
     fn test_constraint_fail() {
-        let vars = vec![make_var("n", "number")];
+        let vars = vec![make_var("n", Some("number"))];
         let constraints = vec!["n < 0".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -297,7 +359,7 @@ mod tests {
 
     #[test]
     fn test_no_match() {
-        let vars = vec![make_var("n", "number")];
+        let vars = vec![make_var("n", Some("number"))];
         let constraints = vec![];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -308,7 +370,7 @@ mod tests {
 
     #[test]
     fn test_empty_string_match() {
-        let vars = vec![make_var("s", "string")];
+        let vars = vec![make_var("s", Some("string"))];
         let constraints = vec!["len(s) == 0".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -317,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_json_string_match() {
-        let vars = vec![make_var("s", "json string")];
+        let vars = vec![make_var("s", Some("json string"))];
         let constraints = vec![r#"s == "hello""#.to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -326,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_json_string_length() {
-        let vars = vec![make_var("s", "json string")];
+        let vars = vec![make_var("s", Some("json string"))];
         let constraints = vec!["len(s) == 5".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -335,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_json_bool_true() {
-        let vars = vec![make_var("b", "json bool")];
+        let vars = vec![make_var("b", Some("json bool"))];
         let constraints = vec!["b == true".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -344,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_json_bool_false() {
-        let vars = vec![make_var("b", "json bool")];
+        let vars = vec![make_var("b", Some("json bool"))];
         let constraints = vec!["b == false".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -353,7 +415,7 @@ mod tests {
 
     #[test]
     fn test_json_array_match() {
-        let vars = vec![make_var("a", "json array")];
+        let vars = vec![make_var("a", Some("json array"))];
         let constraints = vec!["len(a) == 3".to_string(), "a[0] == 1".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -362,7 +424,7 @@ mod tests {
 
     #[test]
     fn test_json_object_match() {
-        let vars = vec![make_var("o", "json object")];
+        let vars = vec![make_var("o", Some("json object"))];
         let constraints = vec![r#"o["name"] == "alice""#.to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -373,7 +435,7 @@ mod tests {
 
     #[test]
     fn test_json_object_dot_access() {
-        let vars = vec![make_var("o", "json object")];
+        let vars = vec![make_var("o", Some("json object"))];
         let constraints = vec!["o.age == 30".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
@@ -384,10 +446,49 @@ mod tests {
 
     #[test]
     fn test_json_forall() {
-        let vars = vec![make_var("a", "json array")];
+        let vars = vec![make_var("a", Some("json array"))];
         let constraints = vec!["x <= 3 forall x in a".to_string()];
         let matcher = Matcher::new(&vars, &constraints);
 
         assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
+    }
+
+    #[test]
+    fn test_duck_typed_number() {
+        let vars = vec![make_var("x", None)];
+        let constraints = vec!["x > 0".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("val: {{ x }}", "val: 42").unwrap());
+    }
+
+    #[test]
+    fn test_duck_typed_string() {
+        let vars = vec![make_var("x", None)];
+        let constraints = vec!["len(x) == 5".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("val: {{ x }}", "val: hello").unwrap());
+    }
+
+    #[test]
+    fn test_duck_typed_bool() {
+        let vars = vec![make_var("x", None)];
+        let constraints = vec!["x == true".to_string()];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        assert!(matcher.matches("val: {{ x }}", "val: true").unwrap());
+    }
+
+    #[test]
+    fn test_inline_type_annotation_stripped() {
+        let vars = vec![make_var("n", Some("number"))];
+        let constraints = vec![];
+        let matcher = Matcher::new(&vars, &constraints);
+
+        // The pattern has inline type annotation which should be stripped
+        assert!(matcher
+            .matches("val: {{ n: number }}", "val: 42")
+            .unwrap());
     }
 }
