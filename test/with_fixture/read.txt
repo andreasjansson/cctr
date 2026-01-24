@@ -1,20 +1,11 @@
 ===
-read from fixture
+with_fixture tests pass
 ===
-cat sample.txt
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
-Hello from fixture
-
-===
-use FIXTURE_DIR variable
-===
-cat {{ FIXTURE_DIR }}/sample.txt
+All 3 tests passed in {{ t }}s
 ---
-Hello from fixture
-
-===
-list has fixture marker
-===
-cctr --list | grep fixture | wc -l | tr -d ' '
----
-1
+with
+* t: number
+having
+* t < 5
