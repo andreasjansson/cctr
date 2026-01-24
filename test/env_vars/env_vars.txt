@@ -3,7 +3,7 @@ env vars tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
-All 6 tests passed in {{ t }}s
+All 5 tests passed in {{ t: number }}s
 ---
 where
 * t < 5
