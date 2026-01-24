@@ -608,65 +608,40 @@ From highest to lowest:
 9. Logical `and`
 10. Logical `or`
 
-## Built-in variables
+## Environment variables
 
-These variables are automatically available in both commands and expected output:
+cctr injects special environment variables that your commands can use:
 
 | Variable | Description |
 |----------|-------------|
-| `{{ WORK_DIR }}` | Temporary directory where tests run |
-| `{{ FIXTURE_DIR }}` | Location of copied fixture files (same as `WORK_DIR` when fixture exists) |
+| `$CCTR_WORK_DIR` | Temporary directory where tests run |
+| `$CCTR_FIXTURE_DIR` | Location of copied fixture files (same as `CCTR_WORK_DIR` when fixture exists) |
 
-Use `FIXTURE_DIR` to reference test data:
+Use `$CCTR_FIXTURE_DIR` to reference test data:
 
 ```
 ===
 read config
 ===
-cat {{ FIXTURE_DIR }}/config.json
+cat "$CCTR_FIXTURE_DIR/config.json"
 ---
 {"debug": true}
 ```
 
-Use `WORK_DIR` to write temporary files:
+Use `$CCTR_WORK_DIR` to write temporary files:
 
 ```
 ===
 create and read file
 ===
-echo "hello" > {{ WORK_DIR }}/temp.txt && cat {{ WORK_DIR }}/temp.txt
+echo "hello" > "$CCTR_WORK_DIR/temp.txt" && cat "$CCTR_WORK_DIR/temp.txt"
 ---
 hello
 ```
 
-When a fixture exists, `FIXTURE_DIR` and `WORK_DIR` point to the same location (the fixture is copied into the work directory).
+When a fixture exists, `CCTR_FIXTURE_DIR` and `CCTR_WORK_DIR` point to the same location (the fixture is copied into the work directory).
 
-## Environment variables
-
-Environment variables can be used in both commands and expected output using the same `{{ VAR_NAME }}` syntax:
-
-```
-===
-use home directory
-===
-echo "home={{ HOME }}"
----
-home={{ HOME }}
-
-===
-current user
-===
-whoami
----
-{{ USER }}
-```
-
-This is useful for:
-- Testing commands that output paths or user-specific information
-- Configuring tests based on the environment
-- Avoiding hardcoded values that differ between machines
-
-Environment variables are expanded after built-in variables (`WORK_DIR`, `FIXTURE_DIR`), so built-in variables take precedence if there's a name conflict. Unknown variables (not set in the environment) are left unchanged.
+Standard shell environment variables (`$HOME`, `$USER`, `$PATH`, etc.) are also available as usual.
 
 ## Parallel execution
 
