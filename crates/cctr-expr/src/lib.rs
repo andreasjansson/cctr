@@ -1040,6 +1040,10 @@ fn eval_binary_op(
             let arr = r.as_array()?;
             Ok(Value::Bool(arr.iter().any(|v| values_equal(&l, v))))
         }
+        BinaryOp::NotIn => {
+            let arr = r.as_array()?;
+            Ok(Value::Bool(!arr.iter().any(|v| values_equal(&l, v))))
+        }
         BinaryOp::Contains => {
             let haystack = l.as_string()?;
             let needle = r.as_string()?;
