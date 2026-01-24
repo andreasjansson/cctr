@@ -10,6 +10,8 @@ use thiserror::Error;
 pub enum MatchError {
     #[error("failed to build pattern regex: {0}")]
     RegexBuild(#[from] regex::Error),
+    #[error("duplicate variable '{{{{ {0} }}}}' in pattern - each variable can only appear once")]
+    DuplicateVariable(String),
     #[error("constraint '{constraint}' failed: {error}")]
     ConstraintFailed { constraint: String, error: String },
     #[error("{}", format_constraint_error(.constraint, .bindings))]
