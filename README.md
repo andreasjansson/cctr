@@ -499,6 +499,7 @@ having
 * id matches /^[a-z]+[0-9]+$/
 * email matches /^[^@]+@[^@]+\.[^@]+$/
 * version matches /^\d+\.\d+\.\d+$/
+* id not matches /^[0-9]+$/
 ```
 
 Escape special regex characters with backslash:
