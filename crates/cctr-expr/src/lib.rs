@@ -1163,6 +1163,18 @@ mod tests {
     }
 
     #[test]
+    fn test_not_in_operator() {
+        let v = vars(&[("n", Value::Number(5.0))]);
+        assert!(eval_bool("n not in [1, 2, 3]", &v).unwrap());
+        assert!(!eval_bool("n not in [4, 5, 6]", &v).unwrap());
+        // Verify it's equivalent to not (x in y)
+        assert_eq!(
+            eval_bool("n not in [1, 2, 3]", &v).unwrap(),
+            eval_bool("not (n in [1, 2, 3])", &v).unwrap()
+        );
+    }
+
+    #[test]
     fn test_string_operators() {
         let v = vars(&[("s", Value::String("hello world".to_string()))]);
         assert!(eval_bool(r#"s contains "world""#, &v).unwrap());
