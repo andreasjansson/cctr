@@ -178,8 +178,6 @@ pub enum BinaryOp {
     Ge,
     And,
     Or,
-    In,
-    NotIn,
     Contains,
     StartsWith,
     EndsWith,
