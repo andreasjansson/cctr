@@ -585,7 +585,7 @@ having
 Use `forall` to check that a condition holds for all elements in an array or object:
 
 ```
-having
+where
 * x > 0 forall x in numbers
 * len(item.name) > 0 forall item in users
 * type(v) == number forall v in obj
