@@ -156,7 +156,7 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
         let mut constraints = Vec::new();
 
         while i < lines.len() {
-            // Check for second `---` that starts where section
+            // Check for second `---` that starts where section or ends expected output
             if is_dash_separator(lines[i]) {
                 let next_idx = i + 1;
                 if next_idx < lines.len() && lines[next_idx].trim() == "where" {
@@ -171,8 +171,9 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
                         }
                         i += 1;
                     }
-                    break;
                 }
+                // Either way, --- ends the expected output
+                break;
             }
 
             // Check for next test header
