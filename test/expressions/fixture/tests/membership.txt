@@ -84,10 +84,10 @@ with
 having
 * data contains "name"
 * data contains "age"
-* not (data contains "email")
+* data not contains "email"
 
 ===
-string contains substring (unchanged)
+string contains substring
 ===
 echo "hello world"
 ---
@@ -98,4 +98,4 @@ with
 having
 * s contains "world"
 * s contains "hello"
-* not (s contains "goodbye")
+* s not contains "goodbye"
