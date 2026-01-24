@@ -447,7 +447,7 @@ All constraints must pass for the test to pass.
 | `>=` | Greater than or equal (numbers or strings) |
 
 ```
-having
+where
 * n == 42
 * n != 0
 * n >= 10
@@ -467,7 +467,7 @@ having
 | `^` | Exponentiation |
 
 ```
-having
+where
 * n == 10 + 5
 * n ^ 3 == 8
 * total == count * price
@@ -485,7 +485,7 @@ having
 | `not` | Logical NOT |
 
 ```
-having
+where
 * n > 0 and n < 100
 * status == "ok" or status == "success"
 * not (n < 0)
@@ -494,7 +494,7 @@ having
 Use parentheses to control evaluation order:
 
 ```
-having
+where
 * (a > 0 and b > 0) or c == 0
 ```
 
@@ -508,7 +508,7 @@ having
 | `not endswith` | Negated suffix match |
 
 ```
-having
+where
 * path startswith "/usr"
 * filename endswith ".txt"
 * path not startswith "/home"
@@ -520,7 +520,7 @@ having
 Use `matches` with a regex literal (surrounded by `/`):
 
 ```
-having
+where
 * id matches /^[a-z]+[0-9]+$/
 * email matches /^[^@]+@[^@]+\.[^@]+$/
 * version matches /^\d+\.\d+\.\d+$/
@@ -530,7 +530,7 @@ having
 Escape special regex characters with backslash:
 
 ```
-having
+where
 * expr matches /^\(a\+b\)\*c$/
 ```
 
@@ -539,7 +539,7 @@ having
 The `contains` operator works uniformly for strings, arrays, and objects:
 
 ```
-having
+where
 * message contains "error"              # substring in string
 * ["ok", "success"] contains status     # element in array
 * config contains "debug"               # key in object
@@ -564,7 +564,7 @@ having
 | `upper(s)` | Convert string to uppercase |
 
 ```
-having
+where
 * len(name) > 0
 * len(arr) == 3
 * type(value) == number
