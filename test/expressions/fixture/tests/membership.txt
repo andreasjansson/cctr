@@ -11,7 +11,7 @@ having
 * [200, 201, 204, 301, 302] contains n
 
 ===
-array does not contain number (negated)
+array does not contain number (shorthand)
 ===
 echo "code: 200"
 ---
@@ -20,7 +20,7 @@ code: {{ n }}
 with
 * n: number
 having
-* not ([400, 401, 403, 404, 500] contains n)
+* [400, 401, 403, 404, 500] not contains n
 
 ===
 array contains string
