@@ -151,7 +151,7 @@ having
 * x > 1000 forall x in a
 
 ===
-json_array in membership
+json_array contains membership
 ===
 echo '[1, 2, 3]'
 ---
@@ -160,8 +160,8 @@ echo '[1, 2, 3]'
 with
 * a: json array
 having
-* a[0] in [1, 2, 3]
-* a[1] in [1, 2, 3]
+* [1, 2, 3] contains a[0]
+* [1, 2, 3] contains a[1]
 
 ===
 json_array index arithmetic
