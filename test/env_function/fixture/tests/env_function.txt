@@ -53,3 +53,14 @@ workdir set
 where
 * env("CCTR_WORK_DIR") contains "cctr"
 * env("CCTR_WORK_DIR") startswith "/"
+
+===
+env function can access CCTR_FIXTURE_DIR
+===
+echo "$CCTR_FIXTURE_DIR"
+---
+{{ dir }}
+---
+where
+* env("CCTR_FIXTURE_DIR") == dir
+* env("CCTR_FIXTURE_DIR") contains "/"
