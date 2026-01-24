@@ -352,7 +352,7 @@ mod tests {
     fn test_simple_number_match() {
         let vars = vec![make_var("n", Some("number"))];
         let constraints = vec![];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
             .matches("passed in {{ n }}s", "passed in 0.05s")
@@ -363,7 +363,7 @@ mod tests {
     fn test_constraint_pass() {
         let vars = vec![make_var("n", Some("number"))];
         let constraints = vec!["n > 0".to_string(), "n < 1".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("time: {{ n }}s", "time: 0.5s").unwrap());
     }
@@ -372,7 +372,7 @@ mod tests {
     fn test_constraint_fail() {
         let vars = vec![make_var("n", Some("number"))];
         let constraints = vec!["n < 0".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         let result = matcher.matches("time: {{ n }}s", "time: 0.5s");
         assert!(matches!(
@@ -385,7 +385,7 @@ mod tests {
     fn test_no_match() {
         let vars = vec![make_var("n", Some("number"))];
         let constraints = vec![];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(!matcher
             .matches("passed in {{ n }}s", "failed in 0.05s")
@@ -396,7 +396,7 @@ mod tests {
     fn test_empty_string_match() {
         let vars = vec![make_var("s", Some("string"))];
         let constraints = vec!["len(s) == 0".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("val: {{ s }}", "val: ").unwrap());
     }
@@ -405,7 +405,7 @@ mod tests {
     fn test_json_string_match() {
         let vars = vec![make_var("s", Some("json string"))];
         let constraints = vec![r#"s == "hello""#.to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
     }
@@ -414,7 +414,7 @@ mod tests {
     fn test_json_string_length() {
         let vars = vec![make_var("s", Some("json string"))];
         let constraints = vec!["len(s) == 5".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
     }
@@ -423,7 +423,7 @@ mod tests {
     fn test_json_bool_true() {
         let vars = vec![make_var("b", Some("json bool"))];
         let constraints = vec!["b == true".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ b }}", "true").unwrap());
     }
@@ -432,7 +432,7 @@ mod tests {
     fn test_json_bool_false() {
         let vars = vec![make_var("b", Some("json bool"))];
         let constraints = vec!["b == false".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ b }}", "false").unwrap());
     }
@@ -441,7 +441,7 @@ mod tests {
     fn test_json_array_match() {
         let vars = vec![make_var("a", Some("json array"))];
         let constraints = vec!["len(a) == 3".to_string(), "a[0] == 1".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
     }
@@ -450,7 +450,7 @@ mod tests {
     fn test_json_object_match() {
         let vars = vec![make_var("o", Some("json object"))];
         let constraints = vec![r#"o["name"] == "alice""#.to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
             .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
@@ -461,7 +461,7 @@ mod tests {
     fn test_json_object_dot_access() {
         let vars = vec![make_var("o", Some("json object"))];
         let constraints = vec!["o.age == 30".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
             .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
@@ -472,7 +472,7 @@ mod tests {
     fn test_json_forall() {
         let vars = vec![make_var("a", Some("json array"))];
         let constraints = vec!["x <= 3 forall x in a".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
     }
@@ -481,7 +481,7 @@ mod tests {
     fn test_duck_typed_number() {
         let vars = vec![make_var("x", None)];
         let constraints = vec!["x > 0".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("val: {{ x }}", "val: 42").unwrap());
     }
@@ -490,7 +490,7 @@ mod tests {
     fn test_duck_typed_string() {
         let vars = vec![make_var("x", None)];
         let constraints = vec!["len(x) == 5".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("val: {{ x }}", "val: hello").unwrap());
     }
@@ -499,7 +499,7 @@ mod tests {
     fn test_duck_typed_bool() {
         let vars = vec![make_var("x", None)];
         let constraints = vec!["x == true".to_string()];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher.matches("val: {{ x }}", "val: true").unwrap());
     }
@@ -508,7 +508,7 @@ mod tests {
     fn test_inline_type_annotation_stripped() {
         let vars = vec![make_var("n", Some("number"))];
         let constraints = vec![];
-        let matcher = Matcher::new(&vars, &constraints);
+        let matcher = Matcher::new(&vars, &constraints, &[]);
 
         // The pattern has inline type annotation which should be stripped
         assert!(matcher
