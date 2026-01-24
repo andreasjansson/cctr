@@ -183,8 +183,17 @@ impl<'a> Matcher<'a> {
             .collect()
     }
 
-    fn build_regex(&self, pattern: &str) -> Result<Regex, regex::Error> {
+    fn build_regex(&self, pattern: &str) -> Result<Regex, MatchError> {
         let var_pattern = Regex::new(r"\{\{\s*(\w+)\s*\}\}").unwrap();
+
+        // Check for duplicate variable names
+        let mut seen_vars = std::collections::HashSet::new();
+        for cap in var_pattern.captures_iter(pattern) {
+            let var_name = cap.get(1).unwrap().as_str();
+            if self.variables.iter().any(|v| v.name == var_name) && !seen_vars.insert(var_name) {
+                return Err(MatchError::DuplicateVariable(var_name.to_string()));
+            }
+        }
 
         let mut regex_str = String::new();
         let mut last_end = 0;
