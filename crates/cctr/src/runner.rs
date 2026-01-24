@@ -332,12 +332,13 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
 
-    let mut vars = TemplateVars::new();
-    vars.set("WORK_DIR", work_dir.to_string_lossy().as_ref());
+    let env_vars = vec![
+        ("CCTR_WORK_DIR".to_string(), work_dir.to_string_lossy().to_string()),
+    ];
 
     let mut results = Vec::new();
     for test in tests {
-        let result = run_test(&test, &work_dir, "stdin", &vars);
+        let result = run_test(&test, &work_dir, "stdin", &env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
