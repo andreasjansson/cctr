@@ -279,6 +279,25 @@ fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
     Ok(constraints)
 }
 
+/// Extract variables from segments (placeholders with their optional types)
+fn extract_variables(segments: &[Segment]) -> Vec<Variable> {
+    let mut seen = std::collections::HashSet::new();
+    let mut variables = Vec::new();
+    
+    for segment in segments {
+        if let Segment::Placeholder { name, var_type } = segment {
+            if seen.insert(name.clone()) {
+                variables.push(Variable {
+                    name: name.clone(),
+                    var_type: *var_type,
+                });
+            }
+        }
+    }
+    
+    variables
+}
+
 fn test_case(input: &mut &str) -> ModalResult<TestCase> {
     skip_blank_lines.parse_next(input)?;
 
@@ -303,17 +322,20 @@ fn test_case(input: &mut &str) -> ModalResult<TestCase> {
     // Expected output
     let expected_str = expected_block.parse_next(input)?;
 
-    // Optional with/having section
-    let (variables, constraints) = opt(with_having_section)
+    // Optional where section (constraints only, variables extracted from segments)
+    let constraints = opt(where_section)
         .parse_next(input)?
         .unwrap_or_default();
 
     skip_blank_lines.parse_next(input)?;
 
+    let expected = parse_segments(&expected_str);
+    let variables = extract_variables(&expected);
+
     Ok(TestCase {
         description,
         command: parse_segments(&command_str),
-        expected: parse_segments(&expected_str),
+        expected,
         variables,
         constraints,
         start_line: 1, // Would need more work to track accurately
