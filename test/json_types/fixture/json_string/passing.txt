@@ -74,7 +74,7 @@ json_string in array context
 ===
 echo '["a", "b", "c"]'
 ---
-{{ arr: json string }}
+{{ arr: json array }}
 ---
 where
 * arr[0] == "a"
@@ -85,7 +85,7 @@ json_string comparison operators
 ===
 echo '{"a": "apple", "b": "banana", "c": "cherry"}'
 ---
-{{ o: json string }}
+{{ o: json object }}
 ---
 where
 * o.a < o.b
