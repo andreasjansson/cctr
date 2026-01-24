@@ -42,7 +42,10 @@ use winnow::token::{take_till, take_while};
 pub enum Segment {
     Literal(String),
     /// Placeholder with name and optional type annotation
-    Placeholder { name: String, var_type: Option<VarType> },
+    Placeholder {
+        name: String,
+        var_type: Option<VarType>,
+    },
 }
 
 /// Variable type for pattern matching.
@@ -283,7 +286,7 @@ fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
 fn extract_variables(segments: &[Segment]) -> Vec<Variable> {
     let mut seen = std::collections::HashSet::new();
     let mut variables = Vec::new();
-    
+
     for segment in segments {
         if let Segment::Placeholder { name, var_type } = segment {
             if seen.insert(name.clone()) {
@@ -294,7 +297,7 @@ fn extract_variables(segments: &[Segment]) -> Vec<Variable> {
             }
         }
     }
-    
+
     variables
 }
 
@@ -323,9 +326,7 @@ fn test_case(input: &mut &str) -> ModalResult<TestCase> {
     let expected_str = expected_block.parse_next(input)?;
 
     // Optional where section (constraints only, variables extracted from segments)
-    let constraints = opt(where_section)
-        .parse_next(input)?
-        .unwrap_or_default();
+    let constraints = opt(where_section).parse_next(input)?.unwrap_or_default();
 
     skip_blank_lines.parse_next(input)?;
 
@@ -367,7 +368,10 @@ mod tests {
             segments,
             vec![
                 Segment::Literal("hello ".to_string()),
-                Segment::Placeholder { name: "name".to_string(), var_type: None },
+                Segment::Placeholder {
+                    name: "name".to_string(),
+                    var_type: None
+                },
             ]
         );
     }
@@ -379,7 +383,10 @@ mod tests {
             segments,
             vec![
                 Segment::Literal("count: ".to_string()),
-                Segment::Placeholder { name: "n".to_string(), var_type: Some(VarType::Number) },
+                Segment::Placeholder {
+                    name: "n".to_string(),
+                    var_type: Some(VarType::Number)
+                },
             ]
         );
     }
@@ -388,15 +395,33 @@ mod tests {
     fn test_parse_segments_placeholder_type_variations() {
         // No spaces
         let s1 = parse_segments("{{ x:number }}");
-        assert_eq!(s1, vec![Segment::Placeholder { name: "x".to_string(), var_type: Some(VarType::Number) }]);
-        
+        assert_eq!(
+            s1,
+            vec![Segment::Placeholder {
+                name: "x".to_string(),
+                var_type: Some(VarType::Number)
+            }]
+        );
+
         // Spaces around colon
         let s2 = parse_segments("{{ x : string }}");
-        assert_eq!(s2, vec![Segment::Placeholder { name: "x".to_string(), var_type: Some(VarType::String) }]);
-        
+        assert_eq!(
+            s2,
+            vec![Segment::Placeholder {
+                name: "x".to_string(),
+                var_type: Some(VarType::String)
+            }]
+        );
+
         // Json types
         let s3 = parse_segments("{{ data : json object }}");
-        assert_eq!(s3, vec![Segment::Placeholder { name: "data".to_string(), var_type: Some(VarType::JsonObject) }]);
+        assert_eq!(
+            s3,
+            vec![Segment::Placeholder {
+                name: "data".to_string(),
+                var_type: Some(VarType::JsonObject)
+            }]
+        );
     }
 
     #[test]
@@ -405,9 +430,15 @@ mod tests {
         assert_eq!(
             segments,
             vec![
-                Segment::Placeholder { name: "a".to_string(), var_type: None },
+                Segment::Placeholder {
+                    name: "a".to_string(),
+                    var_type: None
+                },
                 Segment::Literal(" + ".to_string()),
-                Segment::Placeholder { name: "b".to_string(), var_type: None },
+                Segment::Placeholder {
+                    name: "b".to_string(),
+                    var_type: None
+                },
             ]
         );
     }
@@ -453,7 +484,10 @@ where
             tests[0].expected,
             vec![
                 Segment::Literal("Completed in ".to_string()),
-                Segment::Placeholder { name: "n".to_string(), var_type: Some(VarType::Number) },
+                Segment::Placeholder {
+                    name: "n".to_string(),
+                    var_type: Some(VarType::Number)
+                },
                 Segment::Literal("s".to_string()),
             ]
         );

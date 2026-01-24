@@ -58,10 +58,34 @@ fn parse_type_annotation(type_str: &str) -> Option<VarType> {
 }
 
 const RESERVED_KEYWORDS: &[&str] = &[
-    "true", "false", "null", "and", "or", "not", "in", "forall",
-    "contains", "startswith", "endswith", "matches",
-    "len", "type", "keys", "values", "sum", "min", "max", "abs", "unique", "lower", "upper",
-    "number", "string", "bool", "array", "object",
+    "true",
+    "false",
+    "null",
+    "and",
+    "or",
+    "not",
+    "in",
+    "forall",
+    "contains",
+    "startswith",
+    "endswith",
+    "matches",
+    "len",
+    "type",
+    "keys",
+    "values",
+    "sum",
+    "min",
+    "max",
+    "abs",
+    "unique",
+    "lower",
+    "upper",
+    "number",
+    "string",
+    "bool",
+    "array",
+    "object",
 ];
 
 fn is_reserved_keyword(name: &str) -> bool {
@@ -81,7 +105,9 @@ fn parse_placeholder(content: &str) -> (String, Option<VarType>) {
 }
 
 /// Extract variables from expected output by finding {{ ... }} placeholders
-fn extract_variables_from_expected(expected: &str) -> std::result::Result<Vec<VariableDecl>, String> {
+fn extract_variables_from_expected(
+    expected: &str,
+) -> std::result::Result<Vec<VariableDecl>, String> {
     let mut variables = Vec::new();
     let mut seen = std::collections::HashSet::new();
     let mut remaining = expected;

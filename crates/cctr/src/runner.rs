@@ -64,10 +64,8 @@ pub enum ProgressEvent {
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
     let mut cmd = Command::new("bash");
-    cmd.arg("-c")
-        .arg(command)
-        .current_dir(work_dir);
-    
+    cmd.arg("-c").arg(command).current_dir(work_dir);
+
     for (key, value) in env_vars {
         cmd.env(key, value);
     }
@@ -84,7 +82,12 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
     }
 }
 
-fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, env_vars: &[(String, String)]) -> TestResult {
+fn run_test(
+    test: &TestCase,
+    work_dir: &Path,
+    suite_name: &str,
+    env_vars: &[(String, String)],
+) -> TestResult {
     let start = Instant::now();
 
     // Commands run as-is with CCTR_* env vars injected
@@ -186,11 +189,12 @@ pub fn run_suite(
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
     let work_dir = work_dir.as_path();
-    
+
     // Build environment variables to inject
-    let mut env_vars = vec![
-        ("CCTR_WORK_DIR".to_string(), work_dir.to_string_lossy().to_string()),
-    ];
+    let mut env_vars = vec![(
+        "CCTR_WORK_DIR".to_string(),
+        work_dir.to_string_lossy().to_string(),
+    )];
 
     if suite.has_fixture {
         let fixture_src = suite.path.join("fixture");
@@ -202,7 +206,10 @@ pub fn run_suite(
                 elapsed: start.elapsed(),
             };
         }
-        env_vars.push(("CCTR_FIXTURE_DIR".to_string(), work_dir.to_string_lossy().to_string()));
+        env_vars.push((
+            "CCTR_FIXTURE_DIR".to_string(),
+            work_dir.to_string_lossy().to_string(),
+        ));
     }
 
     if suite.has_setup {
@@ -331,9 +338,10 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
 
-    let env_vars = vec![
-        ("CCTR_WORK_DIR".to_string(), work_dir.to_string_lossy().to_string()),
-    ];
+    let env_vars = vec![(
+        "CCTR_WORK_DIR".to_string(),
+        work_dir.to_string_lossy().to_string(),
+    )];
 
     let mut results = Vec::new();
     for test in tests {

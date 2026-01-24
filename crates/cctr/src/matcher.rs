@@ -69,7 +69,7 @@ fn format_value(value: &Value) -> String {
 /// Priority: json object > json array > json string > json bool > number > string
 fn duck_type_value(text: &str) -> Value {
     let trimmed = text.trim();
-    
+
     // Try JSON object
     if trimmed.starts_with('{') {
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(trimmed) {
@@ -78,7 +78,7 @@ fn duck_type_value(text: &str) -> Value {
             }
         }
     }
-    
+
     // Try JSON array
     if trimmed.starts_with('[') {
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(trimmed) {
@@ -87,14 +87,15 @@ fn duck_type_value(text: &str) -> Value {
             }
         }
     }
-    
+
     // Try JSON string
     if trimmed.starts_with('"') {
-        if let Ok(serde_json::Value::String(s)) = serde_json::from_str::<serde_json::Value>(trimmed) {
+        if let Ok(serde_json::Value::String(s)) = serde_json::from_str::<serde_json::Value>(trimmed)
+        {
             return Value::String(s);
         }
     }
-    
+
     // Try JSON bool
     if trimmed == "true" {
         return Value::Bool(true);
@@ -102,19 +103,19 @@ fn duck_type_value(text: &str) -> Value {
     if trimmed == "false" {
         return Value::Bool(false);
     }
-    
+
     // Try null
     if trimmed == "null" {
         return Value::Null;
     }
-    
+
     // Try number (reject infinity/nan which aren't valid JSON)
     if let Ok(n) = trimmed.parse::<f64>() {
         if n.is_finite() {
             return Value::Number(n);
         }
     }
-    
+
     // Fall back to string
     Value::String(text.to_string())
 }
@@ -511,8 +512,6 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         // The pattern has inline type annotation which should be stripped
-        assert!(matcher
-            .matches("val: {{ n: number }}", "val: 42")
-            .unwrap());
+        assert!(matcher.matches("val: {{ n: number }}", "val: 42").unwrap());
     }
 }

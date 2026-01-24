@@ -678,20 +678,28 @@ pub fn parse(input: &str) -> Result<Expr, EvalError> {
                 ))
             } else if original_input.contains("//") {
                 Err(EvalError::ParseError(
-                    "comments are not supported ('// ...' is not valid)".to_string()
+                    "comments are not supported ('// ...' is not valid)".to_string(),
                 ))
             } else if original_input.is_empty() {
                 Err(EvalError::ParseError("empty constraint".to_string()))
             } else {
                 // Try to give a hint about what went wrong
                 let first_word = original_input.split_whitespace().next().unwrap_or("");
-                if !first_word.chars().next().map(|c| c.is_alphabetic() || c == '_').unwrap_or(false)
+                if !first_word
+                    .chars()
+                    .next()
+                    .map(|c| c.is_alphabetic() || c == '_')
+                    .unwrap_or(false)
                     && !first_word.starts_with('(')
                     && !first_word.starts_with('-')
                     && !first_word.starts_with('"')
                     && !first_word.starts_with('[')
                     && !first_word.starts_with('{')
-                    && !first_word.chars().next().map(|c| c.is_numeric()).unwrap_or(false)
+                    && !first_word
+                        .chars()
+                        .next()
+                        .map(|c| c.is_numeric())
+                        .unwrap_or(false)
                 {
                     Err(EvalError::ParseError(format!(
                         "invalid syntax near '{}' - constraints must be expressions like 'x > 0' or 'len(arr) == 3'",
