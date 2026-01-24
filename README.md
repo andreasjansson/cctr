@@ -513,15 +513,16 @@ having
 * expr matches /^\(a\+b\)\*c$/
 ```
 
-### Array membership
+### Membership with contains
 
-Check if a value is in a set using `in` or `not in`:
+The `contains` operator works uniformly for strings, arrays, and objects:
 
 ```
 having
-* status in ["ok", "success", "completed"]
-* code in [200, 201, 204, 301, 302]
-* code not in [400, 401, 403, 404, 500]
+* message contains "error"              # substring in string
+* ["ok", "success"] contains status     # element in array
+* config contains "debug"               # key in object
+* not (["error", "fail"] contains status)  # negated membership
 ```
 
 ### Functions
