@@ -101,7 +101,7 @@ fn run_test(test: &TestCase, work_dir: &Path, suite_name: &str, env_vars: &[(Str
         }
     } else {
         // Pattern matching mode - strip type annotations from expected for display
-        let matcher = Matcher::new(&test.variables, &test.constraints);
+        let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
         let result = match matcher.matches(&test.expected_output, &actual_output) {
             Ok(true) => (true, None),
             Ok(false) => (false, None),
