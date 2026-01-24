@@ -47,7 +47,7 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Logical operators](#logical-operators)
   - [String operators](#string-operators)
   - [Regular expressions](#regular-expressions)
-  - [Array membership](#array-membership)
+  - [Membership with contains](#membership-with-contains)
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
 - [Built-in variables](#built-in-variables)
