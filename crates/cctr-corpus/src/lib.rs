@@ -105,6 +105,19 @@ pub fn parse_content(content: &str) -> Result<Vec<TestCase>, ParseError> {
 
 // ============ Segment Parsing ============
 
+/// Parse a type annotation string into a VarType
+fn parse_type_annotation(type_str: &str) -> Option<VarType> {
+    match type_str.to_lowercase().as_str() {
+        "number" => Some(VarType::Number),
+        "string" => Some(VarType::String),
+        "json string" => Some(VarType::JsonString),
+        "json bool" => Some(VarType::JsonBool),
+        "json array" => Some(VarType::JsonArray),
+        "json object" => Some(VarType::JsonObject),
+        _ => None,
+    }
+}
+
 pub fn parse_segments(input: &str) -> Vec<Segment> {
     let mut result = Vec::new();
     let mut remaining = input;
@@ -115,8 +128,16 @@ pub fn parse_segments(input: &str) -> Vec<Segment> {
                 result.push(Segment::Literal(remaining[..start].to_string()));
             }
             if let Some(end) = remaining[start..].find("}}") {
-                let name = remaining[start + 2..start + end].trim().to_string();
-                result.push(Segment::Placeholder(name));
+                let content = remaining[start + 2..start + end].trim();
+                // Check for inline type annotation: "name : type" or "name: type" or "name :type"
+                let (name, var_type) = if let Some(colon_pos) = content.find(':') {
+                    let name = content[..colon_pos].trim().to_string();
+                    let type_str = content[colon_pos + 1..].trim();
+                    (name, parse_type_annotation(type_str))
+                } else {
+                    (content.to_string(), None)
+                };
+                result.push(Segment::Placeholder { name, var_type });
                 remaining = &remaining[start + end + 2..];
             } else {
                 result.push(Segment::Literal(remaining.to_string()));
