@@ -1,34 +1,11 @@
 ===
-FIXTURE_DIR expands in command
+template expansion tests pass
 ===
-echo "path={{ FIXTURE_DIR }}"
+cctr {{ FIXTURE_DIR }}/tests --no-color 2>&1 | tail -1
 ---
-path={{ FIXTURE_DIR }}
-
-===
-WORK_DIR expands in command
-===
-echo "path={{ WORK_DIR }}"
+All 5 tests passed in {{ t }}s
 ---
-path={{ WORK_DIR }}
-
-===
-both expand in expected output
-===
-echo "fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}"
----
-fixture={{ FIXTURE_DIR }} work={{ WORK_DIR }}
-
-===
-pwd matches FIXTURE_DIR
-===
-pwd
----
-{{ FIXTURE_DIR }}
-
-===
-realpath resolves to same as FIXTURE_DIR
-===
-realpath .
----
-{{ FIXTURE_DIR }}
+with
+* t: number
+having
+* t < 5
