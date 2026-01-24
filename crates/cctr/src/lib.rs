@@ -5,5 +5,4 @@ pub mod matcher;
 pub mod output;
 pub mod parse;
 pub mod runner;
-pub mod template;
 pub mod update;
