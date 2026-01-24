@@ -1,13 +1,25 @@
 ===
-env function returns string for existing var
+env function returns string for existing var HOME
 ===
-export CCTR_TEST_VAR="hello world" && echo "value: $CCTR_TEST_VAR"
+echo "$HOME"
 ---
-value: {{ v }}
+{{ home }}
 ---
 where
-* env("CCTR_TEST_VAR") == "hello world"
-* type(env("CCTR_TEST_VAR")) == string
+* env("HOME") == home
+* type(env("HOME")) == string
+* len(env("HOME")) > 0
+
+===
+env function returns string for USER
+===
+echo "$USER"
+---
+{{ user }}
+---
+where
+* env("USER") == user
+* type(env("USER")) == string
 
 ===
 env function returns null for non-existent var
@@ -21,35 +33,23 @@ where
 * type(env("CCTR_NONEXISTENT_VAR_xyz123")) == null
 
 ===
-env function with HOME
+env function with string operators
 ===
 echo "$HOME"
 ---
 {{ home }}
 ---
 where
-* env("HOME") == home
-* len(env("HOME")) > 0
+* env("HOME") startswith "/"
+* env("HOME") not contains "NONEXISTENT"
 
 ===
-env function combined with other expressions
+env function can access CCTR_WORK_DIR
 ===
-export CCTR_NUM="42" && echo "num: $CCTR_NUM"
+echo "$CCTR_WORK_DIR"
 ---
-num: {{ n }}
+{{ workdir }}
 ---
 where
-* env("CCTR_NUM") == "42"
-* env("CCTR_NUM") startswith "4"
-* env("CCTR_NUM") endswith "2"
-
-===
-env function with contains
-===
-export CCTR_PATH="/usr/local/bin" && echo "path: $CCTR_PATH"
----
-path: {{ p }}
----
-where
-* env("CCTR_PATH") contains "local"
-* env("CCTR_PATH") not contains "windows"
+* env("CCTR_WORK_DIR") == workdir
+* env("CCTR_WORK_DIR") contains "/"
