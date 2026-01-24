@@ -1,19 +1,11 @@
 ===
-simple echo
+echo tests pass
 ===
-echo hello
+cctr {{ FIXTURE_DIR }}/echo --no-color 2>&1 | tail -1
 ---
-hello
-
-===
-echo with multiple words
-===
-echo hello world
+All 3 tests passed in {{ t }}s
 ---
-hello world
-
-===
-exit only mode
-===
-true
----
+with
+* t: number
+having
+* t < 5
