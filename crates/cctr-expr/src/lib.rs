@@ -1037,10 +1037,10 @@ fn eval_binary_op(
                 let key = r.as_string()?;
                 Ok(Value::Bool(obj.contains_key(key)))
             }
-            _ => Err(EvalError::Type(format!(
-                "contains requires string, array, or object on left side, got {}",
-                l.type_name()
-            ))),
+            _ => Err(EvalError::TypeError {
+                expected: "string, array, or object",
+                got: l.type_name(),
+            }),
         }
         BinaryOp::StartsWith => {
             let s = l.as_string()?;
