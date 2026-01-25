@@ -95,6 +95,26 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
     }
 }
 
+use crate::SkipDirective;
+
+fn should_skip(
+    skip: &SkipDirective,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+) -> Option<String> {
+    match &skip.condition {
+        Some(condition) => {
+            let (_, exit_code) = run_command(condition, work_dir, env_vars);
+            if exit_code == 0 {
+                Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string()))
+            } else {
+                None
+            }
+        }
+        None => Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string())),
+    }
+}
+
 fn run_test(
     test: &TestCase,
     work_dir: &Path,
@@ -103,12 +123,26 @@ fn run_test(
 ) -> TestResult {
     let start = Instant::now();
 
-    // Commands run as-is with CCTR_* env vars injected
+    if let Some(skip) = &test.skip {
+        if let Some(reason) = should_skip(skip, work_dir, env_vars) {
+            return TestResult {
+                test: test.clone(),
+                passed: true,
+                skipped: true,
+                skip_reason: Some(reason),
+                actual_output: None,
+                expected_output: test.expected_output.clone(),
+                error: None,
+                elapsed: start.elapsed(),
+                suite: suite_name.to_string(),
+            };
+        }
+    }
+
     let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars);
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
-        // Simple mode: exact match or exit-only
         let expected = &test.expected_output;
         if expected.is_empty() {
             (exit_code == 0, None, expected.clone())
@@ -116,7 +150,6 @@ fn run_test(
             (actual_output == *expected, None, expected.clone())
         }
     } else {
-        // Pattern matching mode - strip type annotations from expected for display
         let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
         let result = match matcher.matches(&test.expected_output, &actual_output) {
             Ok(true) => (true, None),
@@ -129,6 +162,8 @@ fn run_test(
     TestResult {
         test: test.clone(),
         passed,
+        skipped: false,
+        skip_reason: None,
         actual_output: Some(actual_output),
         expected_output,
         error,
