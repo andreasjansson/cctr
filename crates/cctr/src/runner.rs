@@ -207,8 +207,20 @@ fn run_corpus_file(
     // Handle file-level skip directive
     if let Some(skip) = &corpus.file_skip {
         if let Some(reason) = should_skip(skip, work_dir, env_vars) {
+            let file_stem = file_path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
             let mut results = Vec::new();
             for test in corpus.tests {
+                if let Some(tx) = progress_tx {
+                    let _ = tx.send(ProgressEvent::TestStart {
+                        suite: suite_name.to_string(),
+                        file: file_stem.clone(),
+                        name: test.name.clone(),
+                    });
+                }
                 let result = TestResult {
                     test: test.clone(),
                     passed: true,
