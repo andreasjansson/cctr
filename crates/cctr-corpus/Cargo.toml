@@ -9,3 +9,6 @@ license.workspace = true
 [dependencies]
 thiserror = "1"
 winnow = "0.6"
+
+[dev-dependencies]
+tempfile = "3"

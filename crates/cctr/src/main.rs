@@ -1,7 +1,7 @@
 use cctr::cli::Cli;
 use cctr::discover::discover_suites;
 use cctr::output::Output;
-use cctr::parse::parse_corpus_file;
+use cctr::parse_file;
 use cctr::runner::{run_from_stdin, run_suite, ProgressEvent, SuiteResult};
 use cctr::update::update_corpus_file;
 use clap::Parser;
@@ -153,7 +153,7 @@ fn list_tests(
     for suite in &suites {
         let mut all_tests = Vec::new();
         for file in suite.corpus_files() {
-            let tests = parse_corpus_file(&file)?;
+            let corpus = parse_file(&file)?;
 
             // Check if file name matches the pattern
             let file_matches = pattern.is_none_or(|pat| {
@@ -164,12 +164,13 @@ fn list_tests(
 
             // Keep tests where either the file matches or the test name matches
             let filtered: Vec<_> = if let Some(pat) = pattern {
-                tests
+                corpus
+                    .tests
                     .into_iter()
                     .filter(|t| file_matches || t.name.contains(pat))
                     .collect()
             } else {
-                tests
+                corpus.tests
             };
 
             all_tests.extend(filtered);

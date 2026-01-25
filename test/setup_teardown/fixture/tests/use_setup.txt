@@ -1,3 +1,5 @@
+%skip(Unix only) if: test "$OS" = "Windows_NT"
+
 ===
 verify setup ran
 ===

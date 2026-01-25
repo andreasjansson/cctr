@@ -1,0 +1,61 @@
+%skip(Windows only - cannot run due to cmd.exe vs bash shell differences) if: uname
+
+===
+number comparison greater than
+===
+echo value: 100
+---
+value: {{ n }}
+---
+where
+* n > 50
+
+===
+number comparison less than
+===
+echo value: 10
+---
+value: {{ n }}
+---
+where
+* n < 50
+
+===
+string startswith
+===
+echo path: C:\Users\test
+---
+path: {{ p }}
+---
+where
+* p startswith "C:"
+
+===
+string contains
+===
+echo message: hello world
+---
+message: {{ m }}
+---
+where
+* m contains "world"
+
+===
+logical and
+===
+echo x: 50
+---
+x: {{ n }}
+---
+where
+* n > 0 and n < 100
+
+===
+logical or
+===
+echo status: success
+---
+status: {{ s }}
+---
+where
+* s == "success" or s == "ok"

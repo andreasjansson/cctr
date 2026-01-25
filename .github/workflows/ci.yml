@@ -44,15 +44,27 @@ jobs:
       - run: cargo test --all-features
 
   corpus:
-    name: Corpus Tests
-    runs-on: ubuntu-latest
+    name: Corpus Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release
-      - run: echo "$PWD/target/release" >> $GITHUB_PATH
-      - run: cctr test
+      - name: Build
+        run: cargo build --release
+      - name: Add to PATH (Unix)
+        if: runner.os != 'Windows'
+        run: echo "$PWD/target/release" >> $GITHUB_PATH
+      - name: Add to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "$PWD\target\release" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Run corpus tests
+        run: cctr test
 
   # Check if we need to release (version changed)
   check-release:
@@ -280,81 +292,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install via Homebrew
-        run: |
-          brew install andreasjansson/tap/cctr
+        run: brew install andreasjansson/tap/cctr
       - name: Verify version
         run: |
           cctr --version
           cctr --version | grep -q "${{ needs.check-release.outputs.version }}"
-      - name: Run cctr corpus tests
-        run: |
-          cctr test
-      - name: Run standalone smoke tests
-        run: |
-          mkdir -p /tmp/cctr-test
-          
-          cat > /tmp/cctr-test/basic.txt << 'EOF'
-          ===
-          echo hello world
-          ===
-          echo "hello world"
-          ---
-          hello world
-
-          ===
-          arithmetic
-          ===
-          echo $((2 + 2))
-          ---
-          4
-
-          ===
-          multiline output
-          ===
-          printf "one\ntwo\nthree\n"
-          ---
-          one
-          two
-          three
-          EOF
-
-          cat > /tmp/cctr-test/variables.txt << 'EOF'
-          ===
-          capture number
-          ===
-          echo "count: 42"
-          ---
-          count: {{ n: number }}
-          ---
-          where
-          * n == 42
-
-          ===
-          capture string
-          ===
-          echo "status: success"
-          ---
-          status: {{ s }}
-          ---
-          where
-          * s == "success"
-          EOF
-
-          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
-          ===
-          successful exit
-          ===
-          true
-          ---
-
-          ===
-          test file exists
-          ===
-          test -d /tmp
-          ---
-          EOF
-
-          cctr /tmp/cctr-test
+      - name: Run corpus tests
+        run: cctr test
 
   smoke-test-linux:
     name: Smoke Test (Linux/GitHub Release)
@@ -371,75 +315,8 @@ jobs:
         run: |
           cctr --version
           cctr --version | grep -q "${{ needs.check-release.outputs.version }}"
-      - name: Run cctr corpus tests
-        run: |
-          cctr test
-      - name: Run standalone smoke tests
-        run: |
-          mkdir -p /tmp/cctr-test
-          
-          cat > /tmp/cctr-test/basic.txt << 'EOF'
-          ===
-          echo hello world
-          ===
-          echo "hello world"
-          ---
-          hello world
-
-          ===
-          arithmetic
-          ===
-          echo $((2 + 2))
-          ---
-          4
-
-          ===
-          multiline output
-          ===
-          printf "one\ntwo\nthree\n"
-          ---
-          one
-          two
-          three
-          EOF
-
-          cat > /tmp/cctr-test/variables.txt << 'EOF'
-          ===
-          capture number
-          ===
-          echo "count: 42"
-          ---
-          count: {{ n: number }}
-          ---
-          where
-          * n == 42
-
-          ===
-          capture string
-          ===
-          echo "status: success"
-          ---
-          status: {{ s }}
-          ---
-          where
-          * s == "success"
-          EOF
-
-          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
-          ===
-          successful exit
-          ===
-          true
-          ---
-
-          ===
-          test file exists
-          ===
-          test -d /tmp
-          ---
-          EOF
-
-          cctr /tmp/cctr-test
+      - name: Run corpus tests
+        run: cctr test
 
   smoke-test-windows:
     name: Smoke Test (Windows/GitHub Release)
@@ -464,41 +341,5 @@ jobs:
           if ($output -notmatch "${{ needs.check-release.outputs.version }}") {
             throw "Version mismatch"
           }
-      - name: Run standalone smoke tests
-        shell: bash
-        run: |
-          mkdir -p /tmp/cctr-test
-          
-          # Windows cmd.exe: echo doesn't strip quotes, so we test without quotes
-          cat > /tmp/cctr-test/basic.txt << 'EOF'
-          ===
-          echo hello world
-          ===
-          echo hello world
-          ---
-          hello world
-          EOF
-
-          # Windows cmd.exe: echo "x" outputs "x" literally with quotes
-          cat > /tmp/cctr-test/variables.txt << 'EOF'
-          ===
-          capture number
-          ===
-          echo count: 42
-          ---
-          count: {{ n }}
-          ---
-          where
-          * n == 42
-          EOF
-
-          cat > /tmp/cctr-test/exit_only.txt << 'EOF'
-          ===
-          successful exit
-          ===
-          echo ok
-          ---
-          ok
-          EOF
-
-          cctr /tmp/cctr-test
+      - name: Run corpus tests
+        run: cctr test

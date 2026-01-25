@@ -1,6 +1,6 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
-use crate::parse::{parse_corpus_content, parse_corpus_file, TestCase};
+use crate::{parse_content, parse_file, TestCase};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc::Sender;
@@ -11,6 +11,8 @@ use tempfile::TempDir;
 pub struct TestResult {
     pub test: TestCase,
     pub passed: bool,
+    pub skipped: bool,
+    pub skip_reason: Option<String>,
     pub actual_output: Option<String>,
     pub expected_output: String,
     pub error: Option<String>,
@@ -93,6 +95,34 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
     }
 }
 
+use crate::SkipDirective;
+
+fn should_skip(
+    skip: &SkipDirective,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+) -> Option<String> {
+    match &skip.condition {
+        Some(condition) => {
+            let (_, exit_code) = run_command(condition, work_dir, env_vars);
+            if exit_code == 0 {
+                Some(
+                    skip.message
+                        .clone()
+                        .unwrap_or_else(|| "skipped".to_string()),
+                )
+            } else {
+                None
+            }
+        }
+        None => Some(
+            skip.message
+                .clone()
+                .unwrap_or_else(|| "skipped".to_string()),
+        ),
+    }
+}
+
 fn run_test(
     test: &TestCase,
     work_dir: &Path,
@@ -101,12 +131,26 @@ fn run_test(
 ) -> TestResult {
     let start = Instant::now();
 
-    // Commands run as-is with CCTR_* env vars injected
+    if let Some(skip) = &test.skip {
+        if let Some(reason) = should_skip(skip, work_dir, env_vars) {
+            return TestResult {
+                test: test.clone(),
+                passed: true,
+                skipped: true,
+                skip_reason: Some(reason),
+                actual_output: None,
+                expected_output: test.expected_output.clone(),
+                error: None,
+                elapsed: start.elapsed(),
+                suite: suite_name.to_string(),
+            };
+        }
+    }
+
     let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars);
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
-        // Simple mode: exact match or exit-only
         let expected = &test.expected_output;
         if expected.is_empty() {
             (exit_code == 0, None, expected.clone())
@@ -114,7 +158,6 @@ fn run_test(
             (actual_output == *expected, None, expected.clone())
         }
     } else {
-        // Pattern matching mode - strip type annotations from expected for display
         let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
         let result = match matcher.matches(&test.expected_output, &actual_output) {
             Ok(true) => (true, None),
@@ -127,6 +170,8 @@ fn run_test(
     TestResult {
         test: test.clone(),
         passed,
+        skipped: false,
+        skip_reason: None,
         actual_output: Some(actual_output),
         expected_output,
         error,
@@ -143,8 +188,8 @@ fn run_corpus_file(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> FileResult {
-    let tests = match parse_corpus_file(file_path) {
-        Ok(tests) => tests,
+    let corpus = match parse_file(file_path) {
+        Ok(corpus) => corpus,
         Err(e) => {
             return FileResult {
                 file_path: file_path.to_path_buf(),
@@ -153,6 +198,36 @@ fn run_corpus_file(
             };
         }
     };
+
+    // Handle file-level skip directive
+    if let Some(skip) = &corpus.file_skip {
+        if let Some(reason) = should_skip(skip, work_dir, env_vars) {
+            let mut results = Vec::new();
+            for test in corpus.tests {
+                let result = TestResult {
+                    test: test.clone(),
+                    passed: true,
+                    skipped: true,
+                    skip_reason: Some(reason.clone()),
+                    actual_output: None,
+                    expected_output: test.expected_output.clone(),
+                    error: None,
+                    elapsed: Duration::ZERO,
+                    suite: suite_name.to_string(),
+                };
+                if let Some(tx) = progress_tx {
+                    let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
+                }
+                results.push(result);
+            }
+            return FileResult {
+                file_path: file_path.to_path_buf(),
+                results,
+                parse_error: None,
+            };
+        }
+    }
+
     let mut results = Vec::new();
 
     // Check if file name matches the pattern (excluding .txt extension)
@@ -163,13 +238,14 @@ fn run_corpus_file(
             .is_some_and(|name| name.contains(pat))
     });
 
-    for test in tests {
+    for test in corpus.tests {
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
                 continue;
             }
         }
+
         let result = run_test(&test, work_dir, suite_name, env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
@@ -314,8 +390,8 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
     let start = Instant::now();
 
     let stdin_path = PathBuf::from("<stdin>");
-    let tests = match parse_corpus_content(content, &stdin_path) {
-        Ok(t) => t,
+    let corpus = match parse_content(content, &stdin_path) {
+        Ok(c) => c,
         Err(e) => {
             let suite = Suite {
                 name: "stdin".to_string(),
@@ -365,7 +441,7 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
     )];
 
     let mut results = Vec::new();
-    for test in tests {
+    for test in corpus.tests {
         let result = run_test(&test, &work_dir, "stdin", &env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));

@@ -1,0 +1,22 @@
+===
+unconditional skip with no message
+%skip
+===
+echo "this should not run"
+---
+this should not run
+
+===
+unconditional skip with message
+%skip(not implemented yet)
+===
+echo "this should not run either"
+---
+this should not run either
+
+===
+test that runs normally
+===
+echo "this runs"
+---
+this runs

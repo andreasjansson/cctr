@@ -66,7 +66,10 @@ impl Output {
     }
 
     fn print_dot(&mut self, result: &TestResult, update_mode: bool) {
-        if result.passed {
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            write!(self.stdout, "s").unwrap();
+        } else if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, ".").unwrap();
         } else if update_mode {
@@ -91,7 +94,10 @@ impl Output {
     }
 
     fn print_verbose_result(&mut self, result: &TestResult, update_mode: bool) {
-        if result.passed {
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            write!(self.stdout, "⊘").unwrap();
+        } else if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, "✓").unwrap();
         } else if update_mode {
@@ -117,9 +123,20 @@ impl Output {
         )
         .unwrap();
 
-        self.set_dim();
-        writeln!(self.stdout, "{:.2}s", result.elapsed.as_secs_f64()).unwrap();
-        self.reset();
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            if let Some(reason) = &result.skip_reason {
+                write!(self.stdout, "({})", reason).unwrap();
+            } else {
+                write!(self.stdout, "(skipped)").unwrap();
+            }
+            self.reset();
+            writeln!(self.stdout).unwrap();
+        } else {
+            self.set_dim();
+            writeln!(self.stdout, "{:.2}s", result.elapsed.as_secs_f64()).unwrap();
+            self.reset();
+        }
     }
 
     pub fn finish_progress(&mut self) {
@@ -170,8 +187,15 @@ impl Output {
                 }
             }
 
-            let suite_passed = suite_result.passed_tests();
+            let suite_skipped: usize = suite_result
+                .file_results
+                .iter()
+                .flat_map(|f| &f.results)
+                .filter(|r| r.skipped)
+                .count();
+            let suite_passed = suite_result.passed_tests() - suite_skipped;
             let suite_total = suite_result.total_tests();
+            let suite_failed = suite_total - suite_passed - suite_skipped;
             let has_parse_errors = suite_result
                 .file_results
                 .iter()
@@ -179,10 +203,17 @@ impl Output {
             let suite_time = format!(" in {:.2}s", suite_result.elapsed.as_secs_f64());
 
             total_passed += suite_passed;
-            total_failed += suite_total - suite_passed;
+            total_failed += suite_failed;
+            total_skipped += suite_skipped;
             if has_parse_errors {
                 total_failed += 1; // Count parse error as a failure
             }
+
+            let skip_info = if suite_skipped > 0 {
+                format!(", {} skipped", suite_skipped)
+            } else {
+                String::new()
+            };
 
             if suite_result.passed() && !has_parse_errors {
                 self.set_color(Color::Green);
@@ -190,8 +221,11 @@ impl Output {
                 self.reset();
                 writeln!(
                     self.stdout,
-                    ": {}/{} tests passed{}",
-                    suite_passed, suite_total, suite_time
+                    ": {}/{} tests passed{}{}",
+                    suite_passed,
+                    suite_total - suite_skipped,
+                    suite_time,
+                    skip_info
                 )
                 .unwrap();
             } else {
@@ -205,14 +239,17 @@ impl Output {
                 self.reset();
                 writeln!(
                     self.stdout,
-                    ": {}/{} tests passed{}",
-                    suite_passed, suite_total, suite_time
+                    ": {}/{} tests passed{}{}",
+                    suite_passed,
+                    suite_total - suite_skipped,
+                    suite_time,
+                    skip_info
                 )
                 .unwrap();
 
                 for file_result in &suite_result.file_results {
                     for result in &file_result.results {
-                        if !result.passed {
+                        if !result.passed && !result.skipped {
                             failed_tests.push(result);
                         }
                     }
@@ -355,10 +392,7 @@ impl Output {
         }
     }
 
-    pub fn print_list(
-        &mut self,
-        results: &[(&crate::discover::Suite, Vec<crate::parse::TestCase>)],
-    ) {
+    pub fn print_list(&mut self, results: &[(&crate::discover::Suite, Vec<crate::TestCase>)]) {
         for (suite, tests_by_file) in results {
             let mut markers = Vec::new();
             if suite.has_fixture {
@@ -382,10 +416,8 @@ impl Output {
             self.reset();
             writeln!(self.stdout, "{}", marker_str).unwrap();
 
-            let mut files: std::collections::HashMap<
-                &std::path::Path,
-                Vec<&crate::parse::TestCase>,
-            > = std::collections::HashMap::new();
+            let mut files: std::collections::HashMap<&std::path::Path, Vec<&crate::TestCase>> =
+                std::collections::HashMap::new();
             for test in tests_by_file {
                 files
                     .entry(test.file_path.as_path())
