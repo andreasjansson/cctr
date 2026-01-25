@@ -1,7 +1,7 @@
 use cctr::cli::Cli;
 use cctr::discover::discover_suites;
 use cctr::output::Output;
-use cctr::parse::parse_corpus_file;
+use cctr::parse_file;
 use cctr::runner::{run_from_stdin, run_suite, ProgressEvent, SuiteResult};
 use cctr::update::update_corpus_file;
 use clap::Parser;
