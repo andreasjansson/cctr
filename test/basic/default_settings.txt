@@ -11,7 +11,7 @@ cctr $CCTR_FIXTURE_DIR/test/corpus --no-color 2>&1
 Failures:
 
 ✗ corpus/cat_incorrect: Test cat with incorrect output
-  test/corpus/cat_incorrect.txt:1
+  test/corpus/cat_incorrect.txt:2
   Command: cat foo.txt
 
 -bar
