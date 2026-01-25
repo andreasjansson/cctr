@@ -1,4 +1,4 @@
-%skip(Windows only) if: uname
+%skip(Windows only - cannot run due to cmd.exe vs bash shell differences) if: uname
 
 ===
 number comparison greater than
