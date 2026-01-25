@@ -1,0 +1,53 @@
+===
+unconditional skip tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color 2>&1 | tail -1
+---
+Summary: 1 passed, 0 failed, 2 skipped in {{ t }}s
+---
+where
+* t > 0
+
+===
+conditional skip tests pass
+===
+cctr $CCTR_FIXTURE_DIR/tests/conditional_skip.txt --no-color 2>&1 | tail -1
+---
+Summary: 2 passed, 0 failed, 2 skipped in {{ t }}s
+---
+where
+* t > 0
+
+===
+file level skip
+===
+cctr $CCTR_FIXTURE_DIR/tests/file_level_skip.txt --no-color 2>&1 | tail -1
+---
+Summary: 0 passed, 0 failed, 2 skipped in {{ t }}s
+---
+where
+* t > 0
+
+===
+file level skip with false condition runs tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/file_level_no_skip.txt --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
+---
+where
+* t > 0
+
+===
+verbose output shows skip marker for skipped tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep -c "⊘"
+---
+2
+
+===
+verbose output shows skip reason
+===
+cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep "not implemented yet"
+---
+⊘ tests/unconditional_skip: unconditional skip with message (not implemented yet)
