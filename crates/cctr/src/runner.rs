@@ -243,12 +243,26 @@ fn run_corpus_file(
             .is_some_and(|name| name.contains(pat))
     });
 
+    let file_stem = file_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_string();
+
     for test in corpus.tests {
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
                 continue;
             }
+        }
+
+        if let Some(tx) = progress_tx {
+            let _ = tx.send(ProgressEvent::TestStart {
+                suite: suite_name.to_string(),
+                file: file_stem.clone(),
+                name: test.name.clone(),
+            });
         }
 
         let result = run_test(&test, work_dir, suite_name, env_vars);
