@@ -2,7 +2,7 @@
 ===
 verbose mode shows timing for each test
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -E '^✓ tests/simple:' | wc -l | tr -d ' '
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -E '^tests/simple:.*✓' | wc -l | tr -d ' '
 ---
 2
 
