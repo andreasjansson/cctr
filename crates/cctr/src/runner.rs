@@ -387,6 +387,7 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
         file_results: vec![FileResult {
             file_path: stdin_path,
             results,
+            parse_error: None,
         }],
         setup_error: None,
         elapsed: start.elapsed(),
