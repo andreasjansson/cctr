@@ -40,6 +40,12 @@ impl Output {
 
     pub fn print_progress(&mut self, event: &ProgressEvent, verbose: bool, update_mode: bool) {
         match event {
+            ProgressEvent::TestStart { suite, file, name } => {
+                if verbose {
+                    write!(self.stdout, "{}/{}: {} ... ", suite, file, name).unwrap();
+                    let _ = self.stdout.flush();
+                }
+            }
             ProgressEvent::TestComplete(result) => {
                 if verbose {
                     self.print_verbose_result(result, update_mode);
