@@ -477,6 +477,7 @@ jobs:
         run: |
           mkdir -p /tmp/cctr-test
           
+          # Windows cmd.exe: echo doesn't strip quotes, so we test without quotes
           cat > /tmp/cctr-test/basic.txt << 'EOF'
           ===
           echo hello world
@@ -484,26 +485,18 @@ jobs:
           echo hello world
           ---
           hello world
-
-          ===
-          echo with spaces
-          ===
-          echo "hello   world"
-          ---
-          hello   world
           EOF
 
+          # Windows cmd.exe: echo "x" outputs "x" literally with quotes
           cat > /tmp/cctr-test/variables.txt << 'EOF'
           ===
           capture number
           ===
-          echo "count: 42"
+          echo count: 42
           ---
           count: {{ n }}
           ---
-          with
-          * n: number
-          having
+          where
           * n == 42
           EOF
 
