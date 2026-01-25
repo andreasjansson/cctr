@@ -1,37 +1,41 @@
 %skip(Unix only) if: test "$OS" = "Windows_NT"
 ===
-number variable tests first two pass
+variables verbose output
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep 'tests/numbers:' | head -2
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
+starting tests/numbers: number variable match
 ✓ tests/numbers: number variable match {{ t1 }}s
+starting tests/numbers: number constraint pass
 ✓ tests/numbers: number constraint pass {{ t2 }}s
----
-where
-* t1 < 5
-* t2 < 5
+starting tests/numbers: number constraint fail
+✗ tests/numbers: number constraint fail {{ t3 }}s
+starting tests/strings: string variable match
+✓ tests/strings: string variable match {{ t4 }}s
+starting tests/strings: string startswith
+✓ tests/strings: string startswith {{ t5 }}s
+starting tests/strings: string endswith
+✓ tests/strings: string endswith {{ t6 }}s
 
-===
-number constraint failure detected
-===
-cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | grep -A1 "constraint.*not satisfied" | head -2
----
+✗ tests: 5/6 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ tests/numbers: number constraint fail
   Error: constraint 't < 1' not satisfied
   where t = 2
 
-===
-string variable tests pass
-===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep 'tests/strings:' | head -3
----
-✓ tests/strings: string variable match {{ t1 }}s
-✓ tests/strings: string startswith {{ t2 }}s
-✓ tests/strings: string endswith {{ t3 }}s
+Summary: 5 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 where
 * t1 < 5
 * t2 < 5
 * t3 < 5
+* t4 < 5
+* t5 < 5
+* t6 < 5
+* suite_time < 5
+* total_time < 5
 
 ===
 list mode shows variable test names
