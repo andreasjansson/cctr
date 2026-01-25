@@ -1,4 +1,4 @@
-%skip(Windows only) if: test "$OS" != "Windows_NT"
+%skip(Windows only) if: test -z "$OS"
 
 ===
 echo simple string
