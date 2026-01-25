@@ -51,4 +51,4 @@ verbose output shows skip reason
 ===
 cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep "not implemented yet" | sed 's|.*/||'
 ---
-unconditional_skip: unconditional skip with message (not implemented yet)
+unconditional_skip: unconditional skip with message ... ⊘ (not implemented yet)
