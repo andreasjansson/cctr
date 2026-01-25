@@ -1,7 +1,7 @@
 ===
-unconditional skip tests
+unconditional skip summary line
 ===
-cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color 2>&1 | grep "^Summary:"
 ---
 Summary: 1 passed, 0 failed, 2 skipped in {{ t }}s
 ---
@@ -11,7 +11,7 @@ where
 ===
 conditional skip tests pass
 ===
-cctr $CCTR_FIXTURE_DIR/tests/conditional_skip.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests/conditional_skip.txt --no-color 2>&1 | grep "^Summary:"
 ---
 Summary: 2 passed, 0 failed, 2 skipped in {{ t }}s
 ---
@@ -21,7 +21,7 @@ where
 ===
 file level skip
 ===
-cctr $CCTR_FIXTURE_DIR/tests/file_level_skip.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests/file_level_skip.txt --no-color 2>&1 | grep "^Summary:"
 ---
 Summary: 0 passed, 0 failed, 2 skipped in {{ t }}s
 ---
@@ -48,6 +48,6 @@ cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep -c
 ===
 verbose output shows skip reason
 ===
-cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep "not implemented yet"
+cctr $CCTR_FIXTURE_DIR/tests/unconditional_skip.txt --no-color -v 2>&1 | grep "not implemented yet" | sed 's|.*/||'
 ---
-⊘ tests/unconditional_skip: unconditional skip with message (not implemented yet)
+unconditional_skip: unconditional skip with message (not implemented yet)
