@@ -1,0 +1,31 @@
+===
+skip when condition is true
+%skip if: true
+===
+echo "should be skipped"
+---
+should be skipped
+
+===
+run when condition is false
+%skip if: false
+===
+echo "should run"
+---
+should run
+
+===
+skip with message when condition is true
+%skip(unix only) if: true
+===
+echo "should be skipped"
+---
+should be skipped
+
+===
+run with message when condition is false
+%skip(unix only) if: false
+===
+echo "should run"
+---
+should run
