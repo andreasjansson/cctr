@@ -187,8 +187,15 @@ impl Output {
                 }
             }
 
-            let suite_passed = suite_result.passed_tests();
+            let suite_skipped: usize = suite_result
+                .file_results
+                .iter()
+                .flat_map(|f| &f.results)
+                .filter(|r| r.skipped)
+                .count();
+            let suite_passed = suite_result.passed_tests() - suite_skipped;
             let suite_total = suite_result.total_tests();
+            let suite_failed = suite_total - suite_passed - suite_skipped;
             let has_parse_errors = suite_result
                 .file_results
                 .iter()
@@ -196,7 +203,8 @@ impl Output {
             let suite_time = format!(" in {:.2}s", suite_result.elapsed.as_secs_f64());
 
             total_passed += suite_passed;
-            total_failed += suite_total - suite_passed;
+            total_failed += suite_failed;
+            total_skipped += suite_skipped;
             if has_parse_errors {
                 total_failed += 1; // Count parse error as a failure
             }
