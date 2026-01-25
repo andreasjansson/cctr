@@ -322,8 +322,8 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
     let start = Instant::now();
 
     let stdin_path = PathBuf::from("<stdin>");
-    let tests = match parse_corpus_content(content, &stdin_path) {
-        Ok(t) => t,
+    let corpus = match parse_content(content, &stdin_path) {
+        Ok(c) => c,
         Err(e) => {
             let suite = Suite {
                 name: "stdin".to_string(),
@@ -373,7 +373,7 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
     )];
 
     let mut results = Vec::new();
-    for test in tests {
+    for test in corpus.tests {
         let result = run_test(&test, &work_dir, "stdin", &env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
