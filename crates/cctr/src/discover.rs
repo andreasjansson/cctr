@@ -82,25 +82,25 @@ impl Suite {
     }
 
     pub fn test_count(&self) -> usize {
-        use crate::parse::parse_corpus_file;
+        use crate::parse_file;
 
         let mut count = 0;
 
         if self.has_setup {
-            if let Ok(tests) = parse_corpus_file(&self.path.join("_setup.txt")) {
-                count += tests.len();
+            if let Ok(corpus) = parse_file(&self.path.join("_setup.txt")) {
+                count += corpus.tests.len();
             }
         }
 
         for file in self.corpus_files() {
-            if let Ok(tests) = parse_corpus_file(&file) {
-                count += tests.len();
+            if let Ok(corpus) = parse_file(&file) {
+                count += corpus.tests.len();
             }
         }
 
         if self.has_teardown {
-            if let Ok(tests) = parse_corpus_file(&self.path.join("_teardown.txt")) {
-                count += tests.len();
+            if let Ok(corpus) = parse_file(&self.path.join("_teardown.txt")) {
+                count += corpus.tests.len();
             }
         }
 
