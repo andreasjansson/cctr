@@ -613,6 +613,84 @@ From highest to lowest:
 9. Logical `and`
 10. Logical `or`
 
+## Skip directives
+
+Tests can be conditionally skipped using `%skip` directives. This is useful for platform-specific tests or tests that aren't ready yet.
+
+### Test-level skip
+
+Add a `%skip` directive after the test name to skip individual tests:
+
+```
+===
+unix only test
+%skip if: test "$OS" = "Windows_NT"
+===
+ls -la
+---
+```
+
+The directive syntax is:
+
+```
+%skip                           # unconditional skip
+%skip(MESSAGE)                  # unconditional skip with message
+%skip if: COMMAND               # skip if COMMAND exits with code 0
+%skip(MESSAGE) if: COMMAND      # skip with message if COMMAND exits 0
+```
+
+Examples:
+
+```
+===
+not implemented yet
+%skip(TODO: implement this)
+===
+my-unfinished-feature
+---
+expected output
+
+===
+requires bash
+%skip(bash not available) if: ! command -v bash
+===
+bash -c "echo hello"
+---
+hello
+
+===
+windows only
+%skip if: test "$(uname)" != "MINGW"*
+===
+cmd /C echo hello
+---
+hello
+```
+
+### File-level skip
+
+Add a `%skip` directive at the top of a file (before any tests) to skip all tests in the file:
+
+```
+%skip(windows tests) if: test "$OS" != "Windows_NT"
+
+===
+first windows test
+===
+echo hello
+---
+hello
+
+===
+second windows test
+===
+echo world
+---
+world
+```
+
+When a file-level skip is active, all tests in the file are marked as skipped.
+
 ## Environment variables
 
 cctr injects special environment variables that your commands can use:
