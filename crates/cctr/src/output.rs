@@ -214,7 +214,7 @@ impl Output {
             } else {
                 String::new()
             };
-            
+
             if suite_result.passed() && !has_parse_errors {
                 self.set_color(Color::Green);
                 write!(self.stdout, "✓ {}", suite_result.suite.name).unwrap();
@@ -222,7 +222,10 @@ impl Output {
                 writeln!(
                     self.stdout,
                     ": {}/{} tests passed{}{}",
-                    suite_passed, suite_total - suite_skipped, suite_time, skip_info
+                    suite_passed,
+                    suite_total - suite_skipped,
+                    suite_time,
+                    skip_info
                 )
                 .unwrap();
             } else {
@@ -237,7 +240,10 @@ impl Output {
                 writeln!(
                     self.stdout,
                     ": {}/{} tests passed{}{}",
-                    suite_passed, suite_total - suite_skipped, suite_time, skip_info
+                    suite_passed,
+                    suite_total - suite_skipped,
+                    suite_time,
+                    skip_info
                 )
                 .unwrap();
 
@@ -386,10 +392,7 @@ impl Output {
         }
     }
 
-    pub fn print_list(
-        &mut self,
-        results: &[(&crate::discover::Suite, Vec<crate::TestCase>)],
-    ) {
+    pub fn print_list(&mut self, results: &[(&crate::discover::Suite, Vec<crate::TestCase>)]) {
         for (suite, tests_by_file) in results {
             let mut markers = Vec::new();
             if suite.has_fixture {
@@ -413,10 +416,8 @@ impl Output {
             self.reset();
             writeln!(self.stdout, "{}", marker_str).unwrap();
 
-            let mut files: std::collections::HashMap<
-                &std::path::Path,
-                Vec<&crate::TestCase>,
-            > = std::collections::HashMap::new();
+            let mut files: std::collections::HashMap<&std::path::Path, Vec<&crate::TestCase>> =
+                std::collections::HashMap::new();
             for test in tests_by_file {
                 files
                     .entry(test.file_path.as_path())

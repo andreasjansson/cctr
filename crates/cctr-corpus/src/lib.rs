@@ -136,8 +136,6 @@ impl<'a> ParseState<'a> {
             current_line: 1,
         }
     }
-
-
 }
 
 // ============ Type Annotation Parsing ============
@@ -155,10 +153,35 @@ fn parse_type_annotation(type_str: &str) -> Option<VarType> {
 }
 
 const RESERVED_KEYWORDS: &[&str] = &[
-    "true", "false", "null", "and", "or", "not", "in", "forall", "contains",
-    "startswith", "endswith", "matches", "len", "type", "keys", "values",
-    "sum", "min", "max", "abs", "unique", "lower", "upper", "number",
-    "string", "bool", "array", "object", "env",
+    "true",
+    "false",
+    "null",
+    "and",
+    "or",
+    "not",
+    "in",
+    "forall",
+    "contains",
+    "startswith",
+    "endswith",
+    "matches",
+    "len",
+    "type",
+    "keys",
+    "values",
+    "sum",
+    "min",
+    "max",
+    "abs",
+    "unique",
+    "lower",
+    "upper",
+    "number",
+    "string",
+    "bool",
+    "array",
+    "object",
+    "env",
 ];
 
 fn is_reserved_keyword(name: &str) -> bool {
@@ -174,14 +197,14 @@ fn parse_placeholder(content: &str) -> Result<(String, Option<VarType>), String>
     } else {
         (content.to_string(), None)
     };
-    
+
     if is_reserved_keyword(&name) {
         return Err(format!(
             "'{}' is a reserved keyword and cannot be used as a variable name",
             name
         ));
     }
-    
+
     Ok((name, var_type))
 }
 
@@ -239,11 +262,15 @@ fn opt_newline(input: &mut &str) -> ModalResult<()> {
 }
 
 fn blank_line(input: &mut &str) -> ModalResult<()> {
-    (take_while(0.., ' '), newline).map(|_| ()).parse_next(input)
+    (take_while(0.., ' '), newline)
+        .map(|_| ())
+        .parse_next(input)
 }
 
 fn skip_blank_lines(input: &mut &str) -> ModalResult<()> {
-    repeat(0.., blank_line).map(|_: Vec<()>| ()).parse_next(input)
+    repeat(0.., blank_line)
+        .map(|_: Vec<()>| ())
+        .parse_next(input)
 }
 
 fn is_separator_line(line: &str) -> bool {
@@ -273,13 +300,13 @@ fn skip_directive(input: &mut &str) -> ModalResult<SkipDirective> {
     "%skip".parse_next(input)?;
     let message = opt(skip_message).parse_next(input)?;
     let condition = opt(skip_condition).parse_next(input)?;
-    
+
     if message.is_none() && condition.is_none() {
         let _ = line_content.parse_next(input)?;
     }
-    
+
     opt_newline.parse_next(input)?;
-    
+
     Ok(SkipDirective { message, condition })
 }
 
@@ -302,26 +329,26 @@ fn description_line(input: &mut &str) -> ModalResult<String> {
 
 fn command_lines(input: &mut &str) -> ModalResult<String> {
     let mut lines = Vec::new();
-    
+
     loop {
         if input.is_empty() {
             break;
         }
-        
+
         let peek_line = input.lines().next().unwrap_or("");
         if is_separator_line(peek_line) {
             break;
         }
-        
+
         let line = line_content.parse_next(input)?;
         opt_newline.parse_next(input)?;
         lines.push(line);
     }
-    
+
     while lines.last().is_some_and(|s| s.trim().is_empty()) {
         lines.pop();
     }
-    
+
     Ok(lines.join("\n"))
 }
 
@@ -382,9 +409,9 @@ fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
 
 fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<ContextError>> {
     let input = &mut state.input;
-    
+
     skip_blank_lines.parse_next(input)?;
-    
+
     let start_line = state.current_line;
 
     header_sep.parse_next(input)?;
@@ -414,7 +441,8 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let expected_start = state.current_line;
     let expected_output = expected_block.parse_next(input)?;
     let expected_lines = expected_output.lines().count();
-    state.current_line = expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
+    state.current_line =
+        expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
 
     let constraints = opt(where_section).parse_next(input)?.unwrap_or_default();
     if !constraints.is_empty() {
@@ -443,32 +471,32 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
 
 fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrMode<ContextError>> {
     let input = &mut state.input;
-    
+
     skip_blank_lines.parse_next(input)?;
-    
+
     let file_skip = try_skip_directive.parse_next(input)?;
     if file_skip.is_some() {
         state.current_line += 1;
     }
-    
+
     skip_blank_lines.parse_next(input)?;
-    
+
     let mut tests = Vec::new();
-    
+
     while !state.input.is_empty() {
         let peeked = state.input.trim_start();
         if peeked.is_empty() {
             break;
         }
-        
+
         if !peeked.starts_with("===") {
             break;
         }
-        
+
         let tc = test_case(state)?;
         tests.push(tc);
     }
-    
+
     Ok(CorpusFile { file_skip, tests })
 }
 
@@ -564,7 +592,10 @@ Completed in {{ n: number }}s
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "Completed in {{ n: number }}s");
+        assert_eq!(
+            file.tests[0].expected_output,
+            "Completed in {{ n: number }}s"
+        );
         assert_eq!(file.tests[0].variables.len(), 1);
         assert_eq!(file.tests[0].variables[0].name, "n");
         assert_eq!(file.tests[0].variables[0].var_type, Some(VarType::Number));
@@ -703,7 +734,10 @@ hello
         assert_eq!(file.tests.len(), 1);
         let skip = file.tests[0].skip.as_ref().unwrap();
         assert!(skip.message.is_none());
-        assert_eq!(skip.condition.as_deref(), Some(r#"test "$OS" = "Windows_NT""#));
+        assert_eq!(
+            skip.condition.as_deref(),
+            Some(r#"test "$OS" = "Windows_NT""#)
+        );
     }
 
     #[test]
@@ -720,7 +754,10 @@ hello
         assert_eq!(file.tests.len(), 1);
         let skip = file.tests[0].skip.as_ref().unwrap();
         assert_eq!(skip.message.as_deref(), Some("requires bash"));
-        assert_eq!(skip.condition.as_deref(), Some(r#"test "$OS" = "Windows_NT""#));
+        assert_eq!(
+            skip.condition.as_deref(),
+            Some(r#"test "$OS" = "Windows_NT""#)
+        );
     }
 
     #[test]
@@ -737,7 +774,10 @@ hello
         let file = parse_test(content);
         let file_skip = file.file_skip.as_ref().unwrap();
         assert_eq!(file_skip.message.as_deref(), Some("windows tests"));
-        assert_eq!(file_skip.condition.as_deref(), Some(r#"test "$OS" != "Windows_NT""#));
+        assert_eq!(
+            file_skip.condition.as_deref(),
+            Some(r#"test "$OS" != "Windows_NT""#)
+        );
         assert_eq!(file.tests.len(), 1);
     }
 
@@ -762,7 +802,7 @@ hello
     fn test_parse_file() {
         let mut f = NamedTempFile::new().unwrap();
         write!(f, "===\ntest\n===\necho hi\n---\nhi\n").unwrap();
-        
+
         let file = parse_file(f.path()).unwrap();
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "test");
@@ -784,7 +824,10 @@ line 3
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].command, "echo \"line 1\"\necho \"line 2\"\necho \"line 3\"");
+        assert_eq!(
+            file.tests[0].command,
+            "echo \"line 1\"\necho \"line 2\"\necho \"line 3\""
+        );
     }
 
     #[test]

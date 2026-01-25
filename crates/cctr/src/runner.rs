@@ -106,12 +106,20 @@ fn should_skip(
         Some(condition) => {
             let (_, exit_code) = run_command(condition, work_dir, env_vars);
             if exit_code == 0 {
-                Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string()))
+                Some(
+                    skip.message
+                        .clone()
+                        .unwrap_or_else(|| "skipped".to_string()),
+                )
             } else {
                 None
             }
         }
-        None => Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string())),
+        None => Some(
+            skip.message
+                .clone()
+                .unwrap_or_else(|| "skipped".to_string()),
+        ),
     }
 }
 
@@ -190,7 +198,7 @@ fn run_corpus_file(
             };
         }
     };
-    
+
     // Handle file-level skip directive
     if let Some(skip) = &corpus.file_skip {
         if let Some(reason) = should_skip(skip, work_dir, env_vars) {
@@ -219,7 +227,7 @@ fn run_corpus_file(
             };
         }
     }
-    
+
     let mut results = Vec::new();
 
     // Check if file name matches the pattern (excluding .txt extension)
@@ -237,7 +245,7 @@ fn run_corpus_file(
                 continue;
             }
         }
-        
+
         let result = run_test(&test, work_dir, suite_name, env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
