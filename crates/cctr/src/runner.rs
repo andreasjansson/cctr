@@ -143,7 +143,16 @@ fn run_corpus_file(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> FileResult {
-    let tests = parse_corpus_file(file_path).unwrap_or_default();
+    let tests = match parse_corpus_file(file_path) {
+        Ok(tests) => tests,
+        Err(e) => {
+            return FileResult {
+                file_path: file_path.to_path_buf(),
+                results: vec![],
+                parse_error: Some(e.to_string()),
+            };
+        }
+    };
     let mut results = Vec::new();
 
     // Check if file name matches the pattern (excluding .txt extension)
@@ -171,6 +180,7 @@ fn run_corpus_file(
     FileResult {
         file_path: file_path.to_path_buf(),
         results,
+        parse_error: None,
     }
 }
 
