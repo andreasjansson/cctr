@@ -66,7 +66,10 @@ impl Output {
     }
 
     fn print_dot(&mut self, result: &TestResult, update_mode: bool) {
-        if result.passed {
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            write!(self.stdout, "s").unwrap();
+        } else if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, ".").unwrap();
         } else if update_mode {
