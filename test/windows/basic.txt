@@ -1,4 +1,4 @@
-%skip(Windows only) if: uname
+%skip(Windows only) if: where uname
 
 ===
 echo simple string
