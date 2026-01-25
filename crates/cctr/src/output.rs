@@ -94,7 +94,10 @@ impl Output {
     }
 
     fn print_verbose_result(&mut self, result: &TestResult, update_mode: bool) {
-        if result.passed {
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            write!(self.stdout, "⊘").unwrap();
+        } else if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, "✓").unwrap();
         } else if update_mode {
@@ -120,9 +123,20 @@ impl Output {
         )
         .unwrap();
 
-        self.set_dim();
-        writeln!(self.stdout, "{:.2}s", result.elapsed.as_secs_f64()).unwrap();
-        self.reset();
+        if result.skipped {
+            self.set_color(Color::Yellow);
+            if let Some(reason) = &result.skip_reason {
+                write!(self.stdout, "({})", reason).unwrap();
+            } else {
+                write!(self.stdout, "(skipped)").unwrap();
+            }
+            self.reset();
+            writeln!(self.stdout).unwrap();
+        } else {
+            self.set_dim();
+            writeln!(self.stdout, "{:.2}s", result.elapsed.as_secs_f64()).unwrap();
+            self.reset();
+        }
     }
 
     pub fn finish_progress(&mut self) {
