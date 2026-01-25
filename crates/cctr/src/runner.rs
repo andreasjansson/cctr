@@ -22,11 +22,12 @@ pub struct TestResult {
 pub struct FileResult {
     pub file_path: PathBuf,
     pub results: Vec<TestResult>,
+    pub parse_error: Option<String>,
 }
 
 impl FileResult {
     pub fn passed(&self) -> bool {
-        self.results.iter().all(|r| r.passed)
+        self.parse_error.is_none() && self.results.iter().all(|r| r.passed)
     }
 }
 
