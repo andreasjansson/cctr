@@ -1,11 +1,13 @@
 %skip(Unix only) if: test "$OS" = "Windows_NT"
 ===
-verbose mode shows timing for each test
+verbose mode shows starting and completion for each test
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
-tests/simple: test one ... ✓ {{ t1 }}s
-tests/simple: test two ... ✓ {{ t2 }}s
+starting tests/simple: test one
+✓ tests/simple: test one {{ t1 }}s
+starting tests/simple: test two
+✓ tests/simple: test two {{ t2 }}s
 
 ✓ tests: 2/2 tests passed in {{ suite_time }}s
 
