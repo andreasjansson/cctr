@@ -103,44 +103,33 @@ impl Output {
         if result.skipped {
             self.set_color(Color::Yellow);
             write!(self.stdout, "⊘").unwrap();
+            self.reset();
+            if let Some(reason) = &result.skip_reason {
+                self.set_color(Color::Yellow);
+                write!(self.stdout, " ({})", reason).unwrap();
+                self.reset();
+            }
+            writeln!(self.stdout).unwrap();
         } else if result.passed {
             self.set_color(Color::Green);
             write!(self.stdout, "✓").unwrap();
+            self.reset();
+            self.set_dim();
+            writeln!(self.stdout, " {:.2}s", result.elapsed.as_secs_f64()).unwrap();
+            self.reset();
         } else if update_mode {
             self.set_color(Color::Cyan);
             write!(self.stdout, "↺").unwrap();
+            self.reset();
+            self.set_dim();
+            writeln!(self.stdout, " {:.2}s", result.elapsed.as_secs_f64()).unwrap();
+            self.reset();
         } else {
             self.set_color(Color::Red);
             write!(self.stdout, "✗").unwrap();
-        }
-        self.reset();
-
-        let file_stem = result
-            .test
-            .file_path
-            .file_stem()
-            .map(|s| s.to_string_lossy())
-            .unwrap_or_default();
-
-        write!(
-            self.stdout,
-            " {}/{}: {} ",
-            result.suite, file_stem, result.test.name
-        )
-        .unwrap();
-
-        if result.skipped {
-            self.set_color(Color::Yellow);
-            if let Some(reason) = &result.skip_reason {
-                write!(self.stdout, "({})", reason).unwrap();
-            } else {
-                write!(self.stdout, "(skipped)").unwrap();
-            }
             self.reset();
-            writeln!(self.stdout).unwrap();
-        } else {
             self.set_dim();
-            writeln!(self.stdout, "{:.2}s", result.elapsed.as_secs_f64()).unwrap();
+            writeln!(self.stdout, " {:.2}s", result.elapsed.as_secs_f64()).unwrap();
             self.reset();
         }
     }
