@@ -209,14 +209,20 @@ impl Output {
                 total_failed += 1; // Count parse error as a failure
             }
 
+            let skip_info = if suite_skipped > 0 {
+                format!(", {} skipped", suite_skipped)
+            } else {
+                String::new()
+            };
+            
             if suite_result.passed() && !has_parse_errors {
                 self.set_color(Color::Green);
                 write!(self.stdout, "✓ {}", suite_result.suite.name).unwrap();
                 self.reset();
                 writeln!(
                     self.stdout,
-                    ": {}/{} tests passed{}",
-                    suite_passed, suite_total, suite_time
+                    ": {}/{} tests passed{}{}",
+                    suite_passed, suite_total - suite_skipped, suite_time, skip_info
                 )
                 .unwrap();
             } else {
@@ -230,14 +236,14 @@ impl Output {
                 self.reset();
                 writeln!(
                     self.stdout,
-                    ": {}/{} tests passed{}",
-                    suite_passed, suite_total, suite_time
+                    ": {}/{} tests passed{}{}",
+                    suite_passed, suite_total - suite_skipped, suite_time, skip_info
                 )
                 .unwrap();
 
                 for file_result in &suite_result.file_results {
                     for result in &file_result.results {
-                        if !result.passed {
+                        if !result.passed && !result.skipped {
                             failed_tests.push(result);
                         }
                     }
