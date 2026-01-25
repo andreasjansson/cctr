@@ -1,4 +1,4 @@
-%skip(Windows only) if: test -z "$OS"
+%skip(Windows only) if: uname
 
 ===
 echo simple string
