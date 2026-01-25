@@ -1,0 +1,15 @@
+%skip(should not skip) if: false
+
+===
+test 1 in non-skipped file
+===
+echo "should run"
+---
+should run
+
+===
+test 2 in non-skipped file
+===
+echo "should also run"
+---
+should also run
