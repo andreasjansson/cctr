@@ -37,14 +37,33 @@ corpus [fixture]
     - Test cat with incorrect output
 
 ===
-verbose mode shows timing
+verbose mode shows starting and completion
 ===
-cctr $CCTR_FIXTURE_DIR/test/corpus --no-color -v 2>&1 | grep 'corpus/cat_correct:' | head -1
+cctr $CCTR_FIXTURE_DIR/test/corpus --no-color -v 2>&1
 ---
-✓ corpus/cat_correct: Test cat with correct output {{ t }}s
+starting corpus/cat_correct: Test cat with correct output
+✓ corpus/cat_correct: Test cat with correct output {{ t1 }}s
+starting corpus/cat_incorrect: Test cat with incorrect output
+✗ corpus/cat_incorrect: Test cat with incorrect output {{ t2 }}s
+
+✗ corpus: 1/2 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ corpus/cat_incorrect: Test cat with incorrect output
+  test/corpus/cat_incorrect.txt:2
+  Command: cat foo.txt
+
+-bar
++foo
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 where
-* t < 5
+* t1 < 5
+* t2 < 5
+* suite_time < 5
+* total_time < 5
 
 ===
 non-verbose mode shows dots
