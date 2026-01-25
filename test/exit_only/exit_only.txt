@@ -1,33 +1,52 @@
 %skip(Unix only) if: test "$OS" = "Windows_NT"
 ===
-exit zero passes exit only mode
+exit only verbose output
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep "exit zero" | head -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
-✓ tests/exit: exit zero passes {{ t }}s
+starting tests/exit: exit zero passes
+✓ tests/exit: exit zero passes {{ t1 }}s
+starting tests/exit: exit nonzero fails
+✗ tests/exit: exit nonzero fails {{ t2 }}s
+
+✗ tests: 1/2 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ tests/exit: exit nonzero fails
+  tests/exit.txt:6
+  Command: false
+
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 where
-* t < 5
+* t1 < 5
+* t2 < 5
+* suite_time < 5
+* total_time < 5
 
 ===
-exit nonzero fails exit only mode
+exit only non-verbose output
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep "exit nonzero" | head -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 ---
-✗ tests/exit: exit nonzero fails {{ t }}s
----
-where
-* t < 5
+.F
 
-===
-summary shows one pass one fail
-===
-cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
----
-Summary: 1 passed, 1 failed, 0 skipped in {{ t }}s
+✗ tests: 1/2 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ tests/exit: exit nonzero fails
+  tests/exit.txt:6
+  Command: false
+
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 where
-* t < 5
+* suite_time < 5
+* total_time < 5
 
 ===
 list mode shows exit only tests
