@@ -409,11 +409,9 @@ jobs:
           ===
           echo "count: 42"
           ---
-          count: {{ n }}
+          count: {{ n: number }}
           ---
-          with
-          * n: number
-          having
+          where
           * n == 42
 
           ===
@@ -423,9 +421,7 @@ jobs:
           ---
           status: {{ s }}
           ---
-          with
-          * s: string
-          having
+          where
           * s == "success"
           EOF
 
