@@ -1,6 +1,6 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
-use crate::parse::{parse_corpus_content, parse_corpus_file, TestCase};
+use crate::{parse_content, parse_file, TestCase};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc::Sender;
