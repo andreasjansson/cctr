@@ -1,27 +1,41 @@
 %skip(Unix only) if: test "$OS" = "Windows_NT"
 ===
-setup runs before tests
+setup teardown verbose output
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -E 'tests/_setup:|tests/use_setup:|tests/_teardown:'
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
+starting tests/_setup: create marker file
 ✓ tests/_setup: create marker file {{ t1 }}s
+starting tests/use_setup: verify setup ran
 ✓ tests/use_setup: verify setup ran {{ t2 }}s
+starting tests/_teardown: cleanup marker
 ✓ tests/_teardown: cleanup marker {{ t3 }}s
+
+✓ tests: 3/3 tests passed in {{ suite_time }}s
+
+All 3 tests passed in {{ total_time }}s
 ---
 where
 * t1 < 5
 * t2 < 5
 * t3 < 5
+* suite_time < 5
+* total_time < 5
 
 ===
-all tests pass with setup teardown
+setup teardown non-verbose output
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 ---
-All 3 tests passed in {{ t }}s
+...
+
+✓ tests: 3/3 tests passed in {{ suite_time }}s
+
+All 3 tests passed in {{ total_time }}s
 ---
 where
-* t < 5
+* suite_time < 5
+* total_time < 5
 
 ===
 list mode shows setup and teardown
