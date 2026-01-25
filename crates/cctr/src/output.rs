@@ -134,6 +134,7 @@ impl Output {
         let mut total_failed = 0;
         let mut total_skipped = 0;
         let mut failed_tests: Vec<&TestResult> = Vec::new();
+        let mut parse_errors: Vec<(&std::path::Path, &str)> = Vec::new();
 
         let mut sorted_results: Vec<_> = results.iter().collect();
         sorted_results.sort_by(|a, b| a.suite.name.cmp(&b.suite.name));
@@ -162,14 +163,28 @@ impl Output {
                 continue;
             }
 
+            // Collect parse errors
+            for file_result in &suite_result.file_results {
+                if let Some(err) = &file_result.parse_error {
+                    parse_errors.push((file_result.file_path.as_path(), err.as_str()));
+                }
+            }
+
             let suite_passed = suite_result.passed_tests();
             let suite_total = suite_result.total_tests();
+            let has_parse_errors = suite_result
+                .file_results
+                .iter()
+                .any(|f| f.parse_error.is_some());
             let suite_time = format!(" in {:.2}s", suite_result.elapsed.as_secs_f64());
 
             total_passed += suite_passed;
             total_failed += suite_total - suite_passed;
+            if has_parse_errors {
+                total_failed += 1; // Count parse error as a failure
+            }
 
-            if suite_result.passed() {
+            if suite_result.passed() && !has_parse_errors {
                 self.set_color(Color::Green);
                 write!(self.stdout, "✓ {}", suite_result.suite.name).unwrap();
                 self.reset();
@@ -202,6 +217,24 @@ impl Output {
                         }
                     }
                 }
+            }
+        }
+
+        // Print parse errors first
+        if !parse_errors.is_empty() {
+            writeln!(self.stdout).unwrap();
+            self.set_color(Color::Red);
+            self.set_bold();
+            writeln!(self.stdout, "Parse Errors:").unwrap();
+            self.reset();
+
+            for (path, error) in &parse_errors {
+                writeln!(self.stdout).unwrap();
+                self.set_color(Color::Red);
+                write!(self.stdout, "✗").unwrap();
+                self.reset();
+                writeln!(self.stdout, " {}", path.display()).unwrap();
+                writeln!(self.stdout, "  {}", error).unwrap();
             }
         }
 
