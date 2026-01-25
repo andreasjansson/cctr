@@ -2,16 +2,35 @@
 ===
 verbose mode shows timing for each test
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -E '^tests/simple:.*✓' | wc -l | tr -d ' '
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
-2
+tests/simple: test one ... ✓ {{ t1 }}s
+tests/simple: test two ... ✓ {{ t2 }}s
+
+✓ tests: 2/2 tests passed in {{ suite_time }}s
+
+All 2 tests passed in {{ total_time }}s
+---
+where
+* t1 >= 0
+* t2 >= 0
+* suite_time >= 0
+* total_time >= 0
 
 ===
-non verbose shows dots
+non verbose mode shows dots
 ===
-cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | head -1
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 ---
 ..
+
+✓ tests: 2/2 tests passed in {{ suite_time }}s
+
+All 2 tests passed in {{ total_time }}s
+---
+where
+* suite_time >= 0
+* total_time >= 0
 
 ===
 list mode shows test names
