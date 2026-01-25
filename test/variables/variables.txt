@@ -1,3 +1,4 @@
+%skip(Unix only) if: test "$OS" = "Windows_NT"
 ===
 number variable tests first two pass
 ===
