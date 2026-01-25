@@ -1,0 +1,45 @@
+%skip(Windows only) if: test "$OS" != "Windows_NT"
+
+===
+echo simple string
+===
+echo hello world
+---
+hello world
+
+===
+echo with variable capture
+===
+echo count: 42
+---
+count: {{ n }}
+---
+where
+* n == 42
+
+===
+arithmetic in echo
+===
+echo 4
+---
+{{ n }}
+---
+where
+* n == 2 + 2
+
+===
+string comparison
+===
+echo status: ok
+---
+status: {{ s }}
+---
+where
+* s == "ok"
+
+===
+exit code zero passes
+===
+echo success
+---
+success
