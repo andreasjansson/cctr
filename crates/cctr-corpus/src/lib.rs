@@ -137,9 +137,7 @@ impl<'a> ParseState<'a> {
         }
     }
 
-    fn advance_lines(&mut self, text: &str) {
-        self.current_line += text.chars().filter(|&c| c == '\n').count();
-    }
+
 }
 
 // ============ Type Annotation Parsing ============
