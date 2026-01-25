@@ -84,7 +84,9 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
             let stderr = String::from_utf8_lossy(&output.stderr);
             let combined = format!("{}{}", stdout, stderr);
             let exit_code = output.status.code().unwrap_or(-1);
-            (combined.trim_end_matches('\n').to_string(), exit_code)
+            // Normalize line endings (Windows uses \r\n) and trim trailing newlines
+            let normalized = combined.replace("\r\n", "\n");
+            (normalized.trim_end_matches('\n').to_string(), exit_code)
         }
         Err(e) => (format!("Failed to execute command: {}", e), -1),
     }
