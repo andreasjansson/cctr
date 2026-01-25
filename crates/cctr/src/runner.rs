@@ -461,6 +461,14 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
 
     let mut results = Vec::new();
     for test in corpus.tests {
+        if let Some(tx) = progress_tx {
+            let _ = tx.send(ProgressEvent::TestStart {
+                suite: "stdin".to_string(),
+                file: "stdin".to_string(),
+                name: test.name.clone(),
+            });
+        }
+
         let result = run_test(&test, &work_dir, "stdin", &env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
