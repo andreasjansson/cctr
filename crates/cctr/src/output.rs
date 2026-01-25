@@ -42,7 +42,9 @@ impl Output {
         match event {
             ProgressEvent::TestStart { suite, file, name } => {
                 if verbose {
-                    write!(self.stdout, "{}/{}: {} ... ", suite, file, name).unwrap();
+                    self.set_dim();
+                    writeln!(self.stdout, "starting {}/{}: {}", suite, file, name).unwrap();
+                    self.reset();
                     let _ = self.stdout.flush();
                 }
             }
