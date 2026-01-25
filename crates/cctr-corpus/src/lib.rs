@@ -40,7 +40,7 @@
 
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use winnow::combinator::{alt, opt, peek, repeat};
+use winnow::combinator::{alt, opt, repeat};
 use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::{take_till, take_while};
