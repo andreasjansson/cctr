@@ -11,6 +11,8 @@ use tempfile::TempDir;
 pub struct TestResult {
     pub test: TestCase,
     pub passed: bool,
+    pub skipped: bool,
+    pub skip_reason: Option<String>,
     pub actual_output: Option<String>,
     pub expected_output: String,
     pub error: Option<String>,
