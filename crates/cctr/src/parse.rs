@@ -216,6 +216,19 @@ pub fn parse_corpus_content(content: &str, path: &Path) -> Result<Vec<TestCase>>
                         }
                         i += 1;
                     }
+                } else if next_idx < lines.len() {
+                    // There's content after `---` but it's not `where` - this is an error
+                    let next_line = lines[next_idx].trim();
+                    if !next_line.is_empty() && !is_header_separator(lines[next_idx]) {
+                        return Err(Error::ParseCorpus {
+                            path: path.to_path_buf(),
+                            message: format!(
+                                "line {}: expected 'where' after '---', found '{}'. Note: 'with/having' syntax is not supported, use 'where' instead",
+                                next_idx + 1,
+                                next_line
+                            ),
+                        });
+                    }
                 }
                 // Either way, --- ends the expected output
                 break;
