@@ -67,9 +67,17 @@ main() {
     if [[ "$use_sudo" == true ]]; then
         sudo cp "$src" "$dst"
         sudo chmod +x "$dst"
+        # Ad-hoc sign on macOS to avoid code signing issues
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sudo codesign -s - "$dst" 2>/dev/null || true
+        fi
     else
         cp "$src" "$dst"
         chmod +x "$dst"
+        # Ad-hoc sign on macOS to avoid code signing issues
+        if [[ "$(uname)" == "Darwin" ]]; then
+            codesign -s - "$dst" 2>/dev/null || true
+        fi
     fi
 
     echo ""
