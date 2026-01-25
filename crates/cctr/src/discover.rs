@@ -44,7 +44,21 @@ impl Suite {
     }
 
     pub fn new_single_file(dir_path: PathBuf, file_path: PathBuf) -> Self {
-        let name = dir_path.to_string_lossy().into_owned();
+        let cwd = std::env::current_dir().unwrap_or_default();
+        let name = dir_path
+            .strip_prefix(&cwd)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_else(|_| dir_path.to_string_lossy().into_owned());
+
+        let name = if name.is_empty() {
+            dir_path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| name)
+        } else {
+            name
+        };
+
         let has_fixture = dir_path.join("fixture").is_dir();
         let has_setup = dir_path.join("_setup.txt").is_file();
         let has_teardown = dir_path.join("_teardown.txt").is_file();
