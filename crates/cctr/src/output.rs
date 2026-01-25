@@ -357,7 +357,7 @@ impl Output {
 
     pub fn print_list(
         &mut self,
-        results: &[(&crate::discover::Suite, Vec<crate::parse::TestCase>)],
+        results: &[(&crate::discover::Suite, Vec<crate::TestCase>)],
     ) {
         for (suite, tests_by_file) in results {
             let mut markers = Vec::new();
@@ -384,7 +384,7 @@ impl Output {
 
             let mut files: std::collections::HashMap<
                 &std::path::Path,
-                Vec<&crate::parse::TestCase>,
+                Vec<&crate::TestCase>,
             > = std::collections::HashMap::new();
             for test in tests_by_file {
                 files
