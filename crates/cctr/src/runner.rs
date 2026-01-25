@@ -143,8 +143,8 @@ fn run_corpus_file(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
 ) -> FileResult {
-    let tests = match parse_corpus_file(file_path) {
-        Ok(tests) => tests,
+    let corpus = match parse_file(file_path) {
+        Ok(corpus) => corpus,
         Err(e) => {
             return FileResult {
                 file_path: file_path.to_path_buf(),
@@ -153,6 +153,10 @@ fn run_corpus_file(
             };
         }
     };
+    
+    // TODO: Handle file-level skip directive
+    // if let Some(skip) = &corpus.file_skip { ... }
+    
     let mut results = Vec::new();
 
     // Check if file name matches the pattern (excluding .txt extension)
@@ -163,13 +167,17 @@ fn run_corpus_file(
             .is_some_and(|name| name.contains(pat))
     });
 
-    for test in tests {
+    for test in corpus.tests {
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
                 continue;
             }
         }
+        
+        // TODO: Handle test-level skip directive
+        // if let Some(skip) = &test.skip { ... }
+        
         let result = run_test(&test, work_dir, suite_name, env_vars);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
