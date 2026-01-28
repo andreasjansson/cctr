@@ -319,10 +319,20 @@ pub fn run_suite(
     let work_dir = work_dir.as_path();
 
     // Build environment variables to inject
-    let mut env_vars = vec![(
-        "CCTR_WORK_DIR".to_string(),
-        work_dir.to_string_lossy().to_string(),
-    )];
+    let test_path = suite
+        .path
+        .canonicalize()
+        .unwrap_or_else(|_| suite.path.clone());
+    let mut env_vars = vec![
+        (
+            "CCTR_WORK_DIR".to_string(),
+            work_dir.to_string_lossy().to_string(),
+        ),
+        (
+            "CCTR_TEST_PATH".to_string(),
+            test_path.to_string_lossy().to_string(),
+        ),
+    ];
 
     if suite.has_fixture {
         let fixture_src = suite.path.join("fixture");
