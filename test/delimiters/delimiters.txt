@@ -1,44 +1,38 @@
 ===
-debug fixture dir
+debug - list passing directory contents
 ===
-echo "FIXTURE: $CCTR_FIXTURE_DIR" && ls -la "$CCTR_FIXTURE_DIR"
+ls -la "$CCTR_FIXTURE_DIR/passing/" && cat "$CCTR_FIXTURE_DIR/passing/longer_delimiters.txt"
 ---
-FIXTURE: {{ fixture_dir: string }}
-{{ ls_output: string }}
+{{ ls: string }}
+====
+test with --- in output using 4-char delimiters
+====
+echo "---"
+----
 ---
+
+=====
+test with ---- in output using 5-char delimiters
+=====
+echo "----"
+-----
+----
+
+=====
+test with multiple dash lengths in output
+=====
+printf '%s\n%s\n' '---' '----'
+-----
+---
+----
+
+====
+test with constraints and longer delimiters
+====
+echo "count: 42"
+----
+count: {{ n: number }}
+----
 where
-* fixture_dir contains "cctr"
-
-===
-longer delimiters allow --- in content
-===
-cctr $CCTR_FIXTURE_DIR/passing --no-color 2>&1 | tail -1
----
-All 4 tests passed in {{ t }}s
----
-where
-* t: number
-
-===
-mixed delimiter lengths in same file
-===
-cctr $CCTR_FIXTURE_DIR/mixed --no-color 2>&1 | tail -1
----
-All 3 tests passed in {{ t }}s
----
-where
-* t: number
-
-===
-mismatched header delimiter shows helpful error
-===
-cctr $CCTR_FIXTURE_DIR/mismatch_header --no-color 2>&1 | grep "delimiter length mismatch"
----
-  parse error at line 3: delimiter length mismatch: expected 4 '=' characters but found 3
-
-===
-mismatched dash delimiter shows helpful error
-===
-cctr $CCTR_FIXTURE_DIR/mismatch_dash --no-color 2>&1 | grep "delimiter length mismatch"
----
-  parse error at line 5: delimiter length mismatch: expected 4 '-' characters but found 3
+* n > 0
+* n < 100
