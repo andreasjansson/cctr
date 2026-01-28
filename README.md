@@ -334,6 +334,54 @@ two
 three
 ```
 
+### Output containing `---`
+
+If your expected output contains `---` (three or more dashes), use longer delimiters. The opening `===` determines the required delimiter length for that test:
+
+```
+====
+test with --- in output
+====
+echo "---"
+----
+---
+```
+
+Use more delimiter characters than any separator that appears in your content:
+
+```
+=====
+markdown horizontal rules
+=====
+cat doc.md
+-----
+# Title
+---
+Content
+----
+More content
+```
+
+Different tests in the same file can use different delimiter lengths:
+
+```
+===
+normal test
+===
+echo "hello"
+---
+hello
+
+=====
+test with dashes in output
+=====
+echo "---"
+-----
+---
+```
+
+**Note:** While `---` can appear in expected output when using longer delimiters, `===` always signals the start of a new test regardless of delimiter length.
+
 ## Variables
 
 Variables capture dynamic parts of the output using `{{ name }}` or `{{ name: type }}` syntax. Types can be specified inline or omitted for automatic duck-typing.
