@@ -404,8 +404,8 @@ fn constraint_line(input: &mut &str) -> ModalResult<String> {
     }
 }
 
-fn where_section(input: &mut &str) -> ModalResult<Vec<String>> {
-    dash_sep.parse_next(input)?;
+fn where_section(input: &mut &str, delimiter_len: usize) -> ModalResult<Vec<String>> {
+    dash_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
 
     let _ = take_while(0.., ' ').parse_next(input)?;
