@@ -369,7 +369,6 @@ fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expecte
         if is_any_separator_line(peek_line) {
             let actual_len = trimmed.len();
             let is_header = trimmed.chars().all(|c| c == '=');
-            let is_dash = trimmed.chars().all(|c| c == '-');
 
             if actual_len == delimiter_len {
                 // Exact match - this is our terminator
