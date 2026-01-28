@@ -320,6 +320,12 @@ fn is_separator_line_exact(line: &str, len: usize) -> bool {
         || (trimmed.len() == len && trimmed.chars().all(|c| c == '-'))
 }
 
+fn is_any_separator_line(line: &str) -> bool {
+    let trimmed = line.trim();
+    (trimmed.len() >= 3 && trimmed.chars().all(|c| c == '='))
+        || (trimmed.len() >= 3 && trimmed.chars().all(|c| c == '-'))
+}
+
 // ============ Skip Directive Parser ============
 
 fn skip_message(input: &mut &str) -> ModalResult<String> {
