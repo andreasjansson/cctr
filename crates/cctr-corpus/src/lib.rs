@@ -314,10 +314,10 @@ fn skip_blank_lines(input: &mut &str) -> ModalResult<()> {
         .parse_next(input)
 }
 
-fn is_separator_line(line: &str, len: usize) -> bool {
+fn is_separator_line(line: &str) -> bool {
     let trimmed = line.trim();
-    (trimmed.len() == len && trimmed.chars().all(|c| c == '='))
-        || (trimmed.len() == len && trimmed.chars().all(|c| c == '-'))
+    (trimmed.len() >= 3 && trimmed.chars().all(|c| c == '='))
+        || (trimmed.len() >= 3 && trimmed.chars().all(|c| c == '-'))
 }
 
 // ============ Skip Directive Parser ============
