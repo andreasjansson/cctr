@@ -368,7 +368,7 @@ fn description_line(input: &mut &str) -> ModalResult<String> {
     Ok(content.trim().to_string())
 }
 
-fn command_lines(input: &mut &str, delimiter_len: usize) -> ModalResult<String> {
+fn command_lines(input: &mut &str) -> ModalResult<String> {
     let mut lines = Vec::new();
 
     loop {
@@ -377,7 +377,7 @@ fn command_lines(input: &mut &str, delimiter_len: usize) -> ModalResult<String> 
         }
 
         let peek_line = input.lines().next().unwrap_or("");
-        if is_separator_line(peek_line, delimiter_len) {
+        if is_separator_line(peek_line) {
             break;
         }
 
@@ -393,7 +393,7 @@ fn command_lines(input: &mut &str, delimiter_len: usize) -> ModalResult<String> 
     Ok(lines.join("\n"))
 }
 
-fn expected_block(input: &mut &str, delimiter_len: usize) -> ModalResult<String> {
+fn expected_block(input: &mut &str) -> ModalResult<String> {
     let mut lines = Vec::new();
 
     loop {
@@ -402,7 +402,7 @@ fn expected_block(input: &mut &str, delimiter_len: usize) -> ModalResult<String>
         }
 
         let peek_line = input.lines().next().unwrap_or("");
-        if is_separator_line(peek_line, delimiter_len) {
+        if is_separator_line(peek_line) {
             break;
         }
 
