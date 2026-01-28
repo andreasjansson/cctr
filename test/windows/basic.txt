@@ -1,4 +1,4 @@
-%skip(Windows only - cannot run due to cmd.exe vs bash shell differences) if: uname
+%skip(Windows only) if: test "$OS" != "Windows_NT"
 
 ===
 echo simple string
