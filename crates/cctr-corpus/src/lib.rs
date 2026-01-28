@@ -374,7 +374,7 @@ fn description_line(input: &mut &str) -> ModalResult<String> {
     Ok(content.trim().to_string())
 }
 
-fn command_lines(input: &mut &str, delimiter_len: usize) -> ModalResult<String> {
+fn read_block_until_separator(input: &mut &str, delimiter_len: usize, allow_shorter: bool) -> Result<String, String> {
     let mut lines = Vec::new();
 
     loop {
@@ -383,41 +383,30 @@ fn command_lines(input: &mut &str, delimiter_len: usize) -> ModalResult<String> 
         }
 
         let peek_line = input.lines().next().unwrap_or("");
-        if is_separator_line_exact(peek_line, delimiter_len) {
-            break;
+
+        if is_any_separator_line(peek_line) {
+            let actual_len = peek_line.trim().len();
+            if actual_len == delimiter_len {
+                break;
+            }
+            if allow_shorter && actual_len < delimiter_len {
+                // Shorter separators are allowed in content when using longer delimiters
+                // Continue reading as content
+            } else {
+                let sep_char = if peek_line.trim().starts_with('=') { '=' } else { '-' };
+                return Err(format!(
+                    "delimiter length mismatch: expected {} '{}' characters but found {}",
+                    delimiter_len, sep_char, actual_len
+                ));
+            }
         }
 
-        let line = line_content.parse_next(input)?;
-        opt_newline.parse_next(input)?;
+        let line = line_content.parse_next(input).map_err(|_| "failed to read line".to_string())?;
+        opt_newline.parse_next(input).ok();
         lines.push(line);
     }
 
     while lines.last().is_some_and(|s| s.trim().is_empty()) {
-        lines.pop();
-    }
-
-    Ok(lines.join("\n"))
-}
-
-fn expected_block(input: &mut &str, delimiter_len: usize) -> ModalResult<String> {
-    let mut lines = Vec::new();
-
-    loop {
-        if input.is_empty() {
-            break;
-        }
-
-        let peek_line = input.lines().next().unwrap_or("");
-        if is_separator_line_exact(peek_line, delimiter_len) {
-            break;
-        }
-
-        let line = line_content.parse_next(input)?;
-        opt_newline.parse_next(input)?;
-        lines.push(line);
-    }
-
-    while lines.last() == Some(&"") {
         lines.pop();
     }
 
