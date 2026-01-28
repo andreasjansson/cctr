@@ -477,7 +477,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let command_start = state.current_line;
-    let command = command_lines(input, delimiter_len)?;
+    let command = command_lines(input)?;
     state.current_line = command_start + command.lines().count().max(1);
 
     if let Some(err) = input.lines().next().and_then(|l| check_dash_sep_exact(l, delimiter_len)) {
@@ -489,7 +489,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let expected_start = state.current_line;
-    let expected_output = expected_block(input, delimiter_len)?;
+    let expected_output = expected_block(input)?;
     let expected_lines = expected_output.lines().count();
     state.current_line =
         expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
