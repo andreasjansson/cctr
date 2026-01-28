@@ -425,7 +425,8 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
 
     let start_line = state.current_line;
 
-    header_sep.parse_next(input)?;
+    let delimiter_len = header_sep.parse_next(input)?;
+    state.delimiter_len = delimiter_len;
     opt_newline.parse_next(input)?;
     state.current_line += 1;
 
@@ -437,25 +438,27 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         state.current_line += 1;
     }
 
-    header_sep.parse_next(input)?;
+    header_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
     state.current_line += 1;
 
     let command_start = state.current_line;
-    let command = command_lines.parse_next(input)?;
+    let command = command_lines(input, delimiter_len)?;
     state.current_line = command_start + command.lines().count().max(1);
 
-    dash_sep.parse_next(input)?;
+    dash_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
     state.current_line += 1;
 
     let expected_start = state.current_line;
-    let expected_output = expected_block.parse_next(input)?;
+    let expected_output = expected_block(input, delimiter_len)?;
     let expected_lines = expected_output.lines().count();
     state.current_line =
         expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
 
-    let constraints = opt(where_section).parse_next(input)?.unwrap_or_default();
+    let constraints = opt(|i: &mut &str| where_section(i, delimiter_len))
+        .parse_next(input)?
+        .unwrap_or_default();
     if !constraints.is_empty() {
         state.current_line += 2 + constraints.len();
     }
