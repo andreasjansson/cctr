@@ -5,15 +5,15 @@ echo "hello"
 ---
 hello
 
-=====
-second test with longer delimiters
-=====
+===
+second test with standard delimiters
+===
 echo "world"
------
+---
 world
 
 ===
-back to standard delimiters
+third test
 ===
 echo "again"
 ---
