@@ -494,7 +494,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let command_start = state.current_line;
-    let command = match read_block_until_separator(input, delimiter_len, false) {
+    let command = match read_block_until_separator(input, delimiter_len, false /* is_expected_block */) {
         Ok(cmd) => cmd,
         Err(err) => {
             state.error_message = Some(err);
@@ -508,7 +508,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let expected_start = state.current_line;
-    let expected_output = match read_block_until_separator(input, delimiter_len, true) {
+    let expected_output = match read_block_until_separator(input, delimiter_len, true /* is_expected_block */) {
         Ok(output) => output,
         Err(err) => {
             state.error_message = Some(err);
