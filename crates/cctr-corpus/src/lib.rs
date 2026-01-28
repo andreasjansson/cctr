@@ -943,18 +943,19 @@ echo "---"
 
     #[test]
     fn test_dash_separators_in_output() {
+        // With 5-char delimiters, shorter --- and ---- can appear in output
+        // But ----- is the closing delimiter so it terminates the block
         let content = r#"=====
 test with various dash separators in output
 =====
-printf "---\n----\n-----\n"
+printf "---\n----\n"
 -----
 ---
 ----
------
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "---\n----\n-----");
+        assert_eq!(file.tests[0].expected_output, "---\n----");
     }
 
     #[test]
