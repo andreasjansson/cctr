@@ -1,0 +1,20 @@
+===
+first test with standard delimiters
+===
+echo "hello"
+---
+hello
+
+=====
+second test with longer delimiters
+=====
+echo "world"
+-----
+world
+
+===
+back to standard delimiters
+===
+echo "again"
+---
+again
