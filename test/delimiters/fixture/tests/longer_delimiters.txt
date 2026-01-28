@@ -1,15 +1,15 @@
 ====
-test with --- in output using longer delimiters
+test with --- in output using 4-char delimiters
 ====
 echo "---"
 ----
 ---
 
-====
-test with ---- in output using even longer delimiters
-====
+=====
+test with ---- in output using 5-char delimiters
+=====
 echo "----"
-----
+-----
 ----
 
 =====
