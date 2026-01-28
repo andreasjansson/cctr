@@ -443,13 +443,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let command_start = state.current_line;
-    let command = match read_block_until_separator(input, delimiter_len, false /* is_expected_block */) {
-        Ok(cmd) => cmd,
-        Err(err) => {
-            state.error_message = Some(err);
-            return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
-        }
-    };
+    let command = read_block_until_separator(input, delimiter_len);
     state.current_line = command_start + command.lines().count().max(1);
 
     dash_sep_exact(input, delimiter_len)?;
@@ -457,13 +451,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let expected_start = state.current_line;
-    let expected_output = match read_block_until_separator(input, delimiter_len, true /* is_expected_block */) {
-        Ok(output) => output,
-        Err(err) => {
-            state.error_message = Some(err);
-            return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
-        }
-    };
+    let expected_output = read_block_until_separator(input, delimiter_len);
     let expected_lines = expected_output.lines().count();
     state.current_line =
         expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
