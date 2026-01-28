@@ -74,7 +74,16 @@ pub enum ProgressEvent {
 }
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
-    let mut cmd = if cfg!(windows) {
+    run_command_with_shell(command, work_dir, env_vars, cfg!(windows))
+}
+
+fn run_command_with_shell(
+    command: &str,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    use_cmd: bool,
+) -> (String, i32) {
+    let mut cmd = if use_cmd {
         let mut c = Command::new("cmd");
         c.arg("/C").arg(command);
         c
