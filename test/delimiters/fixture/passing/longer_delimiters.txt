@@ -1,0 +1,32 @@
+====
+test with --- in output using 4-char delimiters
+====
+echo "---"
+----
+---
+
+=====
+test with ---- in output using 5-char delimiters
+=====
+echo "----"
+-----
+----
+
+=====
+test with multiple dash lengths in output
+=====
+printf '%s\n%s\n' '---' '----'
+-----
+---
+----
+
+====
+test with constraints and longer delimiters
+====
+echo "count: 42"
+----
+count: {{ n: number }}
+----
+where
+* n > 0
+* n < 100
