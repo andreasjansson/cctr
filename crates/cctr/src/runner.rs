@@ -476,10 +476,20 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
         .canonicalize()
         .unwrap_or_else(|_| temp_dir.path().to_path_buf());
 
-    let env_vars = vec![(
-        "CCTR_WORK_DIR".to_string(),
-        work_dir.to_string_lossy().to_string(),
-    )];
+    let test_path = std::env::current_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from("."));
+    let env_vars = vec![
+        (
+            "CCTR_WORK_DIR".to_string(),
+            work_dir.to_string_lossy().to_string(),
+        ),
+        (
+            "CCTR_TEST_PATH".to_string(),
+            test_path.to_string_lossy().to_string(),
+        ),
+    ];
 
     let mut results = Vec::new();
     for test in corpus.tests {
