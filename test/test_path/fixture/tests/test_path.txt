@@ -1,0 +1,21 @@
+===
+CCTR_TEST_PATH is set
+===
+test -n "$CCTR_TEST_PATH" && echo "set"
+---
+set
+
+===
+CCTR_TEST_PATH points to original test directory
+===
+test -d "$CCTR_TEST_PATH" && echo "exists"
+---
+exists
+
+===
+CCTR_TEST_PATH is different from CCTR_WORK_DIR
+===
+test "$CCTR_TEST_PATH" != "$CCTR_WORK_DIR" && echo "different"
+---
+different
+
