@@ -1,5 +1,5 @@
 ===
-longer delimiters allow --- in content
+longer delimiters allow --- and ---- in content
 ===
 cctr $CCTR_FIXTURE_DIR/passing --no-color 2>&1 | tail -1
 ---
@@ -13,15 +13,8 @@ cctr $CCTR_FIXTURE_DIR/mixed --no-color 2>&1 | tail -1
 All 3 tests passed in {{ t: number }}s
 
 ===
-mismatched header delimiter shows helpful error
+mismatched header delimiter fails to parse
 ===
 cctr $CCTR_FIXTURE_DIR/mismatch_header --no-color 2>&1 | grep "delimiter length mismatch"
 ---
   parse error at line 3: delimiter length mismatch: expected 4 '=' characters but found 3
-
-===
-mismatched dash delimiter shows helpful error
-===
-cctr $CCTR_FIXTURE_DIR/mismatch_dash --no-color 2>&1 | grep "delimiter length mismatch"
----
-  parse error at line 4: delimiter length mismatch: expected 4 '-' characters but found 3
