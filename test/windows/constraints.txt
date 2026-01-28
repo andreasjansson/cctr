@@ -1,4 +1,4 @@
-%skip(Windows only) if: test "$OS" != "Windows_NT"
+%skip(Windows only) if: test -e /bin/sh
 
 ===
 number comparison greater than
