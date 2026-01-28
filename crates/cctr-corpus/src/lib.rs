@@ -472,27 +472,31 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     state.current_line += 1;
 
     let command_start = state.current_line;
-    let command = command_lines(input, delimiter_len)?;
+    let command = match read_block_until_separator(input, delimiter_len, false) {
+        Ok(cmd) => cmd,
+        Err(err) => {
+            state.error_message = Some(err);
+            return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+        }
+    };
     state.current_line = command_start + command.lines().count().max(1);
 
-    if let Some(err) = input.lines().next().and_then(|l| check_dash_sep_exact(l, delimiter_len)) {
-        state.error_message = Some(err);
-        return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
-    }
     dash_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
     state.current_line += 1;
 
     let expected_start = state.current_line;
-    let expected_output = expected_block(input, delimiter_len)?;
+    let expected_output = match read_block_until_separator(input, delimiter_len, true) {
+        Ok(output) => output,
+        Err(err) => {
+            state.error_message = Some(err);
+            return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+        }
+    };
     let expected_lines = expected_output.lines().count();
     state.current_line =
         expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
 
-    if let Some(err) = input.lines().next().and_then(|l| check_dash_sep_exact(l, delimiter_len)) {
-        state.error_message = Some(err);
-        return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
-    }
     let constraints = opt(|i: &mut &str| where_section(i, delimiter_len))
         .parse_next(input)?
         .unwrap_or_default();
