@@ -1,25 +1,23 @@
 ====
-test with standard delimiters in output
+test with --- in output using longer delimiters
 ====
 echo "---"
 ----
 ---
 
 ====
-test with === in output
+test with ---- in output using even longer delimiters
 ====
-echo "==="
+echo "----"
 ----
-===
+----
 
 =====
-test with longer delimiter allows shorter in content
+test with multiple dash lengths in output
 =====
-printf "===\n---\n====\n----\n"
+printf "---\n----\n"
 -----
-===
 ---
-====
 ----
 
 ====
