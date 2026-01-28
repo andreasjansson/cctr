@@ -909,4 +909,159 @@ world
         assert!(file.tests[0].start_line < file.tests[0].end_line);
         assert!(file.tests[1].start_line < file.tests[1].end_line);
     }
+
+    #[test]
+    fn test_longer_delimiters() {
+        let content = r#"=====
+test with longer delimiters
+=====
+echo hello
+-----
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].name, "test with longer delimiters");
+        assert_eq!(file.tests[0].command, "echo hello");
+        assert_eq!(file.tests[0].expected_output, "hello");
+    }
+
+    #[test]
+    fn test_dash_separator_in_output() {
+        let content = r#"====
+test with --- in output
+====
+echo "---"
+----
+---
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_output, "---");
+    }
+
+    #[test]
+    fn test_equals_separator_in_command() {
+        let content = r#"====
+test with === in command
+====
+echo "==="
+----
+===
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].command, r#"echo "===""#);
+        assert_eq!(file.tests[0].expected_output, "===");
+    }
+
+    #[test]
+    fn test_mixed_separator_lengths_in_content() {
+        let content = r#"=====
+test with various separators in output
+=====
+printf "===\n---\n====\n----\n"
+-----
+===
+---
+====
+----
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_output, "===\n---\n====\n----");
+    }
+
+    #[test]
+    fn test_longer_delimiters_with_constraints() {
+        let content = r#"====
+test with constraints
+====
+echo "count: 42"
+----
+count: {{ n: number }}
+----
+where
+* n > 0
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].constraints.len(), 1);
+        assert_eq!(file.tests[0].constraints[0], "n > 0");
+    }
+
+    #[test]
+    fn test_mismatched_header_delimiter_error() {
+        let content = r#"====
+test name
+===
+echo hello
+---
+hello
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("delimiter length mismatch"),
+            "Error should mention delimiter mismatch: {}",
+            err
+        );
+        assert!(
+            err.to_string().contains("expected 4") && err.to_string().contains("found 3"),
+            "Error should mention expected 4 and found 3: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_mismatched_dash_delimiter_error() {
+        let content = r#"====
+test name
+====
+echo hello
+---
+hello
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("delimiter length mismatch"),
+            "Error should mention delimiter mismatch: {}",
+            err
+        );
+        assert!(
+            err.to_string().contains("expected 4") && err.to_string().contains("found 3"),
+            "Error should mention expected 4 and found 3: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_multiple_tests_different_delimiter_lengths() {
+        let content = r#"===
+first test with short delimiters
+===
+echo "short"
+---
+short
+
+=====
+second test with long delimiters and --- in output
+=====
+echo "---"
+-----
+---
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].name, "first test with short delimiters");
+        assert_eq!(file.tests[0].expected_output, "short");
+        assert_eq!(
+            file.tests[1].name,
+            "second test with long delimiters and --- in output"
+        );
+        assert_eq!(file.tests[1].expected_output, "---");
+    }
 }
