@@ -1,0 +1,6 @@
+===
+setup that fails
+===
+echo "wrong output"
+---
+expected output
