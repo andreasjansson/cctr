@@ -699,6 +699,7 @@ cctr injects special environment variables that your commands can use:
 |----------|-------------|
 | `$CCTR_WORK_DIR` | Temporary directory where tests run |
 | `$CCTR_FIXTURE_DIR` | Location of copied fixture files (same as `CCTR_WORK_DIR` when fixture exists) |
+| `$CCTR_TEST_PATH` | Original test directory in the project tree (not the temp directory) |
 
 Use `$CCTR_FIXTURE_DIR` to reference test data:
 
