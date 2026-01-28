@@ -1,4 +1,15 @@
 ===
+debug fixture dir
+===
+echo "FIXTURE: $CCTR_FIXTURE_DIR" && ls -la "$CCTR_FIXTURE_DIR"
+---
+FIXTURE: {{ fixture_dir: string }}
+{{ ls_output: string }}
+---
+where
+* fixture_dir contains "cctr"
+
+===
 longer delimiters allow --- in content
 ===
 cctr $CCTR_FIXTURE_DIR/passing --no-color 2>&1 | tail -1
