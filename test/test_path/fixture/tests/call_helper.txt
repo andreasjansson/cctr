@@ -1,0 +1,10 @@
+===
+can call script from CCTR_TEST_PATH
+===
+"$CCTR_TEST_PATH/helper.sh"
+---
+helper ran from {{ path }}
+---
+where
+* len(path) > 0
+
