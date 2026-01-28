@@ -3,20 +3,14 @@ longer delimiters allow --- in content
 ===
 cctr $CCTR_FIXTURE_DIR/passing --no-color 2>&1 | tail -1
 ---
-All 4 tests passed in {{ t }}s
----
-where
-* t: number
+All 4 tests passed in {{ t: number }}s
 
 ===
 mixed delimiter lengths in same file
 ===
 cctr $CCTR_FIXTURE_DIR/mixed --no-color 2>&1 | tail -1
 ---
-All 3 tests passed in {{ t }}s
----
-where
-* t: number
+All 3 tests passed in {{ t: number }}s
 
 ===
 mismatched header delimiter shows helpful error
