@@ -355,7 +355,7 @@ fn description_line(input: &mut &str) -> ModalResult<String> {
     Ok(content.trim().to_string())
 }
 
-fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expected_block: bool) -> Result<String, String> {
+fn read_block_until_separator(input: &mut &str, delimiter_len: usize) -> String {
     let mut lines = Vec::new();
 
     loop {
@@ -366,45 +366,13 @@ fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expecte
         let peek_line = input.lines().next().unwrap_or("");
         let trimmed = peek_line.trim();
 
-        if is_any_separator_line(peek_line) {
-            let actual_len = trimmed.len();
-            let is_header = trimmed.chars().all(|c| c == '=');
-
-            if actual_len == delimiter_len {
-                // Exact match - this is our terminator
-                break;
-            }
-
-            if is_expected_block {
-                // In expected block:
-                // - Shorter separators (both === and ---) are allowed as content
-                // - === of same or longer length signals a new test - stop here
-                // - --- of same length is the closing delimiter
-                // - Longer --- is an error (mismatched where section delimiter)
-                if actual_len < delimiter_len {
-                    // Shorter separator in content - keep reading
-                } else if is_header {
-                    // === of same or longer length means new test starting - stop without error
-                    break;
-                } else {
-                    // Longer --- is a mismatch
-                    return Err(format!(
-                        "delimiter length mismatch: expected {} '-' characters but found {}",
-                        delimiter_len, actual_len
-                    ));
-                }
-            } else {
-                // In command block:
-                // - Any separator of wrong length is an error
-                let sep_char = if is_header { '=' } else { '-' };
-                return Err(format!(
-                    "delimiter length mismatch: expected {} '{}' characters but found {}",
-                    delimiter_len, sep_char, actual_len
-                ));
-            }
+        // Only exact-length separators terminate the block
+        // Any other length (shorter or longer) is treated as content
+        if is_any_separator_line(peek_line) && trimmed.len() == delimiter_len {
+            break;
         }
 
-        let line = line_content.parse_next(input).map_err(|_| "failed to read line".to_string())?;
+        let line = line_content.parse_next(input).unwrap_or("");
         opt_newline.parse_next(input).ok();
         lines.push(line);
     }
@@ -413,7 +381,7 @@ fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expecte
         lines.pop();
     }
 
-    Ok(lines.join("\n"))
+    lines.join("\n")
 }
 
 fn constraint_line(input: &mut &str) -> ModalResult<String> {
