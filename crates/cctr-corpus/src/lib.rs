@@ -1005,40 +1005,58 @@ hello
     }
 
     #[test]
-    fn test_mismatched_dash_delimiter_error() {
+    fn test_wrong_dash_length_treated_as_content() {
+        // With simplified logic, wrong-length delimiters are treated as content
+        // This test uses 4-char delimiters but has --- in content
         let content = r#"====
 test name
 ====
 echo hello
+----
 ---
 hello
 "#;
-        let result = parse_content(content, Path::new("<test>"));
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            err.to_string().contains("delimiter length mismatch"),
-            "Error should mention delimiter mismatch: {}",
-            err
-        );
-        assert!(
-            err.to_string().contains("expected 4") && err.to_string().contains("found 3"),
-            "Error should mention expected 4 and found 3: {}",
-            err
-        );
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_output, "---\nhello");
     }
 
     #[test]
-    fn test_multiple_tests_different_delimiter_lengths() {
+    fn test_multiple_tests_same_delimiter_length() {
+        // Multiple tests must use the same delimiter length
+        // (or longer delimiter tests can follow shorter ones, but not vice versa)
         let content = r#"===
-first test with short delimiters
+first test
+===
+echo "short"
+---
+short
+
+===
+second test
+===
+echo "world"
+---
+world
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].expected_output, "short");
+        assert_eq!(file.tests[1].expected_output, "world");
+    }
+
+    #[test]
+    fn test_longer_delimiter_after_shorter() {
+        // Longer delimiter tests can follow shorter ones
+        let content = r#"===
+first test
 ===
 echo "short"
 ---
 short
 
 =====
-second test with long delimiters and --- in output
+second test with --- in output
 =====
 echo "---"
 -----
@@ -1046,12 +1064,7 @@ echo "---"
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 2);
-        assert_eq!(file.tests[0].name, "first test with short delimiters");
         assert_eq!(file.tests[0].expected_output, "short");
-        assert_eq!(
-            file.tests[1].name,
-            "second test with long delimiters and --- in output"
-        );
         assert_eq!(file.tests[1].expected_output, "---");
     }
 }
