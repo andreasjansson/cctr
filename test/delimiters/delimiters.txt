@@ -1,9 +1,7 @@
 ===
-debug - check file size
+debug - which cctr and version
 ===
-wc -c < "$CCTR_FIXTURE_DIR/passing/longer_delimiters.txt"
+which cctr && cctr --version
 ---
-{{ size: number }}
----
-where
-* size > 300
+{{ path: string }}
+cctr {{ version: string }}
