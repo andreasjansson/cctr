@@ -1,4 +1,4 @@
-%skip(Windows only) if: which bash
+%skip(Windows only) if: test "$OS" != "Windows_NT"
 
 ===
 echo simple string
