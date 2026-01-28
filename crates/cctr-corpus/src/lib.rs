@@ -1046,8 +1046,9 @@ world
     }
 
     #[test]
-    fn test_longer_delimiter_after_shorter() {
-        // Longer delimiter tests can follow shorter ones
+    fn test_all_tests_must_use_same_delimiter_length() {
+        // With exact-match logic, all tests in a file must use the same delimiter length
+        // A longer delimiter after shorter is treated as content of the first test
         let content = r#"===
 first test
 ===
@@ -1056,15 +1057,12 @@ echo "short"
 short
 
 =====
-second test with --- in output
+this looks like a test but is content
 =====
-echo "---"
------
----
 "#;
         let file = parse_test(content);
-        assert_eq!(file.tests.len(), 2);
-        assert_eq!(file.tests[0].expected_output, "short");
-        assert_eq!(file.tests[1].expected_output, "---");
+        assert_eq!(file.tests.len(), 1);
+        // The ===== block is included as content
+        assert!(file.tests[0].expected_output.contains("====="));
     }
 }
