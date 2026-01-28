@@ -1,0 +1,6 @@
+====
+test with mismatched dash
+====
+echo hello
+---
+hello
