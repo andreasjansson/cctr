@@ -31,4 +31,8 @@ pub struct Cli {
     /// Disable colored output
     #[arg(long)]
     pub no_color: bool,
+
+    /// Debug skip condition evaluation
+    #[arg(long, hide = true)]
+    pub debug_skip: bool,
 }
