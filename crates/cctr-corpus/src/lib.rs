@@ -233,18 +233,27 @@ fn extract_variables_from_expected(expected: &str) -> Result<Vec<VariableDecl>, 
 
 // ============ Winnow Parsers ============
 
-fn header_sep(input: &mut &str) -> ModalResult<()> {
+fn header_sep(input: &mut &str) -> ModalResult<usize> {
     let line: &str = take_while(1.., '=').parse_next(input)?;
     if line.len() >= 3 {
+        Ok(line.len())
+    } else {
+        Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
+    }
+}
+
+fn header_sep_exact(input: &mut &str, len: usize) -> ModalResult<()> {
+    let line: &str = take_while(1.., '=').parse_next(input)?;
+    if line.len() == len {
         Ok(())
     } else {
         Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
     }
 }
 
-fn dash_sep(input: &mut &str) -> ModalResult<()> {
+fn dash_sep_exact(input: &mut &str, len: usize) -> ModalResult<()> {
     let line: &str = take_while(1.., '-').parse_next(input)?;
-    if line.len() >= 3 {
+    if line.len() == len {
         Ok(())
     } else {
         Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
