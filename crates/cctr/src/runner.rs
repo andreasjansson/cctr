@@ -109,8 +109,8 @@ fn should_skip(
     skip: &SkipDirective,
     work_dir: &Path,
     env_vars: &[(String, String)],
-    debug: bool,
 ) -> Option<String> {
+    let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok();
     match &skip.condition {
         Some(condition) => {
             let (output, exit_code) = run_command(condition, work_dir, env_vars);
