@@ -1,0 +1,34 @@
+====
+test with standard delimiters in output
+====
+echo "---"
+----
+---
+
+====
+test with === in output
+====
+echo "==="
+----
+===
+
+=====
+test with longer delimiter allows shorter in content
+=====
+printf "===\n---\n====\n----\n"
+-----
+===
+---
+====
+----
+
+====
+test with constraints and longer delimiters
+====
+echo "count: 42"
+----
+count: {{ n: number }}
+----
+where
+* n > 0
+* n < 100
