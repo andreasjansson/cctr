@@ -377,14 +377,14 @@ fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expecte
 
             if is_expected_block {
                 // In expected block:
-                // - Shorter separators (both === and ---) are allowed as content
-                // - Longer === signals a new test - stop here (don't error)
+                // - Any === (regardless of length) signals a new test - stop here
+                // - Shorter --- are allowed as content (using longer delimiters)
                 // - Longer --- is an error (mismatched where section delimiter)
-                if actual_len < delimiter_len {
-                    // Shorter separator in content - keep reading
-                } else if is_header {
-                    // Longer === means new test starting - stop without error
+                if is_header {
+                    // Any === means new test starting - stop without error
                     break;
+                } else if actual_len < delimiter_len {
+                    // Shorter --- in content - keep reading
                 } else {
                     // Longer --- is a mismatch
                     return Err(format!(
