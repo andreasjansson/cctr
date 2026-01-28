@@ -116,8 +116,8 @@ fn should_skip(
             let (output, exit_code) = run_command(condition, work_dir, env_vars);
             if debug {
                 eprintln!(
-                    "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}",
-                    condition, exit_code, output
+                    "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
+                    condition, exit_code, output, cfg!(windows)
                 );
             }
             if exit_code == 0 {
