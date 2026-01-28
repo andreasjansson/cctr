@@ -723,6 +723,17 @@ echo "hello" > "$CCTR_WORK_DIR/temp.txt" && cat "$CCTR_WORK_DIR/temp.txt"
 hello
 ```
 
+Use `$CCTR_TEST_PATH` to call scripts or access files from the original project tree:
+
+```
+===
+run helper script from project
+===
+"$CCTR_TEST_PATH/helper.sh"
+---
+helper output
+```
+
 When a fixture exists, `CCTR_FIXTURE_DIR` and `CCTR_WORK_DIR` point to the same location (the fixture is copied into the work directory).
 
 Standard shell environment variables (`$HOME`, `$USER`, `$PATH`, etc.) are also available as usual.
