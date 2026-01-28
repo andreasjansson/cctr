@@ -67,7 +67,10 @@ pub enum ProgressEvent {
         name: String,
     },
     TestComplete(Box<TestResult>),
-    Skip { suite: String, reason: String },
+    Skip {
+        suite: String,
+        reason: String,
+    },
 }
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {

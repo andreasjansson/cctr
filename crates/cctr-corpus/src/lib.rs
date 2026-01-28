@@ -434,7 +434,11 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         state.current_line += 1;
     }
 
-    if let Some(err) = input.lines().next().and_then(|l| check_header_sep_exact(l, delimiter_len)) {
+    if let Some(err) = input
+        .lines()
+        .next()
+        .and_then(|l| check_header_sep_exact(l, delimiter_len))
+    {
         state.error_message = Some(err);
         return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
     }
