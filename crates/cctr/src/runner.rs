@@ -109,10 +109,17 @@ fn should_skip(
     skip: &SkipDirective,
     work_dir: &Path,
     env_vars: &[(String, String)],
+    debug: bool,
 ) -> Option<String> {
     match &skip.condition {
         Some(condition) => {
-            let (_, exit_code) = run_command(condition, work_dir, env_vars);
+            let (output, exit_code) = run_command(condition, work_dir, env_vars);
+            if debug {
+                eprintln!(
+                    "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}",
+                    condition, exit_code, output
+                );
+            }
             if exit_code == 0 {
                 Some(
                     skip.message
