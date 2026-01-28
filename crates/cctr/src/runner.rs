@@ -122,7 +122,9 @@ fn should_skip(
     let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok();
     match &skip.condition {
         Some(condition) => {
-            let (output, exit_code) = run_command(condition, work_dir, env_vars);
+            // Always use bash for skip conditions since they use bash syntax
+            // On Windows, this requires bash to be available (e.g., Git Bash)
+            let (output, exit_code) = run_command_with_shell(condition, work_dir, env_vars, false);
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
