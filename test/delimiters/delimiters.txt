@@ -1,8 +1,9 @@
 ===
-debug - run cctr list on passing
+debug - check file size
 ===
-cctr $CCTR_FIXTURE_DIR/passing --no-color -l 2>&1
+wc -c < "$CCTR_FIXTURE_DIR/passing/longer_delimiters.txt"
 ---
-passing
-  longer_delimiters: 4 test(s)
-{{ tests: string }}
+{{ size: number }}
+---
+where
+* size > 300
