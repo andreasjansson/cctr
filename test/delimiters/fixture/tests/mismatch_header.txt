@@ -1,0 +1,6 @@
+====
+test with mismatched header
+===
+echo hello
+---
+hello
