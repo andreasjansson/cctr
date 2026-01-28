@@ -46,3 +46,24 @@ cctr $CCTR_FIXTURE_DIR/tests --list
 tests [setup, teardown]
   use_setup: 1 test(s)
     - verify setup ran
+
+===
+setup failure causes non-zero exit code
+===
+cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1; echo "exit: $?"
+---
+F
+
+⊘ failing_setup: Setup failed (1 test skipped)
+
+Failures:
+
+✗ failing_setup/_setup: setup that fails
+  {{ path }}
+  Command: echo "wrong output"
+
+-expected output
++wrong output
+
+Summary: 0 passed, 0 failed, 1 skipped in {{ time }}s
+exit: 1
