@@ -1,0 +1,42 @@
+%skip(Unix only) if: test "$OS" = "Windows_NT"
+===
+CCTR_TEST_PATH tests pass
+===
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
+---
+....
+
+✓ tests: 4/4 tests passed in {{ suite_time }}s
+
+All 4 tests passed in {{ total_time }}s
+---
+where
+* suite_time >= 0
+* total_time >= 0
+
+===
+CCTR_TEST_PATH verbose output
+===
+cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
+---
+starting tests/call_helper: can call script from CCTR_TEST_PATH
+✓ tests/call_helper: can call script from CCTR_TEST_PATH {{ t1 }}s
+starting tests/test_path: CCTR_TEST_PATH is set
+✓ tests/test_path: CCTR_TEST_PATH is set {{ t2 }}s
+starting tests/test_path: CCTR_TEST_PATH points to original test directory
+✓ tests/test_path: CCTR_TEST_PATH points to original test directory {{ t3 }}s
+starting tests/test_path: CCTR_TEST_PATH is different from CCTR_WORK_DIR
+✓ tests/test_path: CCTR_TEST_PATH is different from CCTR_WORK_DIR {{ t4 }}s
+
+✓ tests: 4/4 tests passed in {{ suite_time }}s
+
+All 4 tests passed in {{ total_time }}s
+---
+where
+* t1 >= 0
+* t2 >= 0
+* t3 >= 0
+* t4 >= 0
+* suite_time >= 0
+* total_time >= 0
+
