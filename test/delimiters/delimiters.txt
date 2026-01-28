@@ -1,5 +1,5 @@
 ===
-longer delimiters allow standard separators in content
+longer delimiters allow --- in content
 ===
 cctr $CCTR_FIXTURE_DIR/tests/longer_delimiters.txt --no-color 2>&1 | tail -1
 ---
@@ -21,13 +21,13 @@ where
 ===
 mismatched header delimiter shows helpful error
 ===
-cctr $CCTR_FIXTURE_DIR/tests/mismatch_header.txt --no-color 2>&1
+cctr $CCTR_FIXTURE_DIR/tests/mismatch_header.txt --no-color 2>&1 | grep "delimiter length mismatch"
 ---
-Error: parse error at line 3: delimiter length mismatch: expected 4 '=' characters but found 3
+  parse error at line 3: delimiter length mismatch: expected 4 '=' characters but found 3
 
 ===
 mismatched dash delimiter shows helpful error
 ===
-cctr $CCTR_FIXTURE_DIR/tests/mismatch_dash.txt --no-color 2>&1
+cctr $CCTR_FIXTURE_DIR/tests/mismatch_dash.txt --no-color 2>&1 | grep "delimiter length mismatch"
 ---
-Error: parse error at line 5: delimiter length mismatch: expected 4 '-' characters but found 3
+  parse error at line 5: delimiter length mismatch: expected 4 '-' characters but found 3
