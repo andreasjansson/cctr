@@ -100,9 +100,7 @@ fn main() -> anyhow::Result<()> {
     let elapsed = start_time.elapsed();
     output.print_results(&results, elapsed, cli.update);
 
-    let all_passed = results
-        .iter()
-        .all(|r| r.passed() || r.setup_error.is_some());
+    let all_passed = results.iter().all(|r| r.passed());
 
     std::process::exit(if all_passed { 0 } else { 1 });
 }
