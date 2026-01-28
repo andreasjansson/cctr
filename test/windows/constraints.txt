@@ -1,4 +1,4 @@
-%skip(Windows only) if: test -e /bin/sh
+%skip(Windows only) if: which bash
 
 ===
 number comparison greater than
