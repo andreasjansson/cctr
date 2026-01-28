@@ -1,0 +1,6 @@
+===
+test that would pass
+===
+echo hello
+---
+hello
