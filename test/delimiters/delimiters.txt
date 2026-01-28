@@ -1,38 +1,8 @@
 ===
-debug - list passing directory contents
+debug - run cctr list on passing
 ===
-ls -la "$CCTR_FIXTURE_DIR/passing/" && cat "$CCTR_FIXTURE_DIR/passing/longer_delimiters.txt"
+cctr $CCTR_FIXTURE_DIR/passing --no-color -l 2>&1
 ---
-{{ ls: string }}
-====
-test with --- in output using 4-char delimiters
-====
-echo "---"
-----
----
-
-=====
-test with ---- in output using 5-char delimiters
-=====
-echo "----"
------
-----
-
-=====
-test with multiple dash lengths in output
-=====
-printf '%s\n%s\n' '---' '----'
------
----
-----
-
-====
-test with constraints and longer delimiters
-====
-echo "count: 42"
-----
-count: {{ n: number }}
-----
-where
-* n > 0
-* n < 100
+passing
+  longer_delimiters: 4 test(s)
+{{ tests: string }}
