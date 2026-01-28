@@ -1,0 +1,27 @@
+===
+show OS environment variable
+===
+echo OS=%OS%
+---
+OS={{ os }}
+
+===
+check if test command exists
+===
+where test 2>nul && echo "test exists" || echo "test not found"
+---
+{{ output }}
+
+===
+run test -e /bin/sh directly
+===
+test -e /bin/sh && echo "exists" || echo "not exists"
+---
+{{ result }}
+
+===
+show what shell we are using
+===
+echo %COMSPEC%
+---
+{{ shell }}
