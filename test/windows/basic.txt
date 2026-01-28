@@ -1,4 +1,4 @@
-%skip(Windows only) if: test -e /bin/sh
+%skip(Windows only) if: which bash
 
 ===
 echo simple string
