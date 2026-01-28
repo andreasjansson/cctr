@@ -246,6 +246,32 @@ fn header_sep(input: &mut &str) -> ModalResult<usize> {
     }
 }
 
+fn check_header_sep_exact(line: &str, expected_len: usize) -> Option<String> {
+    let trimmed = line.trim();
+    if trimmed.chars().all(|c| c == '=') && trimmed.len() >= 3 && trimmed.len() != expected_len {
+        Some(format!(
+            "delimiter length mismatch: expected {} '=' characters but found {}",
+            expected_len,
+            trimmed.len()
+        ))
+    } else {
+        None
+    }
+}
+
+fn check_dash_sep_exact(line: &str, expected_len: usize) -> Option<String> {
+    let trimmed = line.trim();
+    if trimmed.chars().all(|c| c == '-') && trimmed.len() >= 3 && trimmed.len() != expected_len {
+        Some(format!(
+            "delimiter length mismatch: expected {} '-' characters but found {}",
+            expected_len,
+            trimmed.len()
+        ))
+    } else {
+        None
+    }
+}
+
 fn header_sep_exact(input: &mut &str, len: usize) -> ModalResult<()> {
     let line: &str = take_while(1.., '=').parse_next(input)?;
     if line.len() == len {
