@@ -126,6 +126,7 @@ struct ParseState<'a> {
     input: &'a str,
     path: &'a Path,
     current_line: usize,
+    delimiter_len: usize,
 }
 
 impl<'a> ParseState<'a> {
@@ -134,6 +135,7 @@ impl<'a> ParseState<'a> {
             input,
             path,
             current_line: 1,
+            delimiter_len: 3,
         }
     }
 }
