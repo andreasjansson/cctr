@@ -362,23 +362,7 @@ Content
 More content
 ```
 
-Different tests in the same file can use different delimiter lengths:
-
-```
-===
-normal test
-===
-echo "hello"
----
-hello
-
-=====
-test with dashes in output
-=====
-echo "---"
------
----
-```
+**Important:** All tests in a file must use the same delimiter length. Only exact-length matches are recognized as delimiters - any other length is treated as content.
 
 **Note:** While `---` can appear in expected output when using longer delimiters, `===` always signals the start of a new test regardless of delimiter length.
 
