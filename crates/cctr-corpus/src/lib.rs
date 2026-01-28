@@ -115,7 +115,9 @@ pub fn parse_content(content: &str, path: &Path) -> Result<CorpusFile, ParseErro
         Ok(file) => Ok(file),
         Err(_) => Err(ParseError::Parse {
             line: state.current_line,
-            message: "failed to parse corpus file".to_string(),
+            message: state
+                .error_message
+                .unwrap_or_else(|| "failed to parse corpus file".to_string()),
         }),
     }
 }
