@@ -15,7 +15,7 @@ echo "----"
 =====
 test with multiple dash lengths in output
 =====
-printf "---\n----\n"
+printf '%s\n%s\n' '---' '----'
 -----
 ---
 ----
