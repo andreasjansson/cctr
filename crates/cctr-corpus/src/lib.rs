@@ -942,35 +942,43 @@ echo "---"
     }
 
     #[test]
-    fn test_equals_separator_in_command() {
-        let content = r#"====
-test with === in command
-====
-echo "==="
+    fn test_dash_separators_in_output() {
+        let content = r#"=====
+test with various dash separators in output
+=====
+printf "---\n----\n-----\n"
+-----
+---
 ----
-===
+-----
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].command, r#"echo "===""#);
-        assert_eq!(file.tests[0].expected_output, "===");
+        assert_eq!(file.tests[0].expected_output, "---\n----\n-----");
     }
 
     #[test]
-    fn test_mixed_separator_lengths_in_content() {
-        let content = r#"=====
-test with various separators in output
-=====
-printf "===\n---\n====\n----\n"
------
-===
----
+    fn test_equals_in_output_ends_block() {
+        // === in expected output always signals a new test, even with longer delimiters
+        // This allows mixing tests with different delimiter lengths in the same file
+        let content = r#"====
+first test
 ====
+echo "hello"
 ----
+hello
+
+===
+second test uses shorter delimiters
+===
+echo "world"
+---
+world
 "#;
         let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "===\n---\n====\n----");
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].expected_output, "hello");
+        assert_eq!(file.tests[1].expected_output, "world");
     }
 
     #[test]
