@@ -374,7 +374,7 @@ fn description_line(input: &mut &str) -> ModalResult<String> {
     Ok(content.trim().to_string())
 }
 
-fn read_block_until_separator(input: &mut &str, delimiter_len: usize, allow_shorter: bool) -> Result<String, String> {
+fn read_block_until_separator(input: &mut &str, delimiter_len: usize, is_expected_block: bool) -> Result<String, String> {
     let mut lines = Vec::new();
 
     loop {
@@ -383,17 +383,39 @@ fn read_block_until_separator(input: &mut &str, delimiter_len: usize, allow_shor
         }
 
         let peek_line = input.lines().next().unwrap_or("");
+        let trimmed = peek_line.trim();
 
         if is_any_separator_line(peek_line) {
-            let actual_len = peek_line.trim().len();
+            let actual_len = trimmed.len();
+            let is_header = trimmed.chars().all(|c| c == '=');
+            let is_dash = trimmed.chars().all(|c| c == '-');
+
             if actual_len == delimiter_len {
+                // Exact match - this is our terminator
                 break;
             }
-            if allow_shorter && actual_len < delimiter_len {
-                // Shorter separators are allowed in content when using longer delimiters
-                // Continue reading as content
+
+            if is_expected_block {
+                // In expected block:
+                // - Shorter separators (both === and ---) are allowed as content
+                // - Longer === signals a new test - stop here (don't error)
+                // - Longer --- is an error (mismatched where section delimiter)
+                if actual_len < delimiter_len {
+                    // Shorter separator in content - keep reading
+                } else if is_header {
+                    // Longer === means new test starting - stop without error
+                    break;
+                } else {
+                    // Longer --- is a mismatch
+                    return Err(format!(
+                        "delimiter length mismatch: expected {} '-' characters but found {}",
+                        delimiter_len, actual_len
+                    ));
+                }
             } else {
-                let sep_char = if peek_line.trim().starts_with('=') { '=' } else { '-' };
+                // In command block:
+                // - Any separator of wrong length is an error
+                let sep_char = if is_header { '=' } else { '-' };
                 return Err(format!(
                     "delimiter length mismatch: expected {} '{}' characters but found {}",
                     delimiter_len, sep_char, actual_len
