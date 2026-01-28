@@ -54,7 +54,7 @@ cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1; echo "exit: $?"
 ---
 F
 
-⊘ failing_setup: Setup failed (1 test skipped)
+⊘ failing_setup: Setup failed (2 tests skipped)
 
 Failures:
 
@@ -65,5 +65,5 @@ Failures:
 -expected output
 +wrong output
 
-Summary: 0 passed, 0 failed, 1 skipped in {{ time }}s
+Summary: 0 passed, 0 failed, 2 skipped in {{ time }}s
 exit: 1
