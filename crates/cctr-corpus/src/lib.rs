@@ -960,9 +960,32 @@ printf "---\n----\n"
     }
 
     #[test]
-    fn test_equals_in_output_ends_block() {
-        // === in expected output always signals a new test, even with longer delimiters
-        // This allows mixing tests with different delimiter lengths in the same file
+    fn test_shorter_equals_in_output_is_content() {
+        // Shorter === in expected output is treated as content when using longer delimiters
+        // Only === of same or longer length signals a new test
+        let content = r#"=====
+test with === and ==== in output
+=====
+echo "==="
+-----
+===
+
+=====
+second test
+=====
+echo "===="
+-----
+====
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].expected_output, "===");
+        assert_eq!(file.tests[1].expected_output, "====");
+    }
+
+    #[test]
+    fn test_same_length_equals_ends_block() {
+        // === of same length or longer signals new test
         let content = r#"====
 first test
 ====
@@ -970,11 +993,11 @@ echo "hello"
 ----
 hello
 
-===
-second test uses shorter delimiters
-===
+====
+second test same length
+====
 echo "world"
----
+----
 world
 "#;
         let file = parse_test(content);
