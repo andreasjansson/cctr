@@ -257,6 +257,7 @@ fn run_test(
     work_dir: &Path,
     suite_name: &str,
     env_vars: &[(String, String)],
+    file_shell: Option<Shell>,
 ) -> TestResult {
     let start = Instant::now();
 
@@ -276,7 +277,9 @@ fn run_test(
         }
     }
 
-    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars);
+    // Test-level shell overrides file-level shell
+    let shell = test.shell.or(file_shell);
+    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars, shell);
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
