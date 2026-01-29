@@ -75,8 +75,12 @@ pub enum ProgressEvent {
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
     // Write command to a temporary script file for reliable multi-line execution
+    // Use system temp dir to avoid path format issues (e.g., \\?\ prefix on Windows)
+    let temp_dir = std::env::temp_dir();
+    let script_id = std::process::id();
+
     let (script_path, mut cmd) = if cfg!(windows) {
-        let script_path = work_dir.join("_cctr_script.bat");
+        let script_path = temp_dir.join(format!("_cctr_script_{}.bat", script_id));
         // Add @echo off to suppress command echoing, but preserve echo output
         let script_content = format!("@echo off\r\n{}\r\n", command.replace('\n', "\r\n"));
         if let Err(e) = std::fs::write(&script_path, &script_content) {
@@ -86,7 +90,7 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
         c.arg("/C").arg(&script_path);
         (script_path, c)
     } else {
-        let script_path = work_dir.join("_cctr_script.sh");
+        let script_path = temp_dir.join(format!("_cctr_script_{}.sh", script_id));
         if let Err(e) = std::fs::write(&script_path, command) {
             return (format!("Failed to write script: {}", e), -1);
         }
