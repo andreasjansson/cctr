@@ -76,8 +76,16 @@ pub enum ProgressEvent {
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
     // Write command to a temporary script file for reliable multi-line execution
     // Use system temp dir to avoid path format issues (e.g., \\?\ prefix on Windows)
+    // Use unique ID per invocation to avoid race conditions in parallel execution
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SCRIPT_COUNTER: AtomicU64 = AtomicU64::new(0);
+
     let temp_dir = std::env::temp_dir();
-    let script_id = std::process::id();
+    let script_id = format!(
+        "{}_{}", 
+        std::process::id(),
+        SCRIPT_COUNTER.fetch_add(1, Ordering::Relaxed)
+    );
 
     let (script_path, mut cmd) = if cfg!(windows) {
         let script_path = temp_dir.join(format!("_cctr_script_{}.bat", script_id));
