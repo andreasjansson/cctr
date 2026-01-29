@@ -221,10 +221,10 @@ fn should_skip(
         }
     }
 
-    // Check shell condition
+    // Check shell condition (always use default shell for skip conditions)
     match &skip.condition {
         Some(condition) => {
-            let (output, exit_code) = run_command(condition, work_dir, env_vars);
+            let (output, exit_code) = run_command(condition, work_dir, env_vars, None);
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
