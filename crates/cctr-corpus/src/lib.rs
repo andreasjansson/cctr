@@ -141,7 +141,15 @@ pub fn parse_file(path: &Path) -> Result<CorpusFile, ParseError> {
 pub fn parse_content(content: &str, path: &Path) -> Result<CorpusFile, ParseError> {
     let mut state = ParseState::new(content, path);
     match corpus_file(&mut state) {
-        Ok(file) => Ok(file),
+        Ok(file) => {
+            // Validate shell/platform compatibility
+            if let Some(shell) = file.file_shell {
+                if !file.file_platform.is_empty() {
+                    validate_shell_platform(shell, &file.file_platform)?;
+                }
+            }
+            Ok(file)
+        }
         Err(_) => Err(ParseError::Parse {
             line: state.current_line,
             message: state
@@ -149,6 +157,52 @@ pub fn parse_content(content: &str, path: &Path) -> Result<CorpusFile, ParseErro
                 .unwrap_or_else(|| "failed to parse corpus file".to_string()),
         }),
     }
+}
+
+/// Validate that the shell is compatible with the specified platforms
+fn validate_shell_platform(shell: Shell, platforms: &[Platform]) -> Result<(), ParseError> {
+    let is_windows_shell = matches!(shell, Shell::PowerShell | Shell::Cmd);
+    let is_unix_shell = matches!(shell, Shell::Sh | Shell::Bash | Shell::Zsh);
+
+    let has_windows = platforms.contains(&Platform::Windows);
+    let has_unix = platforms
+        .iter()
+        .any(|p| matches!(p, Platform::Unix | Platform::MacOS | Platform::Linux));
+
+    // Windows-only shells can't run on Unix platforms
+    if is_windows_shell && has_unix && !has_windows {
+        return Err(ParseError::Parse {
+            line: 1,
+            message: format!(
+                "shell '{:?}' is not compatible with platforms {:?}",
+                shell, platforms
+            ),
+        });
+    }
+
+    // Unix-only shells (sh, zsh) can't run on Windows
+    if matches!(shell, Shell::Sh | Shell::Zsh) && has_windows && !has_unix {
+        return Err(ParseError::Parse {
+            line: 1,
+            message: format!(
+                "shell '{:?}' is not compatible with platforms {:?}",
+                shell, platforms
+            ),
+        });
+    }
+
+    // cmd is Windows-only
+    if shell == Shell::Cmd && has_unix && !has_windows {
+        return Err(ParseError::Parse {
+            line: 1,
+            message: format!(
+                "shell 'cmd' is only available on Windows, but platforms are {:?}",
+                platforms
+            ),
+        });
+    }
+
+    Ok(())
 }
 
 // ============ Parse State ============
@@ -1338,7 +1392,10 @@ hello
         assert_eq!(file.file_shell, Some(Shell::Bash));
         assert_eq!(file.file_platform, vec![Platform::Unix, Platform::MacOS]);
         assert!(file.file_skip.is_some());
-        assert_eq!(file.file_skip.as_ref().unwrap().message.as_deref(), Some("not ready yet"));
+        assert_eq!(
+            file.file_skip.as_ref().unwrap().message.as_deref(),
+            Some("not ready yet")
+        );
     }
 
     #[test]
