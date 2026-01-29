@@ -248,6 +248,7 @@ fn run_test(
                 actual_output: None,
                 expected_output: test.expected_output.clone(),
                 error: None,
+                warning: None,
                 elapsed: start.elapsed(),
                 suite: suite_name.to_string(),
             };
@@ -256,6 +257,15 @@ fn run_test(
 
     // Test-level shell overrides file-level shell
     let shell = test.shell.or(file_shell);
+    let effective_shell = shell.unwrap_or_else(default_shell);
+
+    // Warn if using cmd with multiline command
+    let warning = if effective_shell == Shell::Cmd && is_multiline(&test.command) {
+        Some("cmd.exe does not support multi-line commands; only the first line will execute".to_string())
+    } else {
+        None
+    };
+
     let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars, shell);
     let elapsed = start.elapsed();
 
@@ -284,6 +294,7 @@ fn run_test(
         actual_output: Some(actual_output),
         expected_output,
         error,
+        warning,
         elapsed,
         suite: suite_name.to_string(),
     }
