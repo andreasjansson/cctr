@@ -580,9 +580,10 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
 
     skip_blank_lines.parse_next(input)?;
 
-    // Parse file-level directives (skip and shell can appear in any order)
+    // Parse file-level directives (skip, shell, platform can appear in any order)
     let mut file_skip = None;
     let mut file_shell = None;
+    let mut file_platform = Vec::new();
 
     loop {
         let _ = take_while(0.., ' ').parse_next(input)?;
@@ -592,6 +593,10 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
             skip_blank_lines.parse_next(input)?;
         } else if input.starts_with("%shell") && file_shell.is_none() {
             file_shell = Some(shell_directive.parse_next(input)?);
+            state.current_line += 1;
+            skip_blank_lines.parse_next(input)?;
+        } else if input.starts_with("%platform") && file_platform.is_empty() {
+            file_platform = platform_directive.parse_next(input)?;
             state.current_line += 1;
             skip_blank_lines.parse_next(input)?;
         } else {
@@ -618,6 +623,7 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
     Ok(CorpusFile {
         file_skip,
         file_shell,
+        file_platform,
         tests,
     })
 }
