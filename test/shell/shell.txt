@@ -47,4 +47,4 @@ invalid shell platform combination shows error
 ===
 cctr $CCTR_FIXTURE_DIR/invalid_shell_platform --no-color 2>&1 | grep "not compatible"
 ---
-  parse error at line 1: shell 'cmd' is only available on Windows, but platforms are [Unix]
+  parse error at line 1: shell 'Cmd' is not compatible with platforms [Unix]
