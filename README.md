@@ -740,7 +740,7 @@ Use `%platform` to restrict tests to specific platforms. Tests on non-matching p
 Add `%platform` at the top of a file with one or more comma-separated platforms:
 
 ```
-%platform unix, macos, linux
+%platform unix
 
 ===
 unix test
