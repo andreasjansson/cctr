@@ -75,8 +75,15 @@ pub enum ProgressEvent {
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
     let mut cmd = if cfg!(windows) {
+        // cmd /C only runs the first line, so join multi-line commands with &
+        let joined = command
+            .lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .collect::<Vec<_>>()
+            .join(" & ");
         let mut c = Command::new("cmd");
-        c.arg("/C").arg(command);
+        c.arg("/C").arg(joined);
         c
     } else {
         let mut c = Command::new("bash");
