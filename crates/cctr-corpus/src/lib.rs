@@ -115,6 +115,7 @@ pub struct TestCase {
     pub variables: Vec<VariableDecl>,
     pub constraints: Vec<String>,
     pub skip: Option<SkipDirective>,
+    pub shell: Option<Shell>,
 }
 
 impl TestCase {
