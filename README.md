@@ -773,7 +773,7 @@ dir
 Multiple platforms can be specified:
 
 ```
-%platform mac, linux    # runs on macOS and Linux, skipped on Windows
+%platform macos, linux  # runs on macOS and Linux, skipped on Windows
 %platform unix          # runs on all Unix-like systems
 %platform windows       # runs only on Windows
 ```
