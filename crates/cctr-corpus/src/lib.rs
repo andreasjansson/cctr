@@ -119,6 +119,7 @@ impl TestCase {
 pub struct CorpusFile {
     pub file_skip: Option<SkipDirective>,
     pub file_shell: Option<Shell>,
+    pub file_platform: Vec<Platform>,
     pub tests: Vec<TestCase>,
 }
 
