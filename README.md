@@ -789,7 +789,7 @@ By default, cctr uses **bash** on Unix and **PowerShell** on Windows. Use the `%
 | `bash` | Unix (default), Windows (if installed) | Full bash features |
 | `sh` | Unix | POSIX-compatible shell |
 | `zsh` | Unix | Zsh shell |
-| `powershell` / `pwsh` | Windows (default), Unix (if installed) | PowerShell |
+| `powershell` | Windows (default), Unix (if installed) | PowerShell |
 | `cmd` | Windows | Windows cmd.exe (single-line commands only) |
 
 ### File-level shell
