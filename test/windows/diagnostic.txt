@@ -1,27 +1,28 @@
+%skip(Windows only) platform: not windows
+
 ===
 show OS environment variable
 ===
-echo OS=%OS%
+Write-Output "OS=$env:OS"
 ---
 OS={{ os }}
 
 ===
-check if test command exists
+show powershell version
 ===
-where test 2>nul && echo "test exists" || echo "test not found"
+$PSVersionTable.PSVersion.Major
 ---
-{{ output }}
+{{ version }}
+---
+where
+* version >= 5
 
 ===
-run test -e /bin/sh directly
+show what shell we are using via COMSPEC
 ===
-test -e /bin/sh && echo "exists" || echo "not exists"
----
-{{ result }}
-
-===
-show what shell we are using
-===
-echo %COMSPEC%
+Write-Output $env:COMSPEC
 ---
 {{ shell }}
+---
+where
+* shell contains "cmd.exe"
