@@ -1,0 +1,9 @@
+%shell cmd
+%platform unix
+
+===
+this should fail to parse
+===
+echo hello
+---
+hello
