@@ -3,7 +3,7 @@
 ===
 number comparison greater than
 ===
-echo value: 100
+echo "value: 100"
 ---
 value: {{ n }}
 ---
@@ -13,7 +13,7 @@ where
 ===
 number comparison less than
 ===
-echo value: 10
+echo "value: 10"
 ---
 value: {{ n }}
 ---
@@ -23,7 +23,7 @@ where
 ===
 string startswith
 ===
-echo path: C:\Users\test
+echo "path: C:\Users\test"
 ---
 path: {{ p }}
 ---
@@ -33,7 +33,7 @@ where
 ===
 string contains
 ===
-echo message: hello world
+echo "message: hello world"
 ---
 message: {{ m }}
 ---
@@ -43,7 +43,7 @@ where
 ===
 logical and
 ===
-echo x: 50
+echo "x: 50"
 ---
 x: {{ n }}
 ---
@@ -53,7 +53,7 @@ where
 ===
 logical or
 ===
-echo status: success
+echo "status: success"
 ---
 status: {{ s }}
 ---
