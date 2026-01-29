@@ -454,15 +454,6 @@ fn shell_directive(input: &mut &str) -> ModalResult<Shell> {
     Ok(shell)
 }
 
-fn try_shell_directive(input: &mut &str) -> ModalResult<Option<Shell>> {
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    if input.starts_with("%shell") {
-        Ok(Some(shell_directive.parse_next(input)?))
-    } else {
-        Ok(None)
-    }
-}
-
 // ============ Test Case Parser ============
 
 fn description_line(input: &mut &str) -> ModalResult<String> {
