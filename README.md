@@ -833,7 +833,7 @@ hello
 Or combining platform and skip:
 
 ```
-%platform unix, mac
+%platform unix
 %skip(needs feature) if: ! command -v special-tool
 
 ===
