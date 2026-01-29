@@ -468,7 +468,7 @@ fn shell_name(input: &mut &str) -> ModalResult<Shell> {
         "sh" => Ok(Shell::Sh),
         "bash" => Ok(Shell::Bash),
         "zsh" => Ok(Shell::Zsh),
-        "powershell" | "pwsh" => Ok(Shell::PowerShell),
+        "powershell" => Ok(Shell::PowerShell),
         "cmd" => Ok(Shell::Cmd),
         _ => Err(winnow::error::ErrMode::Backtrack(ContextError::new())),
     }
