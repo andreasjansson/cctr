@@ -440,6 +440,38 @@ fn try_skip_directive(input: &mut &str) -> ModalResult<Option<SkipDirective>> {
     }
 }
 
+// ============ Shell Directive Parser ============
+
+fn shell_name(input: &mut &str) -> ModalResult<Shell> {
+    let name: &str = take_while(1.., |c: char| c.is_ascii_alphanumeric()).parse_next(input)?;
+    match name.to_lowercase().as_str() {
+        "sh" => Ok(Shell::Sh),
+        "bash" => Ok(Shell::Bash),
+        "zsh" => Ok(Shell::Zsh),
+        "powershell" | "pwsh" => Ok(Shell::PowerShell),
+        "cmd" => Ok(Shell::Cmd),
+        _ => Err(winnow::error::ErrMode::Backtrack(ContextError::new())),
+    }
+}
+
+fn shell_directive(input: &mut &str) -> ModalResult<Shell> {
+    "%shell".parse_next(input)?;
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    let shell = shell_name.parse_next(input)?;
+    let _ = line_content.parse_next(input)?;
+    opt_newline.parse_next(input)?;
+    Ok(shell)
+}
+
+fn try_shell_directive(input: &mut &str) -> ModalResult<Option<Shell>> {
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    if input.starts_with("%shell") {
+        Ok(Some(shell_directive.parse_next(input)?))
+    } else {
+        Ok(None)
+    }
+}
+
 // ============ Test Case Parser ============
 
 fn description_line(input: &mut &str) -> ModalResult<String> {
