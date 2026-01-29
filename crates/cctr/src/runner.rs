@@ -617,7 +617,7 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
             });
         }
 
-        let result = run_test(&test, &work_dir, "stdin", &env_vars);
+        let result = run_test(&test, &work_dir, "stdin", &env_vars, corpus.file_shell);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
