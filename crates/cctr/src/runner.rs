@@ -74,29 +74,36 @@ pub enum ProgressEvent {
 }
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
-    let mut cmd = if cfg!(windows) {
-        // cmd /C only runs the first line, so join multi-line commands with &
-        let joined = command
-            .lines()
-            .map(|l| l.trim())
-            .filter(|l| !l.is_empty())
-            .collect::<Vec<_>>()
-            .join(" & ");
+    use std::io::Write;
+
+    // Write command to a temporary script file for reliable multi-line execution
+    let (script_path, mut cmd) = if cfg!(windows) {
+        let script_path = work_dir.join("_cctr_script.bat");
+        // Add @echo off to suppress command echoing, but preserve echo output
+        let script_content = format!("@echo off\r\n{}\r\n", command.replace('\n', "\r\n"));
+        if let Err(e) = std::fs::write(&script_path, &script_content) {
+            return (format!("Failed to write script: {}", e), -1);
+        }
         let mut c = Command::new("cmd");
-        c.arg("/C").arg(joined);
-        c
+        c.arg("/C").arg(&script_path);
+        (script_path, c)
     } else {
+        let script_path = work_dir.join("_cctr_script.sh");
+        if let Err(e) = std::fs::write(&script_path, command) {
+            return (format!("Failed to write script: {}", e), -1);
+        }
         let mut c = Command::new("bash");
-        c.arg("-c").arg(command);
-        c
+        c.arg(&script_path);
+        (script_path, c)
     };
+
     cmd.current_dir(work_dir);
 
     for (key, value) in env_vars {
         cmd.env(key, value);
     }
 
-    match cmd.output() {
+    let result = match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -107,7 +114,12 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
             (normalized.trim_end_matches('\n').to_string(), exit_code)
         }
         Err(e) => (format!("Failed to execute command: {}", e), -1),
-    }
+    };
+
+    // Clean up the script file
+    let _ = std::fs::remove_file(&script_path);
+
+    result
 }
 
 use crate::SkipDirective;
