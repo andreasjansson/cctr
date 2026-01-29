@@ -83,6 +83,11 @@ fn default_shell() -> Shell {
     }
 }
 
+/// Check if a command spans multiple lines
+fn is_multiline(command: &str) -> bool {
+    command.contains('\n')
+}
+
 fn run_command(
     command: &str,
     work_dir: &Path,
@@ -91,8 +96,6 @@ fn run_command(
 ) -> (String, i32) {
     let shell = shell.unwrap_or_else(default_shell);
 
-    // PowerShell and bash-like shells can handle multi-line commands directly via -Command/-c
-    // Only cmd.exe requires writing to a temp script file
     let mut cmd = match shell {
         Shell::PowerShell => {
             let mut c = Command::new("powershell");
@@ -103,33 +106,10 @@ fn run_command(
             c
         }
         Shell::Cmd => {
-            // cmd.exe can't handle multi-line commands, so we write to a temp script
-            use std::sync::atomic::{AtomicU64, Ordering};
-            static SCRIPT_COUNTER: AtomicU64 = AtomicU64::new(0);
-
-            let temp_dir = std::env::temp_dir();
-            let script_id = format!(
-                "{}_{}",
-                std::process::id(),
-                SCRIPT_COUNTER.fetch_add(1, Ordering::Relaxed)
-            );
-            let script_path = temp_dir.join(format!("_cctr_script_{}.bat", script_id));
-            let script_content = format!("@echo off\r\n{}\r\n", command.replace('\n', "\r\n"));
-            if let Err(e) = std::fs::write(&script_path, &script_content) {
-                return (format!("Failed to write script: {}", e), -1);
-            }
-
+            // Note: cmd.exe /C only executes the first line of multi-line commands
             let mut c = Command::new("cmd");
-            c.arg("/C").arg(&script_path);
-
-            // Run command and clean up
-            c.current_dir(work_dir);
-            for (key, value) in env_vars {
-                c.env(key, value);
-            }
-            let result = execute_command(&mut c);
-            let _ = std::fs::remove_file(&script_path);
-            return result;
+            c.arg("/C").arg(command);
+            c
         }
         Shell::Bash => {
             let mut c = Command::new("bash");
@@ -154,10 +134,6 @@ fn run_command(
         cmd.env(key, value);
     }
 
-    execute_command(&mut cmd)
-}
-
-fn execute_command(cmd: &mut Command) -> (String, i32) {
     match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
