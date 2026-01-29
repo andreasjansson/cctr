@@ -16,6 +16,7 @@ pub struct TestResult {
     pub actual_output: Option<String>,
     pub expected_output: String,
     pub error: Option<String>,
+    pub warning: Option<String>,
     pub elapsed: Duration,
     pub suite: String,
 }
