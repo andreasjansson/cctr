@@ -1,6 +1,7 @@
+%shell bash
+
 ===
 bash single line
-%shell bash
 ===
 echo hello
 ---
@@ -8,7 +9,6 @@ hello
 
 ===
 bash multiline
-%shell bash
 ===
 echo line1
 echo line2
@@ -18,7 +18,6 @@ line2
 
 ===
 bash variable
-%shell bash
 ===
 x=42
 echo "value: $x"
@@ -27,7 +26,6 @@ value: 42
 
 ===
 bash subshell
-%shell bash
 ===
 echo "result: $(echo nested)"
 ---
