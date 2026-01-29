@@ -559,6 +559,11 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         state.current_line += 1;
     }
 
+    let shell = try_shell_directive.parse_next(input)?;
+    if shell.is_some() {
+        state.current_line += 1;
+    }
+
     if let Some(err) = input
         .lines()
         .next()
