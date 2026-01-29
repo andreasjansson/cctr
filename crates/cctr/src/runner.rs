@@ -128,7 +128,7 @@ fn should_skip(
     work_dir: &Path,
     env_vars: &[(String, String)],
 ) -> Option<String> {
-    let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok();
+    let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok_and(|v| !v.is_empty());
 
     // Check platform condition first
     if let Some(platform) = &skip.platform {
