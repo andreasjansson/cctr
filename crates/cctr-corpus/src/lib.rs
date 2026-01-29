@@ -431,15 +431,6 @@ fn skip_directive(input: &mut &str) -> ModalResult<SkipDirective> {
     })
 }
 
-fn try_skip_directive(input: &mut &str) -> ModalResult<Option<SkipDirective>> {
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    if input.starts_with("%skip") {
-        Ok(Some(skip_directive.parse_next(input)?))
-    } else {
-        Ok(None)
-    }
-}
-
 // ============ Shell Directive Parser ============
 
 fn shell_name(input: &mut &str) -> ModalResult<Shell> {
