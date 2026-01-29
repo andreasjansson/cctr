@@ -753,6 +753,115 @@ world
 
 When a file-level skip is active, all tests in the file are marked as skipped.
 
+## Shell directive
+
+By default, cctr uses **bash** on Unix and **PowerShell** on Windows. Use the `%shell` directive to specify a different shell for running commands.
+
+### Available shells
+
+| Shell | Platforms | Notes |
+|-------|-----------|-------|
+| `bash` | Unix (default), Windows (if installed) | Full bash features |
+| `sh` | Unix | POSIX-compatible shell |
+| `zsh` | Unix | Zsh shell |
+| `powershell` / `pwsh` | Windows (default), Unix (if installed) | PowerShell |
+| `cmd` | Windows | Windows cmd.exe (single-line commands only) |
+
+### Test-level shell
+
+Specify the shell for a single test:
+
+```
+===
+bash-specific test
+%shell bash
+===
+echo "arrays: ${arr[0]:-default}"
+---
+arrays: default
+
+===
+powershell test
+%shell powershell
+===
+Write-Output "hello from powershell"
+---
+hello from powershell
+```
+
+### File-level shell
+
+Add `%shell` at the top of a file to set the default shell for all tests:
+
+```
+%shell sh
+
+===
+first test uses sh
+===
+echo hello
+---
+hello
+
+===
+second test also uses sh
+===
+echo world
+---
+world
+```
+
+### Combining directives
+
+Both `%skip` and `%shell` can be used together at file or test level, in any order:
+
+```
+%skip(Windows only) platform: not windows
+%shell powershell
+
+===
+windows powershell test
+===
+Write-Output "hello"
+---
+hello
+```
+
+Or at test level:
+
+```
+===
+platform-specific test
+%skip(needs zsh) if: ! command -v zsh
+%shell zsh
+===
+echo "zsh version: $ZSH_VERSION"
+---
+zsh version: {{ version }}
+```
+
+### cmd.exe limitations
+
+**Important:** Windows `cmd.exe` does not support multi-line commands. When using `%shell cmd`, only the first line of a multi-line command will execute. cctr will display a warning when this occurs:
+
+```
+===
+this will only run the first line
+%shell cmd
+===
+echo first
+echo second
+---
+first
+```
+
+Output:
+```
+⚠ Warning: cmd.exe does not support multi-line commands; only the first line will execute
+```
+
+For multi-line commands on Windows, use PowerShell (the default) instead.
+
 ## Environment variables
 
 cctr injects special environment variables that your commands can use:
