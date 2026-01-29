@@ -113,12 +113,7 @@ fn run_command(
             c
         }
         Shell::Bash => {
-            // On Windows, use Git Bash with full path to avoid WSL's bash.exe
-            // which is in C:\Windows\System32 and doesn't work with Windows paths
-            #[cfg(windows)]
-            let bash_path = "C:\\Program Files\\Git\\bin\\bash.exe";
-            #[cfg(not(windows))]
-            let bash_path = "bash";
+            let bash_path = find_working_bash();
             let mut c = Command::new(bash_path);
             c.arg("-c").arg(command);
             c
