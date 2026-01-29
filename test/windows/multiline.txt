@@ -39,7 +39,7 @@ yes
 ===
 for loop on multiple lines
 ===
-for /L %i in (1,1,3) do @echo %i
+for /L %%i in (1,1,3) do @echo %%i
 ---
 1
 2
@@ -48,7 +48,7 @@ for /L %i in (1,1,3) do @echo %i
 ===
 create file read and delete
 ===
-echo content > %TEMP%\cctr_multiline_test.txt
+echo content> %TEMP%\cctr_multiline_test.txt
 type %TEMP%\cctr_multiline_test.txt
 del %TEMP%\cctr_multiline_test.txt
 ---
@@ -70,7 +70,7 @@ where
 mixed commands with pipe
 ===
 echo hello world
-echo hello world | findstr hello
+echo hello world| findstr hello
 ---
 hello world
 hello world
