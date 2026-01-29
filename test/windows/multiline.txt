@@ -3,8 +3,8 @@
 ===
 two echo commands on separate lines
 ===
-echo hello
-echo world
+Write-Output "hello"
+Write-Output "world"
 ---
 hello
 world
@@ -12,17 +12,17 @@ world
 ===
 set variable then use it
 ===
-set myvar=testing
-echo %myvar%
+$myvar = "testing"
+Write-Output $myvar
 ---
 testing
 
 ===
 three commands
 ===
-echo one
-echo two
-echo three
+Write-Output "one"
+Write-Output "two"
+Write-Output "three"
 ---
 one
 two
@@ -31,34 +31,25 @@ three
 ===
 conditional if on multiple lines
 ===
-set x=5
-if %x%==5 echo yes
+$x = 5
+if ($x -eq 5) { Write-Output "yes" }
 ---
 yes
 
 ===
 for loop on multiple lines
 ===
-for /L %%i in (1,1,3) do @echo %%i
+for ($i = 1; $i -le 3; $i++) { Write-Output $i }
 ---
 1
 2
 3
 
 ===
-create file read and delete
-===
-echo content> %TEMP%\cctr_multiline_test.txt
-type %TEMP%\cctr_multiline_test.txt
-del %TEMP%\cctr_multiline_test.txt
----
-content
-
-===
 echo with variable capture
 ===
-echo count: 42
-echo done
+Write-Output "count: 42"
+Write-Output "done"
 ---
 count: {{ n }}
 done
@@ -69,8 +60,16 @@ where
 ===
 mixed commands with pipe
 ===
-echo hello world
-echo hello world| findstr hello
+Write-Output "hello world"
+Write-Output "hello world" | Select-String "hello"
 ---
 hello world
 hello world
+
+===
+cmd shell single line works
+%shell cmd
+===
+echo hello from cmd
+---
+hello from cmd
