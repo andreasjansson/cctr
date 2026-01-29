@@ -67,6 +67,25 @@ pub struct VariableDecl {
 pub struct SkipDirective {
     pub message: Option<String>,
     pub condition: Option<String>,
+    pub platform: Option<PlatformCondition>,
+}
+
+/// Platform condition for skip directives.
+/// Supports: `windows`, `unix`, `macos`, `linux`
+/// With modifiers: `not windows`, `unix or windows`
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlatformCondition {
+    Is(Platform),
+    Not(Platform),
+    Or(Vec<Platform>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Platform {
+    Windows,
+    Unix,
+    MacOS,
+    Linux,
 }
 
 #[derive(Debug, Clone, PartialEq)]
