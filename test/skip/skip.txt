@@ -1,4 +1,4 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 ===
 unconditional skip non-verbose output
 ===
@@ -75,6 +75,21 @@ cctr $CCTR_FIXTURE_DIR/tests/file_level_no_skip.txt --no-color 2>&1
 ✓ tests: 2/2 tests passed in {{ suite_time }}s
 
 All 2 tests passed in {{ total_time }}s
+---
+where
+* suite_time >= 0
+* total_time >= 0
+
+===
+platform directive skips tests on wrong platform
+===
+cctr $CCTR_FIXTURE_DIR/tests/platform_skip.txt --no-color 2>&1
+---
+ss
+
+✓ tests: 0/0 tests passed in {{ suite_time }}s, 2 skipped
+
+Summary: 0 passed, 0 failed, 2 skipped in {{ total_time }}s
 ---
 where
 * suite_time >= 0
