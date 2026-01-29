@@ -1,0 +1,15 @@
+%platform windows
+
+===
+this test should be skipped on unix
+===
+echo "this runs on windows"
+---
+this runs on windows
+
+===
+another windows test
+===
+echo "also windows"
+---
+also windows
