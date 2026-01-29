@@ -411,7 +411,7 @@ fn platform_name(input: &mut &str) -> ModalResult<Platform> {
     match name.to_lowercase().as_str() {
         "windows" => Ok(Platform::Windows),
         "unix" => Ok(Platform::Unix),
-        "macos" | "mac" => Ok(Platform::MacOS),
+        "macos" => Ok(Platform::MacOS),
         "linux" => Ok(Platform::Linux),
         _ => Err(winnow::error::ErrMode::Backtrack(ContextError::new())),
     }
