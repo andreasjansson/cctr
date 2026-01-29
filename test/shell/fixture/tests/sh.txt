@@ -1,0 +1,17 @@
+===
+sh single line
+%shell sh
+===
+echo hello
+---
+hello
+
+===
+sh multiline
+%shell sh
+===
+echo line1
+echo line2
+---
+line1
+line2
