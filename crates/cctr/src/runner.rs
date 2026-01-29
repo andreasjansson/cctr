@@ -393,7 +393,7 @@ fn run_corpus_file(
             });
         }
 
-        let result = run_test(&test, work_dir, suite_name, env_vars);
+        let result = run_test(&test, work_dir, suite_name, env_vars, corpus.file_shell);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
