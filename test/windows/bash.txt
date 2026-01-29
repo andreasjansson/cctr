@@ -1,0 +1,24 @@
+%platform windows
+%shell bash
+
+===
+bash echo on windows
+===
+echo "hello from bash"
+---
+hello from bash
+
+===
+bash variable on windows
+===
+x="world"
+echo "hello $x"
+---
+hello world
+
+===
+bash command substitution on windows
+===
+echo "result: $(echo nested)"
+---
+result: nested
