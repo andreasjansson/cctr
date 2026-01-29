@@ -1452,4 +1452,74 @@ hello
         assert_eq!(skip.message.as_deref(), Some("not ready"));
         assert_eq!(skip.condition.as_deref(), Some("false"));
     }
+
+    #[test]
+    fn test_shell_platform_valid_bash_unix() {
+        let content = r#"%shell bash
+%platform unix, mac
+
+===
+test
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Bash));
+        assert_eq!(file.file_platform, vec![Platform::Unix, Platform::MacOS]);
+    }
+
+    #[test]
+    fn test_shell_platform_valid_powershell_windows() {
+        let content = r#"%shell powershell
+%platform windows
+
+===
+test
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::PowerShell));
+        assert_eq!(file.file_platform, vec![Platform::Windows]);
+    }
+
+    #[test]
+    fn test_shell_platform_invalid_cmd_unix() {
+        let content = r#"%shell cmd
+%platform unix
+
+===
+test
+===
+echo hello
+---
+hello
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("not compatible"));
+    }
+
+    #[test]
+    fn test_shell_platform_invalid_zsh_windows() {
+        let content = r#"%shell zsh
+%platform windows
+
+===
+test
+===
+echo hello
+---
+hello
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("not compatible"));
+    }
 }
