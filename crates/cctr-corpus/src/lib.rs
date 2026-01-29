@@ -162,7 +162,6 @@ pub fn parse_content(content: &str, path: &Path) -> Result<CorpusFile, ParseErro
 /// Validate that the shell is compatible with the specified platforms
 fn validate_shell_platform(shell: Shell, platforms: &[Platform]) -> Result<(), ParseError> {
     let is_windows_shell = matches!(shell, Shell::PowerShell | Shell::Cmd);
-    let is_unix_shell = matches!(shell, Shell::Sh | Shell::Bash | Shell::Zsh);
 
     let has_windows = platforms.contains(&Platform::Windows);
     let has_unix = platforms
