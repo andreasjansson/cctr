@@ -1,0 +1,16 @@
+%shell sh
+
+===
+test level overrides file level
+%shell bash
+===
+echo "arrays work: ${arr[0]:-default}"
+---
+arrays work: default
+
+===
+file level shell still applies when no override
+===
+echo "from sh"
+---
+from sh
