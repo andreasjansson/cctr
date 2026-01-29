@@ -344,6 +344,7 @@ fn run_corpus_file(
                     actual_output: None,
                     expected_output: test.expected_output.clone(),
                     error: None,
+                    warning: None,
                     elapsed: Duration::ZERO,
                     suite: suite_name.to_string(),
                 };
