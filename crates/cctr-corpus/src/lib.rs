@@ -358,44 +358,39 @@ fn platform_name(input: &mut &str) -> ModalResult<Platform> {
     match name.to_lowercase().as_str() {
         "windows" => Ok(Platform::Windows),
         "unix" => Ok(Platform::Unix),
-        "macos" => Ok(Platform::MacOS),
+        "macos" | "mac" => Ok(Platform::MacOS),
         "linux" => Ok(Platform::Linux),
         _ => Err(winnow::error::ErrMode::Backtrack(ContextError::new())),
     }
 }
 
-fn platform_condition(input: &mut &str) -> ModalResult<PlatformCondition> {
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    "platform:".parse_next(input)?;
+/// Parse %platform directive with comma-separated platforms
+/// e.g., %platform windows or %platform mac, linux, unix
+fn platform_directive(input: &mut &str) -> ModalResult<Vec<Platform>> {
+    "%platform".parse_next(input)?;
     let _ = take_while(0.., ' ').parse_next(input)?;
 
-    // Check for "not"
-    if opt("not ").parse_next(input)?.is_some() {
+    let mut platforms = Vec::new();
+
+    // Parse first platform (required)
+    let first = platform_name.parse_next(input)?;
+    platforms.push(first);
+
+    // Parse additional comma-separated platforms
+    loop {
+        let _ = take_while(0.., ' ').parse_next(input)?;
+        if opt(',').parse_next(input)?.is_none() {
+            break;
+        }
         let _ = take_while(0.., ' ').parse_next(input)?;
         let platform = platform_name.parse_next(input)?;
-        return Ok(PlatformCondition::Not(platform));
+        platforms.push(platform);
     }
 
-    // Parse first platform
-    let first = platform_name.parse_next(input)?;
+    let _ = line_content.parse_next(input)?;
+    opt_newline.parse_next(input)?;
 
-    // Check for "or" chain
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    if opt("or ").parse_next(input)?.is_some() {
-        let mut platforms = vec![first];
-        loop {
-            let _ = take_while(0.., ' ').parse_next(input)?;
-            let platform = platform_name.parse_next(input)?;
-            platforms.push(platform);
-            let _ = take_while(0.., ' ').parse_next(input)?;
-            if opt("or ").parse_next(input)?.is_none() {
-                break;
-            }
-        }
-        return Ok(PlatformCondition::Or(platforms));
-    }
-
-    Ok(PlatformCondition::Is(first))
+    Ok(platforms)
 }
 
 fn skip_directive(input: &mut &str) -> ModalResult<SkipDirective> {
