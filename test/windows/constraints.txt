@@ -1,4 +1,4 @@
-%skip(Windows only) if: test "$OS" != "Windows_NT"
+%skip(Windows only) platform: not windows
 
 ===
 number comparison greater than
