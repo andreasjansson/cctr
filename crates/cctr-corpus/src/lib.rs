@@ -396,26 +396,15 @@ fn platform_directive(input: &mut &str) -> ModalResult<Vec<Platform>> {
 fn skip_directive(input: &mut &str) -> ModalResult<SkipDirective> {
     "%skip".parse_next(input)?;
     let message = opt(skip_message).parse_next(input)?;
+    let condition = opt(skip_condition).parse_next(input)?;
 
-    // Try platform condition first, then shell condition
-    let platform = opt(platform_condition).parse_next(input)?;
-    let condition = if platform.is_none() {
-        opt(skip_condition).parse_next(input)?
-    } else {
-        None
-    };
-
-    if message.is_none() && condition.is_none() && platform.is_none() {
+    if message.is_none() && condition.is_none() {
         let _ = line_content.parse_next(input)?;
     }
 
     opt_newline.parse_next(input)?;
 
-    Ok(SkipDirective {
-        message,
-        condition,
-        platform,
-    })
+    Ok(SkipDirective { message, condition })
 }
 
 // ============ Shell Directive Parser ============
