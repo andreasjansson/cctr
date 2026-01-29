@@ -653,7 +653,7 @@ From highest to lowest:
 
 ## Skip directives
 
-Tests can be conditionally skipped using `%skip` directives. This is useful for platform-specific tests or tests that aren't ready yet.
+Tests can be conditionally skipped using `%skip` directives. This is useful for tests that aren't ready yet or have specific requirements.
 
 ### Test-level skip
 
@@ -661,103 +661,118 @@ Add a `%skip` directive after the test name to skip individual tests:
 
 ```
 ===
-unix only test
-%skip platform: windows
-===
-ls -la
----
-```
-
-The directive syntax is:
-
-```
-%skip                           # unconditional skip
-%skip(MESSAGE)                  # unconditional skip with message
-%skip platform: PLATFORM        # skip on specific platform
-%skip if: COMMAND               # skip if COMMAND exits with code 0
-%skip(MESSAGE) if: COMMAND      # skip with message if COMMAND exits 0
-```
-
-### Platform conditions
-
-Use `platform:` for cross-platform skip conditions without shell commands:
-
-```
-%skip platform: windows         # skip on Windows
-%skip platform: unix            # skip on Unix (Linux, macOS, etc.)
-%skip platform: macos           # skip on macOS only
-%skip platform: linux           # skip on Linux only
-%skip platform: not windows     # skip on non-Windows (i.e., Unix)
-%skip platform: unix or windows # skip everywhere (both platforms)
-```
-
-Examples:
-
-```
-===
-unix only test
-%skip(Unix only) platform: windows
-===
-ls -la
----
-...
-
-===
-windows only test
-%skip(Windows only) platform: not windows
-===
-dir
----
-...
-```
-
-### Shell command conditions
-
-Use `if:` for custom skip logic using shell commands:
-
-```
-===
 not implemented yet
-%skip(TODO: implement this)
+%skip
 ===
 my-unfinished-feature
 ---
 expected output
 
 ===
-requires bash
-%skip(bash not available) if: ! command -v bash
+with a message
+%skip(TODO: implement this)
 ===
-bash -c "echo hello"
+another-feature
 ---
-hello
+expected output
 ```
 
-Note: `if:` conditions run in the native shell (bash on Unix, cmd.exe on Windows), so conditions need to be written appropriately for the target platform.
+### Conditional skip
+
+Use `if:` for custom skip logic using shell commands. The test is skipped if the command exits with code 0:
+
+```
+===
+requires special tool
+%skip(needs jq) if: ! command -v jq
+===
+echo '{"x":1}' | jq .x
+---
+1
+
+===
+only on slow systems
+%skip if: test $(nproc) -gt 4
+===
+slow-test
+---
+expected
+```
 
 ### File-level skip
 
-Add a `%skip` directive at the top of a file (before any tests) to skip all tests in the file:
+Add `%skip` at the top of a file to skip all tests in the file:
 
 ```
-%skip(windows tests) if: test "$OS" != "Windows_NT"
+%skip(all tests disabled)
 
 ===
-first windows test
+first test
 ===
 echo hello
 ---
 hello
-
-===
-second windows test
-===
-echo world
----
-world
 ```
 
-When a file-level skip is active, all tests in the file are marked as skipped.
+Or with a condition:
+
+```
+%skip(needs feature) if: ! test -f /special/file
+
+===
+first test
+===
+cat /special/file
+---
+content
+```
+
+## Platform directive
+
+Use `%platform` to restrict tests to specific platforms. Tests on non-matching platforms are skipped.
+
+### File-level platform
+
+Add `%platform` at the top of a file with one or more comma-separated platforms:
+
+```
+%platform unix, mac, linux
+
+===
+unix test
+===
+ls -la
+---
+...
+```
+
+```
+%platform windows
+
+===
+windows test
+===
+dir
+---
+...
+```
+
+### Supported platforms
+
+| Platform | Matches |
+|----------|---------|
+| `windows` | Windows |
+| `unix` | All Unix-like systems (Linux, macOS, etc.) |
+| `mac` / `macos` | macOS only |
+| `linux` | Linux only |
+
+Multiple platforms can be specified:
+
+```
+%platform mac, linux    # runs on macOS and Linux, skipped on Windows
+%platform unix          # runs on all Unix-like systems
+%platform windows       # runs only on Windows
+```
 
 ## Shell directive
 
@@ -773,31 +788,9 @@ By default, cctr uses **bash** on Unix and **PowerShell** on Windows. Use the `%
 | `powershell` / `pwsh` | Windows (default), Unix (if installed) | PowerShell |
 | `cmd` | Windows | Windows cmd.exe (single-line commands only) |
 
-### Test-level shell
-
-Specify the shell for a single test:
-
-```
-===
-bash-specific test
-%shell bash
-===
-echo "arrays: ${arr[0]:-default}"
----
-arrays: default
-
-===
-powershell test
-%shell powershell
-===
-Write-Output "hello from powershell"
----
-hello from powershell
-```
-
 ### File-level shell
 
-Add `%shell` at the top of a file to set the default shell for all tests:
+Add `%shell` at the top of a file to set the shell for all tests in that file:
 
 ```
 %shell sh
@@ -819,10 +812,10 @@ world
 
 ### Combining directives
 
-Both `%skip` and `%shell` can be used together at file or test level, in any order:
+The `%skip`, `%platform`, and `%shell` directives can be used together at the file level in any order:
 
 ```
-%skip(Windows only) platform: not windows
+%platform windows
 %shell powershell
 
 ===
@@ -833,17 +826,30 @@ Write-Output "hello"
 hello
 ```
 
-Or at test level:
+Or combining platform and skip:
 
 ```
+%platform unix, mac
+%skip(needs feature) if: ! command -v special-tool
+
 ===
-platform-specific test
-%skip(needs zsh) if: ! command -v zsh
-%shell zsh
+test requiring tool on unix
 ===
-echo "zsh version: $ZSH_VERSION"
+special-tool --version
 ---
-zsh version: {{ version }}
+...
+```
+
+### Shell/platform validation
+
+cctr validates that `%shell` and `%platform` are compatible before running tests. Incompatible combinations result in a parse error:
+
+```
+%shell cmd
+%platform unix       # ERROR: cmd is Windows-only
+
+%shell zsh
+%platform windows    # ERROR: zsh is Unix-only
 ```
 
 ### cmd.exe limitations
@@ -851,9 +857,10 @@ zsh version: {{ version }}
 **Important:** Windows `cmd.exe` does not support multi-line commands. When using `%shell cmd`, only the first line of a multi-line command will execute. cctr will display a warning when this occurs:
 
 ```
+%shell cmd
+
 ===
 this will only run the first line
-%shell cmd
 ===
 echo first
 echo second
