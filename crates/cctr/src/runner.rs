@@ -23,24 +23,20 @@ fn find_working_bash() -> &'static str {
         #[cfg(windows)]
         {
             // Try bash from PATH first with a simple command
-            if let Ok(output) = Command::new("bash")
-                .arg("-c")
-                .arg("echo ok")
-                .output()
-            {
+            if let Ok(output) = Command::new("bash").arg("-c").arg("echo ok").output() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 // If it works and doesn't mention WSL, use it
                 if output.status.success() && stdout.trim() == "ok" {
                     return "bash".to_string();
                 }
             }
-            
+
             // Fall back to Git Bash
             let git_bash = "C:\\Program Files\\Git\\bin\\bash.exe";
             if std::path::Path::new(git_bash).exists() {
                 return git_bash.to_string();
             }
-            
+
             // Last resort: just use bash and hope for the best
             "bash".to_string()
         }
