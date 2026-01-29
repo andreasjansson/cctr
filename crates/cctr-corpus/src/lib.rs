@@ -343,18 +343,74 @@ fn skip_condition(input: &mut &str) -> ModalResult<String> {
     Ok(condition.trim().to_string())
 }
 
+fn platform_name(input: &mut &str) -> ModalResult<Platform> {
+    let name: &str = take_while(1.., |c: char| c.is_ascii_alphanumeric()).parse_next(input)?;
+    match name.to_lowercase().as_str() {
+        "windows" => Ok(Platform::Windows),
+        "unix" => Ok(Platform::Unix),
+        "macos" => Ok(Platform::MacOS),
+        "linux" => Ok(Platform::Linux),
+        _ => Err(winnow::error::ErrMode::Backtrack(ContextError::new())),
+    }
+}
+
+fn platform_condition(input: &mut &str) -> ModalResult<PlatformCondition> {
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    "platform:".parse_next(input)?;
+    let _ = take_while(0.., ' ').parse_next(input)?;
+
+    // Check for "not"
+    if opt("not ").parse_next(input)?.is_some() {
+        let _ = take_while(0.., ' ').parse_next(input)?;
+        let platform = platform_name.parse_next(input)?;
+        return Ok(PlatformCondition::Not(platform));
+    }
+
+    // Parse first platform
+    let first = platform_name.parse_next(input)?;
+
+    // Check for "or" chain
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    if opt("or ").parse_next(input)?.is_some() {
+        let mut platforms = vec![first];
+        loop {
+            let _ = take_while(0.., ' ').parse_next(input)?;
+            let platform = platform_name.parse_next(input)?;
+            platforms.push(platform);
+            let _ = take_while(0.., ' ').parse_next(input)?;
+            if opt("or ").parse_next(input)?.is_none() {
+                break;
+            }
+        }
+        return Ok(PlatformCondition::Or(platforms));
+    }
+
+    Ok(PlatformCondition::Is(first))
+}
+
 fn skip_directive(input: &mut &str) -> ModalResult<SkipDirective> {
     "%skip".parse_next(input)?;
     let message = opt(skip_message).parse_next(input)?;
-    let condition = opt(skip_condition).parse_next(input)?;
 
-    if message.is_none() && condition.is_none() {
+    // Try platform condition first, then shell condition
+    let platform = opt(platform_condition).parse_next(input)?;
+    let condition = if platform.is_none() {
+        opt(skip_condition).parse_next(input)?
+    } else {
+        None
+    };
+
+    if message.is_none() && condition.is_none() && platform.is_none() {
         let _ = line_content.parse_next(input)?;
     }
 
     opt_newline.parse_next(input)?;
 
-    Ok(SkipDirective { message, condition })
+    Ok(SkipDirective {
+        message,
+        condition,
+        platform,
+    })
 }
 
 fn try_skip_directive(input: &mut &str) -> ModalResult<Option<SkipDirective>> {
