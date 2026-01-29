@@ -1374,7 +1374,7 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.file_shell, Some(Shell::Bash));
-        assert_eq!(file.file_platform, vec![Platform::Unix, Platform::MacOS]);
+        assert_eq!(file.file_platform, vec![Platform::Unix]);
         assert!(file.file_skip.is_some());
         assert_eq!(
             file.file_skip.as_ref().unwrap().message.as_deref(),
@@ -1451,7 +1451,7 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.file_shell, Some(Shell::Bash));
-        assert_eq!(file.file_platform, vec![Platform::Unix, Platform::MacOS]);
+        assert_eq!(file.file_platform, vec![Platform::Unix]);
     }
 
     #[test]
