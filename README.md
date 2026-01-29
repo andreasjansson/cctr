@@ -656,7 +656,7 @@ Add a `%skip` directive after the test name to skip individual tests:
 ```
 ===
 unix only test
-%skip if: test "$OS" = "Windows_NT"
+%skip platform: windows
 ===
 ls -la
 ---
@@ -667,11 +667,47 @@ The directive syntax is:
 ```
 %skip                           # unconditional skip
 %skip(MESSAGE)                  # unconditional skip with message
+%skip platform: PLATFORM        # skip on specific platform
 %skip if: COMMAND               # skip if COMMAND exits with code 0
 %skip(MESSAGE) if: COMMAND      # skip with message if COMMAND exits 0
 ```
 
+### Platform conditions
+
+Use `platform:` for cross-platform skip conditions without shell commands:
+
+```
+%skip platform: windows         # skip on Windows
+%skip platform: unix            # skip on Unix (Linux, macOS, etc.)
+%skip platform: macos           # skip on macOS only
+%skip platform: linux           # skip on Linux only
+%skip platform: not windows     # skip on non-Windows (i.e., Unix)
+%skip platform: unix or windows # skip everywhere (both platforms)
+```
+
 Examples:
+
+```
+===
+unix only test
+%skip(Unix only) platform: windows
+===
+ls -la
+---
+...
+
+===
+windows only test
+%skip(Windows only) platform: not windows
+===
+dir
+---
+...
+```
+
+### Shell command conditions
+
+Use `if:` for custom skip logic using shell commands:
 
 ```
 ===
@@ -689,15 +725,9 @@ requires bash
 bash -c "echo hello"
 ---
 hello
-
-===
-windows only
-%skip if: test "$(uname)" != "MINGW"*
-===
-cmd /C echo hello
----
-hello
 ```
+
+Note: `if:` conditions run in the native shell (bash on Unix, cmd.exe on Windows), so conditions need to be written appropriately for the target platform.
 
 ### File-level skip
 
