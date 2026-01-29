@@ -73,38 +73,79 @@ pub enum ProgressEvent {
     },
 }
 
-fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
-    // Write command to a temporary script file for reliable multi-line execution
-    // Use system temp dir to avoid path format issues (e.g., \\?\ prefix on Windows)
-    // Use unique ID per invocation to avoid race conditions in parallel execution
-    use std::sync::atomic::{AtomicU64, Ordering};
-    static SCRIPT_COUNTER: AtomicU64 = AtomicU64::new(0);
+use cctr_corpus::Shell;
 
-    let temp_dir = std::env::temp_dir();
-    let script_id = format!(
-        "{}_{}",
-        std::process::id(),
-        SCRIPT_COUNTER.fetch_add(1, Ordering::Relaxed)
-    );
-
-    let (script_path, mut cmd) = if cfg!(windows) {
-        let script_path = temp_dir.join(format!("_cctr_script_{}.bat", script_id));
-        // Add @echo off to suppress command echoing, but preserve echo output
-        let script_content = format!("@echo off\r\n{}\r\n", command.replace('\n', "\r\n"));
-        if let Err(e) = std::fs::write(&script_path, &script_content) {
-            return (format!("Failed to write script: {}", e), -1);
-        }
-        let mut c = Command::new("cmd");
-        c.arg("/C").arg(&script_path);
-        (script_path, c)
+fn default_shell() -> Shell {
+    if cfg!(windows) {
+        Shell::PowerShell
     } else {
-        let script_path = temp_dir.join(format!("_cctr_script_{}.sh", script_id));
-        if let Err(e) = std::fs::write(&script_path, command) {
-            return (format!("Failed to write script: {}", e), -1);
+        Shell::Bash
+    }
+}
+
+fn run_command(
+    command: &str,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    shell: Option<Shell>,
+) -> (String, i32) {
+    let shell = shell.unwrap_or_else(default_shell);
+
+    // PowerShell and bash-like shells can handle multi-line commands directly via -Command/-c
+    // Only cmd.exe requires writing to a temp script file
+    let mut cmd = match shell {
+        Shell::PowerShell => {
+            let mut c = Command::new("powershell");
+            c.arg("-ExecutionPolicy")
+                .arg("Bypass")
+                .arg("-Command")
+                .arg(command);
+            c
         }
-        let mut c = Command::new("bash");
-        c.arg(&script_path);
-        (script_path, c)
+        Shell::Cmd => {
+            // cmd.exe can't handle multi-line commands, so we write to a temp script
+            use std::sync::atomic::{AtomicU64, Ordering};
+            static SCRIPT_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+            let temp_dir = std::env::temp_dir();
+            let script_id = format!(
+                "{}_{}",
+                std::process::id(),
+                SCRIPT_COUNTER.fetch_add(1, Ordering::Relaxed)
+            );
+            let script_path = temp_dir.join(format!("_cctr_script_{}.bat", script_id));
+            let script_content = format!("@echo off\r\n{}\r\n", command.replace('\n', "\r\n"));
+            if let Err(e) = std::fs::write(&script_path, &script_content) {
+                return (format!("Failed to write script: {}", e), -1);
+            }
+
+            let mut c = Command::new("cmd");
+            c.arg("/C").arg(&script_path);
+
+            // Run command and clean up
+            c.current_dir(work_dir);
+            for (key, value) in env_vars {
+                c.env(key, value);
+            }
+            let result = execute_command(&mut c);
+            let _ = std::fs::remove_file(&script_path);
+            return result;
+        }
+        Shell::Bash => {
+            let mut c = Command::new("bash");
+            c.arg("-c").arg(command);
+            c
+        }
+        Shell::Sh => {
+            let mut c = Command::new("sh");
+            c.arg("-c").arg(command);
+            c
+        }
+        Shell::Zsh => {
+            let mut c = Command::new("zsh");
+            c.arg("-c").arg(command);
+            c
+        }
     };
 
     cmd.current_dir(work_dir);
@@ -113,7 +154,11 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
         cmd.env(key, value);
     }
 
-    let result = match cmd.output() {
+    execute_command(&mut cmd)
+}
+
+fn execute_command(cmd: &mut Command) -> (String, i32) {
+    match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -124,12 +169,7 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
             (normalized.trim_end_matches('\n').to_string(), exit_code)
         }
         Err(e) => (format!("Failed to execute command: {}", e), -1),
-    };
-
-    // Clean up the script file
-    let _ = std::fs::remove_file(&script_path);
-
-    result
+    }
 }
 
 use crate::SkipDirective;
