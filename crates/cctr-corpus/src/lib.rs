@@ -127,6 +127,7 @@ impl TestCase {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CorpusFile {
     pub file_skip: Option<SkipDirective>,
+    pub file_shell: Option<Shell>,
     pub tests: Vec<TestCase>,
 }
 
