@@ -61,9 +61,9 @@ where
 mixed commands with pipe
 ===
 Write-Output "hello world"
-Write-Output "hello world" | Select-String "hello"
+Write-Output "goodbye world" | ForEach-Object { $_.ToUpper() }
 ---
 hello world
-hello world
+GOODBYE WORLD
 
 
