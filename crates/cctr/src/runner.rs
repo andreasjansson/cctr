@@ -150,7 +150,7 @@ fn run_command(
 }
 
 use crate::SkipDirective;
-use cctr_corpus::{Platform, PlatformCondition};
+use cctr_corpus::Platform;
 
 fn is_current_platform(platform: Platform) -> bool {
     match platform {
@@ -161,47 +161,27 @@ fn is_current_platform(platform: Platform) -> bool {
     }
 }
 
-fn should_skip_for_platform(condition: &PlatformCondition) -> bool {
-    match condition {
-        PlatformCondition::Is(p) => is_current_platform(*p),
-        PlatformCondition::Not(p) => !is_current_platform(*p),
-        PlatformCondition::Or(platforms) => platforms.iter().any(|p| is_current_platform(*p)),
+/// Check if current platform matches any in the list
+/// Empty list means "all platforms" (no restriction)
+fn matches_platform(platforms: &[Platform]) -> bool {
+    if platforms.is_empty() {
+        return true;
     }
+    platforms.iter().any(|p| is_current_platform(*p))
 }
 
 fn should_skip(
     skip: &SkipDirective,
     work_dir: &Path,
     env_vars: &[(String, String)],
+    file_shell: Option<Shell>,
 ) -> Option<String> {
     let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok_and(|v| !v.is_empty());
 
-    // Check platform condition first
-    if let Some(platform) = &skip.platform {
-        let should_skip = should_skip_for_platform(platform);
-        if debug {
-            eprintln!(
-                "[DEBUG SKIP] platform: {:?}, should_skip: {}, is_windows: {}",
-                platform,
-                should_skip,
-                cfg!(windows)
-            );
-        }
-        if should_skip {
-            return Some(
-                skip.message
-                    .clone()
-                    .unwrap_or_else(|| "skipped".to_string()),
-            );
-        } else {
-            return None;
-        }
-    }
-
-    // Check shell condition (always use default shell for skip conditions)
+    // Check shell condition - use file_shell if specified, otherwise default
     match &skip.condition {
         Some(condition) => {
-            let (output, exit_code) = run_command(condition, work_dir, env_vars, None);
+            let (output, exit_code) = run_command(condition, work_dir, env_vars, file_shell);
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
@@ -261,7 +241,10 @@ fn run_test(
 
     // Warn if using cmd with multiline command
     let warning = if effective_shell == Shell::Cmd && is_multiline(&test.command) {
-        Some("cmd.exe does not support multi-line commands; only the first line will execute".to_string())
+        Some(
+            "cmd.exe does not support multi-line commands; only the first line will execute"
+                .to_string(),
+        )
     } else {
         None
     };
