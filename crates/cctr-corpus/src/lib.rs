@@ -1183,97 +1183,7 @@ this looks like a test but is content
     }
 
     #[test]
-    fn test_shell_directive_test_level() {
-        let content = r#"===
-bash test
-%shell bash
-===
-echo hello
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::Bash));
-    }
-
-    #[test]
-    fn test_shell_directive_powershell() {
-        let content = r#"===
-powershell test
-%shell powershell
-===
-Write-Host "hello"
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::PowerShell));
-    }
-
-    #[test]
-    fn test_shell_directive_pwsh_alias() {
-        let content = r#"===
-pwsh test
-%shell pwsh
-===
-Write-Host "hello"
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::PowerShell));
-    }
-
-    #[test]
-    fn test_shell_directive_cmd() {
-        let content = r#"===
-cmd test
-%shell cmd
-===
-echo hello
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::Cmd));
-    }
-
-    #[test]
-    fn test_shell_directive_sh() {
-        let content = r#"===
-sh test
-%shell sh
-===
-echo hello
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::Sh));
-    }
-
-    #[test]
-    fn test_shell_directive_zsh() {
-        let content = r#"===
-zsh test
-%shell zsh
-===
-echo hello
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].shell, Some(Shell::Zsh));
-    }
-
-    #[test]
-    fn test_shell_directive_file_level() {
+    fn test_shell_directive_file_level_bash() {
         let content = r#"%shell bash
 
 ===
@@ -1286,13 +1196,11 @@ hello
         let file = parse_test(content);
         assert_eq!(file.file_shell, Some(Shell::Bash));
         assert_eq!(file.tests.len(), 1);
-        assert!(file.tests[0].shell.is_none());
     }
 
     #[test]
-    fn test_shell_and_skip_directives_file_level() {
+    fn test_shell_directive_file_level_powershell() {
         let content = r#"%shell powershell
-%skip(windows only) platform: not windows
 
 ===
 test 1
@@ -1303,13 +1211,140 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.file_shell, Some(Shell::PowerShell));
-        assert!(file.file_skip.is_some());
-        assert_eq!(file.tests.len(), 1);
     }
 
     #[test]
-    fn test_skip_and_shell_directives_file_level_reverse_order() {
-        let content = r#"%skip(windows only) platform: not windows
+    fn test_shell_directive_file_level_pwsh_alias() {
+        let content = r#"%shell pwsh
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::PowerShell));
+    }
+
+    #[test]
+    fn test_shell_directive_file_level_sh() {
+        let content = r#"%shell sh
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Sh));
+    }
+
+    #[test]
+    fn test_shell_directive_file_level_zsh() {
+        let content = r#"%shell zsh
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Zsh));
+    }
+
+    #[test]
+    fn test_shell_directive_file_level_cmd() {
+        let content = r#"%shell cmd
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Cmd));
+    }
+
+    #[test]
+    fn test_platform_directive_single() {
+        let content = r#"%platform windows
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_platform, vec![Platform::Windows]);
+    }
+
+    #[test]
+    fn test_platform_directive_multiple() {
+        let content = r#"%platform mac, linux, unix
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(
+            file.file_platform,
+            vec![Platform::MacOS, Platform::Linux, Platform::Unix]
+        );
+    }
+
+    #[test]
+    fn test_platform_directive_mac_alias() {
+        let content = r#"%platform mac
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_platform, vec![Platform::MacOS]);
+    }
+
+    #[test]
+    fn test_all_directives_file_level() {
+        let content = r#"%shell bash
+%platform unix, mac
+%skip(not ready yet)
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Bash));
+        assert_eq!(file.file_platform, vec![Platform::Unix, Platform::MacOS]);
+        assert!(file.file_skip.is_some());
+        assert_eq!(file.file_skip.as_ref().unwrap().message.as_deref(), Some("not ready yet"));
+    }
+
+    #[test]
+    fn test_directives_any_order() {
+        let content = r#"%platform windows
+%skip(windows only)
 %shell powershell
 
 ===
@@ -1321,16 +1356,33 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.file_shell, Some(Shell::PowerShell));
+        assert_eq!(file.file_platform, vec![Platform::Windows]);
         assert!(file.file_skip.is_some());
-        assert_eq!(file.tests.len(), 1);
     }
 
     #[test]
-    fn test_shell_and_skip_directives_test_level() {
+    fn test_skip_with_condition_file_level() {
+        let content = r#"%skip(needs feature) if: test -f /nonexistent
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert!(file.file_skip.is_some());
+        let skip = file.file_skip.unwrap();
+        assert_eq!(skip.message.as_deref(), Some("needs feature"));
+        assert_eq!(skip.condition.as_deref(), Some("test -f /nonexistent"));
+    }
+
+    #[test]
+    fn test_skip_test_level_with_condition() {
         let content = r#"===
-test with both
-%skip(not ready)
-%shell zsh
+test with skip
+%skip(not ready) if: false
 ===
 echo hello
 ---
@@ -1339,6 +1391,8 @@ hello
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         assert!(file.tests[0].skip.is_some());
-        assert_eq!(file.tests[0].shell, Some(Shell::Zsh));
+        let skip = file.tests[0].skip.as_ref().unwrap();
+        assert_eq!(skip.message.as_deref(), Some("not ready"));
+        assert_eq!(skip.condition.as_deref(), Some("false"));
     }
 }
