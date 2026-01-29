@@ -326,6 +326,13 @@ impl Output {
                 )
                 .unwrap();
 
+                // Print warning if present
+                if let Some(warning) = &result.warning {
+                    self.set_color(Color::Yellow);
+                    writeln!(self.stdout, "  ⚠ Warning: {}", warning).unwrap();
+                    self.reset();
+                }
+
                 if let Some(error) = &result.error {
                     writeln!(self.stdout, "  Error: {}", error).unwrap();
                 } else if let Some(actual) = &result.actual_output {
