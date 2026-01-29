@@ -650,6 +650,7 @@ hello
         let file = parse_test(content);
         assert!(file.file_skip.is_none());
         assert!(file.file_shell.is_none());
+        assert!(file.file_platform.is_empty());
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "test name");
         assert_eq!(file.tests[0].command, "echo hello");
@@ -657,7 +658,6 @@ hello
         assert!(file.tests[0].variables.is_empty());
         assert!(file.tests[0].constraints.is_empty());
         assert!(file.tests[0].skip.is_none());
-        assert!(file.tests[0].shell.is_none());
     }
 
     #[test]
