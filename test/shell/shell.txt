@@ -1,28 +1,28 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 
 ===
-bash shell tests pass
+file-level bash shell tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests/bash.txt --no-color 2>&1 | tail -1
 ---
 All 4 tests passed in {{ t: number }}s
 
 ===
-sh shell tests pass
+file-level sh shell tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests/sh.txt --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t: number }}s
 
 ===
-file level shell tests pass
+file-level shell with default shell tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests/file_level.txt --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t: number }}s
 
 ===
-shell override tests pass
+sh file-level shell tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests/override.txt --no-color 2>&1 | tail -1
 ---
