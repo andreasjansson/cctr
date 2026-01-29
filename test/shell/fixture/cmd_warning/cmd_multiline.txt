@@ -1,0 +1,8 @@
+===
+cmd with multiline should warn
+%shell cmd
+===
+echo first
+echo second
+---
+first
