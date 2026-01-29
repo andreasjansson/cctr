@@ -1,0 +1,16 @@
+%shell bash
+
+===
+file level shell applies to all tests
+===
+echo "from bash"
+---
+from bash
+
+===
+multiline works with file level shell
+===
+x=hello
+echo $x
+---
+hello
