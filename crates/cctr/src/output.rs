@@ -144,6 +144,13 @@ impl Output {
             writeln!(self.stdout, " {:.2}s", result.elapsed.as_secs_f64()).unwrap();
             self.reset();
         }
+
+        // Print warning if present
+        if let Some(warning) = &result.warning {
+            self.set_color(Color::Yellow);
+            writeln!(self.stdout, "  ⚠ Warning: {}", warning).unwrap();
+            self.reset();
+        }
     }
 
     pub fn finish_progress(&mut self) {
