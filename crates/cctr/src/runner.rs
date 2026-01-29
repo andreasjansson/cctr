@@ -219,7 +219,7 @@ fn run_test(
     let start = Instant::now();
 
     if let Some(skip) = &test.skip {
-        if let Some(reason) = should_skip(skip, work_dir, env_vars) {
+        if let Some(reason) = should_skip(skip, work_dir, env_vars, file_shell) {
             return TestResult {
                 test: test.clone(),
                 passed: true,
@@ -235,9 +235,7 @@ fn run_test(
         }
     }
 
-    // Test-level shell overrides file-level shell
-    let shell = test.shell.or(file_shell);
-    let effective_shell = shell.unwrap_or_else(default_shell);
+    let effective_shell = file_shell.unwrap_or_else(default_shell);
 
     // Warn if using cmd with multiline command
     let warning = if effective_shell == Shell::Cmd && is_multiline(&test.command) {
@@ -249,7 +247,7 @@ fn run_test(
         None
     };
 
-    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars, shell);
+    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars, file_shell);
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
