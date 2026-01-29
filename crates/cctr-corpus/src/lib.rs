@@ -88,6 +88,22 @@ pub enum Platform {
     Linux,
 }
 
+/// Shell to use for running commands.
+/// Default: bash on Unix, powershell on Windows
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Shell {
+    /// Bourne shell (sh)
+    Sh,
+    /// Bash shell (default on Unix)
+    Bash,
+    /// Zsh shell
+    Zsh,
+    /// PowerShell (default on Windows)
+    PowerShell,
+    /// Windows cmd.exe
+    Cmd,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCase {
     pub name: String,
