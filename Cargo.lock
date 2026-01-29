@@ -118,7 +118,7 @@ dependencies = [
 
 [[package]]
 name = "cctr"
-version = "0.20.1"
+version = "0.21.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -140,7 +140,7 @@ dependencies = [
 
 [[package]]
 name = "cctr-corpus"
-version = "0.20.1"
+version = "0.21.0"
 dependencies = [
  "tempfile",
  "thiserror",
@@ -149,7 +149,7 @@ dependencies = [
 
 [[package]]
 name = "cctr-expr"
-version = "0.20.1"
+version = "0.21.0"
 dependencies = [
  "regex",
  "thiserror",

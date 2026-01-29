@@ -136,11 +136,17 @@ fn should_skip(
         if debug {
             eprintln!(
                 "[DEBUG SKIP] platform: {:?}, should_skip: {}, is_windows: {}",
-                platform, should_skip, cfg!(windows)
+                platform,
+                should_skip,
+                cfg!(windows)
             );
         }
         if should_skip {
-            return Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string()));
+            return Some(
+                skip.message
+                    .clone()
+                    .unwrap_or_else(|| "skipped".to_string()),
+            );
         } else {
             return None;
         }
@@ -153,7 +159,10 @@ fn should_skip(
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
-                    condition, exit_code, output, cfg!(windows)
+                    condition,
+                    exit_code,
+                    output,
+                    cfg!(windows)
                 );
             }
             if exit_code == 0 {
