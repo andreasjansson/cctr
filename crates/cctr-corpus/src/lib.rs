@@ -512,22 +512,15 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let name = description_line.parse_next(input)?;
     state.current_line += 1;
 
-    // Parse test-level directives (skip and shell can appear in any order)
-    let mut skip = None;
-    let mut shell = None;
-
-    loop {
-        let _ = take_while(0.., ' ').parse_next(input)?;
-        if input.starts_with("%skip") && skip.is_none() {
-            skip = Some(skip_directive.parse_next(input)?);
-            state.current_line += 1;
-        } else if input.starts_with("%shell") && shell.is_none() {
-            shell = Some(shell_directive.parse_next(input)?);
-            state.current_line += 1;
-        } else {
-            break;
-        }
-    }
+    // Parse test-level skip directive (only %skip allowed at test level)
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    let skip = if input.starts_with("%skip") {
+        let s = Some(skip_directive.parse_next(input)?);
+        state.current_line += 1;
+        s
+    } else {
+        None
+    };
 
     if let Some(err) = input
         .lines()
