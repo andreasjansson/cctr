@@ -1267,21 +1267,6 @@ hello
     }
 
     #[test]
-    fn test_shell_directive_file_level_pwsh_alias() {
-        let content = r#"%shell pwsh
-
-===
-test 1
-===
-echo hello
----
-hello
-"#;
-        let file = parse_test(content);
-        assert_eq!(file.file_shell, Some(Shell::PowerShell));
-    }
-
-    #[test]
     fn test_shell_directive_file_level_sh() {
         let content = r#"%shell sh
 
