@@ -1218,4 +1218,164 @@ this looks like a test but is content
         // The ===== block is included as content
         assert!(file.tests[0].expected_output.contains("====="));
     }
+
+    #[test]
+    fn test_shell_directive_test_level() {
+        let content = r#"===
+bash test
+%shell bash
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::Bash));
+    }
+
+    #[test]
+    fn test_shell_directive_powershell() {
+        let content = r#"===
+powershell test
+%shell powershell
+===
+Write-Host "hello"
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::PowerShell));
+    }
+
+    #[test]
+    fn test_shell_directive_pwsh_alias() {
+        let content = r#"===
+pwsh test
+%shell pwsh
+===
+Write-Host "hello"
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::PowerShell));
+    }
+
+    #[test]
+    fn test_shell_directive_cmd() {
+        let content = r#"===
+cmd test
+%shell cmd
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::Cmd));
+    }
+
+    #[test]
+    fn test_shell_directive_sh() {
+        let content = r#"===
+sh test
+%shell sh
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::Sh));
+    }
+
+    #[test]
+    fn test_shell_directive_zsh() {
+        let content = r#"===
+zsh test
+%shell zsh
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].shell, Some(Shell::Zsh));
+    }
+
+    #[test]
+    fn test_shell_directive_file_level() {
+        let content = r#"%shell bash
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::Bash));
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].shell.is_none());
+    }
+
+    #[test]
+    fn test_shell_and_skip_directives_file_level() {
+        let content = r#"%shell powershell
+%skip(windows only) platform: not windows
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::PowerShell));
+        assert!(file.file_skip.is_some());
+        assert_eq!(file.tests.len(), 1);
+    }
+
+    #[test]
+    fn test_skip_and_shell_directives_file_level_reverse_order() {
+        let content = r#"%skip(windows only) platform: not windows
+%shell powershell
+
+===
+test 1
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_shell, Some(Shell::PowerShell));
+        assert!(file.file_skip.is_some());
+        assert_eq!(file.tests.len(), 1);
+    }
+
+    #[test]
+    fn test_shell_and_skip_directives_test_level() {
+        let content = r#"===
+test with both
+%skip(not ready)
+%shell zsh
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].skip.is_some());
+        assert_eq!(file.tests[0].shell, Some(Shell::Zsh));
+    }
 }
