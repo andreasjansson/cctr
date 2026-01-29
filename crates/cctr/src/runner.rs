@@ -4,8 +4,48 @@ use crate::{parse_content, parse_file, TestCase};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc::Sender;
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
+
+/// Cached bash path - computed once per invocation
+static BASH_PATH: OnceLock<String> = OnceLock::new();
+
+/// Find a working bash executable.
+/// On Windows, `bash` in PATH might be WSL's bash which doesn't work with Windows paths.
+/// We try `bash` first with a simple test, and fall back to Git Bash if it fails.
+fn find_working_bash() -> &'static str {
+    BASH_PATH.get_or_init(|| {
+        #[cfg(not(windows))]
+        {
+            "bash".to_string()
+        }
+        #[cfg(windows)]
+        {
+            // Try bash from PATH first with a simple command
+            if let Ok(output) = Command::new("bash")
+                .arg("-c")
+                .arg("echo ok")
+                .output()
+            {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                // If it works and doesn't mention WSL, use it
+                if output.status.success() && stdout.trim() == "ok" {
+                    return "bash".to_string();
+                }
+            }
+            
+            // Fall back to Git Bash
+            let git_bash = "C:\\Program Files\\Git\\bin\\bash.exe";
+            if std::path::Path::new(git_bash).exists() {
+                return git_bash.to_string();
+            }
+            
+            // Last resort: just use bash and hope for the best
+            "bash".to_string()
+        }
+    })
+}
 
 #[derive(Debug, Clone)]
 pub struct TestResult {
