@@ -1,4 +1,4 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 ===
 update mode output format
 ===

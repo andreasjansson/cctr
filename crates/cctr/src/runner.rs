@@ -301,49 +301,54 @@ fn run_corpus_file(
     };
 
     // Helper to skip all tests in file
-    let skip_all_tests =
-        |corpus: &cctr_corpus::CorpusFile, reason: String, progress_tx: Option<&Sender<ProgressEvent>>| {
-            let file_stem = file_path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("")
-                .to_string();
-            let mut results = Vec::new();
-            for test in &corpus.tests {
-                if let Some(tx) = progress_tx {
-                    let _ = tx.send(ProgressEvent::TestStart {
-                        suite: suite_name.to_string(),
-                        file: file_stem.clone(),
-                        name: test.name.clone(),
-                    });
-                }
-                let result = TestResult {
-                    test: test.clone(),
-                    passed: true,
-                    skipped: true,
-                    skip_reason: Some(reason.clone()),
-                    actual_output: None,
-                    expected_output: test.expected_output.clone(),
-                    error: None,
-                    warning: None,
-                    elapsed: Duration::ZERO,
+    let skip_all_tests = |corpus: &cctr_corpus::CorpusFile,
+                          reason: String,
+                          progress_tx: Option<&Sender<ProgressEvent>>| {
+        let file_stem = file_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string();
+        let mut results = Vec::new();
+        for test in &corpus.tests {
+            if let Some(tx) = progress_tx {
+                let _ = tx.send(ProgressEvent::TestStart {
                     suite: suite_name.to_string(),
-                };
-                if let Some(tx) = progress_tx {
-                    let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
-                }
-                results.push(result);
+                    file: file_stem.clone(),
+                    name: test.name.clone(),
+                });
             }
-            FileResult {
-                file_path: file_path.to_path_buf(),
-                results,
-                parse_error: None,
+            let result = TestResult {
+                test: test.clone(),
+                passed: true,
+                skipped: true,
+                skip_reason: Some(reason.clone()),
+                actual_output: None,
+                expected_output: test.expected_output.clone(),
+                error: None,
+                warning: None,
+                elapsed: Duration::ZERO,
+                suite: suite_name.to_string(),
+            };
+            if let Some(tx) = progress_tx {
+                let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
             }
-        };
+            results.push(result);
+        }
+        FileResult {
+            file_path: file_path.to_path_buf(),
+            results,
+            parse_error: None,
+        }
+    };
 
     // Check file-level platform restriction
     if !matches_platform(&corpus.file_platform) {
-        let platform_names: Vec<_> = corpus.file_platform.iter().map(|p| format!("{:?}", p).to_lowercase()).collect();
+        let platform_names: Vec<_> = corpus
+            .file_platform
+            .iter()
+            .map(|p| format!("{:?}", p).to_lowercase())
+            .collect();
         let reason = format!("platform: {}", platform_names.join(", "));
         return skip_all_tests(&corpus, reason, progress_tx);
     }

@@ -1,4 +1,4 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 ===
 with_fixture tests pass
 ===

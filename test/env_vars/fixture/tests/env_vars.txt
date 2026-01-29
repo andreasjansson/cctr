@@ -1,4 +1,4 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 ===
 CCTR_WORK_DIR is set
 ===

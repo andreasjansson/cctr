@@ -1,4 +1,4 @@
-%skip(Windows only) platform: not windows
+%platform windows
 
 ===
 number comparison greater than

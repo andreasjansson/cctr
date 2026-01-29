@@ -1,4 +1,4 @@
-%skip(Unix only) platform: windows
+%platform unix, mac, linux
 ===
 verbose mode shows starting and completion for each test
 ===

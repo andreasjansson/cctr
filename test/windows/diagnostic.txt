@@ -1,4 +1,4 @@
-%skip(Windows only) platform: not windows
+%platform windows
 
 ===
 show OS environment variable
