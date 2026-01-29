@@ -575,6 +575,19 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         None
     };
 
+    // Check for directives that are only allowed at file level
+    let _ = take_while(0.., ' ').parse_next(input)?;
+    if input.starts_with("%platform") {
+        state.error_message =
+            Some("%platform is only allowed at file level, not inside test headers".to_string());
+        return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+    }
+    if input.starts_with("%shell") {
+        state.error_message =
+            Some("%shell is only allowed at file level, not inside test headers".to_string());
+        return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+    }
+
     if let Some(err) = input
         .lines()
         .next()
