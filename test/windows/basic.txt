@@ -3,14 +3,14 @@
 ===
 echo simple string
 ===
-echo hello world
+echo "hello world"
 ---
 hello world
 
 ===
 echo with variable capture
 ===
-echo count: 42
+echo "count: 42"
 ---
 count: {{ n }}
 ---
@@ -30,7 +30,7 @@ where
 ===
 string comparison
 ===
-echo status: ok
+echo "status: ok"
 ---
 status: {{ s }}
 ---
