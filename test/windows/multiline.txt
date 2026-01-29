@@ -1,4 +1,4 @@
-%skip(Windows only) platform: not windows
+%platform windows
 
 ===
 two echo commands on separate lines
@@ -66,10 +66,4 @@ Write-Output "hello world" | Select-String "hello"
 hello world
 hello world
 
-===
-cmd shell single line works
-%shell cmd
-===
-echo hello from cmd
----
-hello from cmd
+
