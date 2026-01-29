@@ -82,7 +82,7 @@ fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) ->
 
     let temp_dir = std::env::temp_dir();
     let script_id = format!(
-        "{}_{}", 
+        "{}_{}",
         std::process::id(),
         SCRIPT_COUNTER.fetch_add(1, Ordering::Relaxed)
     );
