@@ -418,7 +418,7 @@ fn platform_name(input: &mut &str) -> ModalResult<Platform> {
 }
 
 /// Parse %platform directive with comma-separated platforms
-/// e.g., %platform windows or %platform mac, linux, unix
+/// e.g., %platform windows or %platform unix
 fn platform_directive(input: &mut &str) -> ModalResult<Vec<Platform>> {
     "%platform".parse_next(input)?;
     let _ = take_while(0.., ' ').parse_next(input)?;
@@ -1328,7 +1328,7 @@ hello
 
     #[test]
     fn test_platform_directive_multiple() {
-        let content = r#"%platform mac, linux, unix
+        let content = r#"%platform linux, macos
 
 ===
 test 1
@@ -1340,13 +1340,13 @@ hello
         let file = parse_test(content);
         assert_eq!(
             file.file_platform,
-            vec![Platform::MacOS, Platform::Linux, Platform::Unix]
+            vec![Platform::Linux, Platform::MacOS]
         );
     }
 
     #[test]
-    fn test_platform_directive_mac_alias() {
-        let content = r#"%platform mac
+    fn test_platform_directive_macos() {
+        let content = r#"%platform macos
 
 ===
 test 1
@@ -1362,7 +1362,7 @@ hello
     #[test]
     fn test_all_directives_file_level() {
         let content = r#"%shell bash
-%platform unix, mac
+%platform unix
 %skip(not ready yet)
 
 ===
@@ -1440,7 +1440,7 @@ hello
     #[test]
     fn test_shell_platform_valid_bash_unix() {
         let content = r#"%shell bash
-%platform unix, mac
+%platform unix
 
 ===
 test
