@@ -554,14 +554,21 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let name = description_line.parse_next(input)?;
     state.current_line += 1;
 
-    let skip = try_skip_directive.parse_next(input)?;
-    if skip.is_some() {
-        state.current_line += 1;
-    }
+    // Parse test-level directives (skip and shell can appear in any order)
+    let mut skip = None;
+    let mut shell = None;
 
-    let shell = try_shell_directive.parse_next(input)?;
-    if shell.is_some() {
-        state.current_line += 1;
+    loop {
+        let _ = take_while(0.., ' ').parse_next(input)?;
+        if input.starts_with("%skip") && skip.is_none() {
+            skip = Some(skip_directive.parse_next(input)?);
+            state.current_line += 1;
+        } else if input.starts_with("%shell") && shell.is_none() {
+            shell = Some(shell_directive.parse_next(input)?);
+            state.current_line += 1;
+        } else {
+            break;
+        }
     }
 
     if let Some(err) = input
