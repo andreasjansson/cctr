@@ -1,4 +1,4 @@
-%skip(Unix only) if: test "$OS" = "Windows_NT"
+%skip(Unix only) platform: windows
 ===
 CCTR_TEST_PATH tests pass
 ===

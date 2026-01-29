@@ -1,4 +1,4 @@
-%skip(Unix only) if: test "$OS" = "Windows_NT"
+%skip(Unix only) platform: windows
 ===
 all 84 expression tests pass
 ===
