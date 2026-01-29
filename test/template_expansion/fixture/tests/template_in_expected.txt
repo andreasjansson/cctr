@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 CCTR_FIXTURE_DIR env var is set
 ===

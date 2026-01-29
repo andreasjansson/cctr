@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 CCTR_TEST_PATH tests pass
 ===

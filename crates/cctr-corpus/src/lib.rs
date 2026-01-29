@@ -1338,10 +1338,7 @@ echo hello
 hello
 "#;
         let file = parse_test(content);
-        assert_eq!(
-            file.file_platform,
-            vec![Platform::Linux, Platform::MacOS]
-        );
+        assert_eq!(file.file_platform, vec![Platform::Linux, Platform::MacOS]);
     }
 
     #[test]

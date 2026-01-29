@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 all duck typing passing tests pass
 ===

@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 echo test
 ===

@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 verbose mode shows starting and completion for each test
 ===

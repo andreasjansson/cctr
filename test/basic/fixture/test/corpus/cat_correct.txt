@@ -1,4 +1,4 @@
-%platform unix, mac, linux
+%platform unix
 ===
 Test cat with correct output
 ===
