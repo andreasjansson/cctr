@@ -1,6 +1,7 @@
+%shell sh
+
 ===
 sh single line
-%shell sh
 ===
 echo hello
 ---
@@ -8,7 +9,6 @@ hello
 
 ===
 sh multiline
-%shell sh
 ===
 echo line1
 echo line2
