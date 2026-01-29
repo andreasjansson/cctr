@@ -113,6 +113,24 @@ fn run_command_with_shell(
 }
 
 use crate::SkipDirective;
+use cctr_corpus::{Platform, PlatformCondition};
+
+fn is_current_platform(platform: Platform) -> bool {
+    match platform {
+        Platform::Windows => cfg!(windows),
+        Platform::Unix => cfg!(unix),
+        Platform::MacOS => cfg!(target_os = "macos"),
+        Platform::Linux => cfg!(target_os = "linux"),
+    }
+}
+
+fn should_skip_for_platform(condition: &PlatformCondition) -> bool {
+    match condition {
+        PlatformCondition::Is(p) => is_current_platform(*p),
+        PlatformCondition::Not(p) => !is_current_platform(*p),
+        PlatformCondition::Or(platforms) => platforms.iter().any(|p| is_current_platform(*p)),
+    }
+}
 
 fn should_skip(
     skip: &SkipDirective,
@@ -120,11 +138,27 @@ fn should_skip(
     env_vars: &[(String, String)],
 ) -> Option<String> {
     let debug = std::env::var("CCTR_DEBUG_SKIP").is_ok();
+
+    // Check platform condition first
+    if let Some(platform) = &skip.platform {
+        let should_skip = should_skip_for_platform(platform);
+        if debug {
+            eprintln!(
+                "[DEBUG SKIP] platform: {:?}, should_skip: {}, is_windows: {}",
+                platform, should_skip, cfg!(windows)
+            );
+        }
+        if should_skip {
+            return Some(skip.message.clone().unwrap_or_else(|| "skipped".to_string()));
+        } else {
+            return None;
+        }
+    }
+
+    // Check shell condition
     match &skip.condition {
         Some(condition) => {
-            // Always use bash for skip conditions since they use bash syntax
-            // On Windows, this requires bash to be available (e.g., Git Bash)
-            let (output, exit_code) = run_command_with_shell(condition, work_dir, env_vars, false);
+            let (output, exit_code) = run_command(condition, work_dir, env_vars);
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
