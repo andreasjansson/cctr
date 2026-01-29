@@ -767,7 +767,7 @@ dir
 |----------|---------|
 | `windows` | Windows |
 | `unix` | All Unix-like systems (Linux, macOS, etc.) |
-| `mac` / `macos` | macOS only |
+| `macos` | macOS only |
 | `linux` | Linux only |
 
 Multiple platforms can be specified:
