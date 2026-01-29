@@ -74,8 +74,6 @@ pub enum ProgressEvent {
 }
 
 fn run_command(command: &str, work_dir: &Path, env_vars: &[(String, String)]) -> (String, i32) {
-    use std::io::Write;
-
     // Write command to a temporary script file for reliable multi-line execution
     let (script_path, mut cmd) = if cfg!(windows) {
         let script_path = work_dir.join("_cctr_script.bat");
