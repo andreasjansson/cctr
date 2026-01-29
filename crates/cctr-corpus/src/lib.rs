@@ -623,12 +623,24 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
 
     skip_blank_lines.parse_next(input)?;
 
-    let file_skip = try_skip_directive.parse_next(input)?;
-    if file_skip.is_some() {
-        state.current_line += 1;
-    }
+    // Parse file-level directives (skip and shell can appear in any order)
+    let mut file_skip = None;
+    let mut file_shell = None;
 
-    skip_blank_lines.parse_next(input)?;
+    loop {
+        let _ = take_while(0.., ' ').parse_next(input)?;
+        if input.starts_with("%skip") && file_skip.is_none() {
+            file_skip = Some(skip_directive.parse_next(input)?);
+            state.current_line += 1;
+            skip_blank_lines.parse_next(input)?;
+        } else if input.starts_with("%shell") && file_shell.is_none() {
+            file_shell = Some(shell_directive.parse_next(input)?);
+            state.current_line += 1;
+            skip_blank_lines.parse_next(input)?;
+        } else {
+            break;
+        }
+    }
 
     let mut tests = Vec::new();
 
@@ -646,7 +658,11 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
         tests.push(tc);
     }
 
-    Ok(CorpusFile { file_skip, tests })
+    Ok(CorpusFile {
+        file_skip,
+        file_shell,
+        tests,
+    })
 }
 
 #[cfg(test)]
