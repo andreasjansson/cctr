@@ -1,0 +1,9 @@
+===
+ANSI escape codes are stripped from output
+===
+cctr $CCTR_FIXTURE_DIR/tests/ansi.txt --no-color 2>&1 | tail -1
+---
+All 6 tests passed in {{ t }}s
+---
+where
+* t: number
