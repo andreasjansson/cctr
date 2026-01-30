@@ -1,3 +1,5 @@
+%platform unix
+
 ===
 ANSI escape codes are stripped from output
 ===
