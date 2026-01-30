@@ -575,6 +575,7 @@ pub fn run_suite(
     suite: &Suite,
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
+    stream_output: bool,
 ) -> SuiteResult {
     let start = Instant::now();
     let mut file_results = Vec::new();
@@ -639,6 +640,7 @@ pub fn run_suite(
             &env_vars,
             None, // Setup always runs all tests regardless of pattern
             progress_tx,
+            stream_output,
         );
         let setup_passed = file_result.passed();
         file_results.push(file_result);
@@ -662,6 +664,7 @@ pub fn run_suite(
             &env_vars,
             pattern,
             progress_tx,
+            stream_output,
         );
         file_results.push(file_result);
     }
@@ -675,6 +678,7 @@ pub fn run_suite(
             &env_vars,
             None, // Teardown always runs all tests regardless of pattern
             progress_tx,
+            stream_output,
         );
         file_results.push(file_result);
     }
