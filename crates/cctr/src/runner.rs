@@ -132,7 +132,12 @@ fn is_multiline(command: &str) -> bool {
     command.contains('\n')
 }
 
-fn build_command(command: &str, work_dir: &Path, env_vars: &[(String, String)], shell: Shell) -> Command {
+fn build_command(
+    command: &str,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    shell: Shell,
+) -> Command {
     let mut cmd = match shell {
         Shell::PowerShell => {
             let mut c = Command::new("powershell");
@@ -557,7 +562,14 @@ fn run_corpus_file(
             None
         };
 
-        let result = run_test(&test, work_dir, suite_name, env_vars, corpus.file_shell, streaming);
+        let result = run_test(
+            &test,
+            work_dir,
+            suite_name,
+            env_vars,
+            corpus.file_shell,
+            streaming,
+        );
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
@@ -800,7 +812,14 @@ pub fn run_from_stdin(
             None
         };
 
-        let result = run_test(&test, &work_dir, "stdin", &env_vars, corpus.file_shell, streaming);
+        let result = run_test(
+            &test,
+            &work_dir,
+            "stdin",
+            &env_vars,
+            corpus.file_shell,
+            streaming,
+        );
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
@@ -853,7 +872,7 @@ mod tests {
             "===\necho test\n===\necho hello\n---\nhello\n",
         );
 
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         assert!(result.passed());
         assert_eq!(result.total_tests(), 1);
         assert_eq!(result.passed_tests(), 1);
@@ -868,7 +887,7 @@ mod tests {
             "===\nfailing test\n===\necho wrong\n---\nexpected\n",
         );
 
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         assert!(!result.passed());
         assert_eq!(result.passed_tests(), 0);
     }
@@ -882,7 +901,7 @@ mod tests {
             "===\nexit only\n===\ntrue\n---\n",
         );
 
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         assert!(result.passed());
     }
 
@@ -895,7 +914,7 @@ mod tests {
             "===\nexit only fail\n===\nfalse\n---\n",
         );
 
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         assert!(!result.passed());
     }
 
@@ -908,7 +927,7 @@ mod tests {
             "===\nenv var test\n===\necho $CCTR_WORK_DIR\n---\n",
         );
 
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         // Just checks exit code 0 since expected is empty
         assert!(result.passed());
     }
@@ -926,7 +945,7 @@ mod tests {
         );
 
         let suite = Suite::new(suite_dir, tmp.path());
-        let result = run_suite(&suite, None, None);
+        let result = run_suite(&suite, None, None, false);
         assert!(result.passed());
     }
 }

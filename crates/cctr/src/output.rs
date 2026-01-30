@@ -55,7 +55,12 @@ impl Output {
                     self.print_dot(result, update_mode);
                 }
             }
-            ProgressEvent::TestOutput { suite, file, name, line } => {
+            ProgressEvent::TestOutput {
+                suite,
+                file,
+                name,
+                line,
+            } => {
                 if verbose_level >= 2 {
                     self.set_dim();
                     write!(self.stdout, "[{}/{}:{}] ", suite, file, name).unwrap();
