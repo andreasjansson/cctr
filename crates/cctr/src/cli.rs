@@ -20,9 +20,9 @@ pub struct Cli {
     #[arg(short, long)]
     pub list: bool,
 
-    /// Show each test as it completes with timing
-    #[arg(short, long)]
-    pub verbose: bool,
+    /// Show each test as it completes with timing (-v), or stream output (-vv)
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    pub verbose: u8,
 
     /// Run suites sequentially instead of in parallel
     #[arg(short, long)]
