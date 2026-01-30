@@ -212,6 +212,8 @@ fn run_command_streaming(
     shell: Option<Shell>,
     on_line: OutputCallback,
 ) -> (String, i32) {
+    use std::sync::mpsc::channel;
+
     let shell = shell.unwrap_or_else(default_shell);
     let mut cmd = build_command(command, work_dir, env_vars, shell);
 
@@ -226,45 +228,38 @@ fn run_command_streaming(
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
 
-    let mut output_lines = Vec::new();
+    // Use a channel to receive lines from both stdout and stderr as they arrive
+    let (tx, rx) = channel::<String>();
 
-    // Read stdout and stderr in separate threads to avoid deadlock
+    let tx_stdout = tx.clone();
     let stdout_handle = std::thread::spawn(move || {
         let reader = BufReader::new(stdout);
-        let mut lines = Vec::new();
-        for line in reader.lines() {
-            if let Ok(line) = line {
-                lines.push(line);
-            }
+        for line in reader.lines().map_while(Result::ok) {
+            let _ = tx_stdout.send(line);
         }
-        lines
     });
 
+    let tx_stderr = tx;
     let stderr_handle = std::thread::spawn(move || {
         let reader = BufReader::new(stderr);
-        let mut lines = Vec::new();
-        for line in reader.lines() {
-            if let Ok(line) = line {
-                lines.push(line);
-            }
+        for line in reader.lines().map_while(Result::ok) {
+            let _ = tx_stderr.send(line);
         }
-        lines
     });
 
-    let stdout_lines = stdout_handle.join().unwrap_or_default();
-    let stderr_lines = stderr_handle.join().unwrap_or_default();
+    // Collect lines and stream them as they arrive
+    let mut output_lines = Vec::new();
 
-    // Stream and collect stdout lines
-    for line in &stdout_lines {
-        on_line(line);
-        output_lines.push(line.clone());
+    // Process lines as they come in from either stdout or stderr
+    // The channel closes when both senders are dropped (threads complete)
+    for line in rx {
+        on_line(&line);
+        output_lines.push(line);
     }
 
-    // Stream and collect stderr lines
-    for line in &stderr_lines {
-        on_line(line);
-        output_lines.push(line.clone());
-    }
+    // Wait for threads to complete
+    let _ = stdout_handle.join();
+    let _ = stderr_handle.join();
 
     let exit_code = match child.wait() {
         Ok(status) => status.code().unwrap_or(-1),
