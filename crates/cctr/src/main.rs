@@ -113,13 +113,13 @@ fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
     let start_time = Instant::now();
 
     let (progress_tx, progress_rx) = mpsc::channel::<ProgressEvent>();
-    let verbose = cli.verbose;
+    let verbose_level = cli.verbose;
     let update = cli.update;
 
     let progress_handle = thread::spawn(move || {
         let mut output = Output::new(use_color);
         for event in progress_rx {
-            output.print_progress(&event, verbose, update);
+            output.print_progress(&event, verbose_level, update);
         }
         output.finish_progress();
     });
