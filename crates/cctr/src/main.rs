@@ -62,17 +62,18 @@ fn main() -> anyhow::Result<()> {
     });
 
     let pattern = cli.pattern.as_deref();
+    let stream_output = verbose_level >= 2;
     let results: Vec<SuiteResult> = if cli.sequential || suites.len() == 1 {
         suites
             .iter()
-            .map(|suite| run_suite(suite, pattern, Some(&progress_tx)))
+            .map(|suite| run_suite(suite, pattern, Some(&progress_tx), stream_output))
             .collect()
     } else {
         suites
             .par_iter()
             .map(|suite| {
                 let tx = progress_tx.clone();
-                run_suite(suite, pattern, Some(&tx))
+                run_suite(suite, pattern, Some(&tx), stream_output)
             })
             .collect()
     };
