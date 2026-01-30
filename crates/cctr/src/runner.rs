@@ -546,7 +546,18 @@ fn run_corpus_file(
             });
         }
 
-        let result = run_test(&test, work_dir, suite_name, env_vars, corpus.file_shell);
+        let streaming = if stream_output {
+            progress_tx.map(|tx| StreamingContext {
+                progress_tx: tx,
+                suite: suite_name.to_string(),
+                file: file_stem.clone(),
+                name: test.name.clone(),
+            })
+        } else {
+            None
+        };
+
+        let result = run_test(&test, work_dir, suite_name, env_vars, corpus.file_shell, streaming);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
