@@ -104,6 +104,12 @@ pub enum ProgressEvent {
         name: String,
     },
     TestComplete(Box<TestResult>),
+    TestOutput {
+        suite: String,
+        file: String,
+        name: String,
+        line: String,
+    },
     Skip {
         suite: String,
         reason: String,
