@@ -132,14 +132,7 @@ fn is_multiline(command: &str) -> bool {
     command.contains('\n')
 }
 
-fn run_command(
-    command: &str,
-    work_dir: &Path,
-    env_vars: &[(String, String)],
-    shell: Option<Shell>,
-) -> (String, i32) {
-    let shell = shell.unwrap_or_else(default_shell);
-
+fn build_command(command: &str, work_dir: &Path, env_vars: &[(String, String)], shell: Shell) -> Command {
     let mut cmd = match shell {
         Shell::PowerShell => {
             let mut c = Command::new("powershell");
@@ -150,7 +143,6 @@ fn run_command(
             c
         }
         Shell::Cmd => {
-            // Note: cmd.exe /C only executes the first line of multi-line commands
             let mut c = Command::new("cmd");
             c.arg("/C").arg(command);
             c
@@ -179,6 +171,18 @@ fn run_command(
         cmd.env(key, value);
     }
 
+    cmd
+}
+
+fn run_command(
+    command: &str,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    shell: Option<Shell>,
+) -> (String, i32) {
+    let shell = shell.unwrap_or_else(default_shell);
+    let mut cmd = build_command(command, work_dir, env_vars, shell);
+
     match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -191,6 +195,81 @@ fn run_command(
         }
         Err(e) => (format!("Failed to execute command: {}", e), -1),
     }
+}
+
+/// Callback for streaming output lines
+pub type OutputCallback = Box<dyn Fn(&str) + Send>;
+
+fn run_command_streaming(
+    command: &str,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    shell: Option<Shell>,
+    on_line: OutputCallback,
+) -> (String, i32) {
+    let shell = shell.unwrap_or_else(default_shell);
+    let mut cmd = build_command(command, work_dir, env_vars, shell);
+
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = match cmd.spawn() {
+        Ok(child) => child,
+        Err(e) => return (format!("Failed to execute command: {}", e), -1),
+    };
+
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+
+    let mut output_lines = Vec::new();
+
+    // Read stdout and stderr in separate threads to avoid deadlock
+    let stdout_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        let mut lines = Vec::new();
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                lines.push(line);
+            }
+        }
+        lines
+    });
+
+    let stderr_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        let mut lines = Vec::new();
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                lines.push(line);
+            }
+        }
+        lines
+    });
+
+    let stdout_lines = stdout_handle.join().unwrap_or_default();
+    let stderr_lines = stderr_handle.join().unwrap_or_default();
+
+    // Stream and collect stdout lines
+    for line in &stdout_lines {
+        on_line(line);
+        output_lines.push(line.clone());
+    }
+
+    // Stream and collect stderr lines
+    for line in &stderr_lines {
+        on_line(line);
+        output_lines.push(line.clone());
+    }
+
+    let exit_code = match child.wait() {
+        Ok(status) => status.code().unwrap_or(-1),
+        Err(_) => -1,
+    };
+
+    let combined = output_lines.join("\n");
+    // Normalize line endings (Windows uses \r\n)
+    let normalized = combined.replace("\r\n", "\n");
+    (normalized, exit_code)
 }
 
 use crate::SkipDirective;
