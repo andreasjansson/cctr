@@ -257,7 +257,7 @@ fn run_command_streaming(
         // Strip ANSI escape codes from each line
         let stripped = strip_ansi_escapes::strip_str(&line);
         on_line(&stripped);
-        output_lines.push(stripped.into_owned());
+        output_lines.push(stripped);
     }
 
     // Wait for threads to complete
