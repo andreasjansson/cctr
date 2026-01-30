@@ -111,6 +111,7 @@ Options:
   -u, --update             Update expected outputs from actual results
   -l, --list               List all available tests
   -v, --verbose            Show each test as it completes with timing
+  -vv                      Stream test output in real-time (for debugging)
   -s, --sequential         Run suites sequentially instead of in parallel
       --no-color           Disable colored output
   -h, --help               Print help
