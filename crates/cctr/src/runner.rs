@@ -332,12 +332,21 @@ fn should_skip(
     }
 }
 
+/// Context for streaming test output in -vv mode
+pub struct StreamingContext<'a> {
+    pub progress_tx: &'a Sender<ProgressEvent>,
+    pub suite: String,
+    pub file: String,
+    pub name: String,
+}
+
 fn run_test(
     test: &TestCase,
     work_dir: &Path,
     suite_name: &str,
     env_vars: &[(String, String)],
     file_shell: Option<Shell>,
+    streaming: Option<StreamingContext<'_>>,
 ) -> TestResult {
     let start = Instant::now();
 
@@ -370,7 +379,28 @@ fn run_test(
         None
     };
 
-    let (actual_output, exit_code) = run_command(&test.command, work_dir, env_vars, file_shell);
+    let (actual_output, exit_code) = if let Some(ctx) = streaming {
+        let tx = ctx.progress_tx.clone();
+        let suite = ctx.suite.clone();
+        let file = ctx.file.clone();
+        let name = ctx.name.clone();
+        run_command_streaming(
+            &test.command,
+            work_dir,
+            env_vars,
+            file_shell,
+            Box::new(move |line| {
+                let _ = tx.send(ProgressEvent::TestOutput {
+                    suite: suite.clone(),
+                    file: file.clone(),
+                    name: name.clone(),
+                    line: line.to_string(),
+                });
+            }),
+        )
+    } else {
+        run_command(&test.command, work_dir, env_vars, file_shell)
+    };
     let elapsed = start.elapsed();
 
     let (passed, error, expected_output) = if test.variables.is_empty() {
