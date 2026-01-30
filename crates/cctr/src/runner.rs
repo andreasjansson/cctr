@@ -254,8 +254,10 @@ fn run_command_streaming(
     // Process lines as they come in from either stdout or stderr
     // The channel closes when both senders are dropped (threads complete)
     for line in rx {
-        on_line(&line);
-        output_lines.push(line);
+        // Strip ANSI escape codes from each line
+        let stripped = strip_ansi_escapes::strip_str(&line);
+        on_line(&stripped);
+        output_lines.push(stripped.into_owned());
     }
 
     // Wait for threads to complete
