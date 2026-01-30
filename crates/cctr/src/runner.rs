@@ -441,6 +441,7 @@ fn run_corpus_file(
     env_vars: &[(String, String)],
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
+    stream_output: bool,
 ) -> FileResult {
     let corpus = match parse_file(file_path) {
         Ok(corpus) => corpus,
