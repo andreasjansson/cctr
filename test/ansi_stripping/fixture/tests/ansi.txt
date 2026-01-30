@@ -3,41 +3,41 @@
 ===
 bold text ANSI codes are stripped
 ===
-printf '\e[1mbold text\e[0m'
+echo $'\e[1mbold text\e[0m'
 ---
 bold text
 
 ===
 color codes are stripped
 ===
-printf '\e[31mred\e[0m \e[32mgreen\e[0m \e[34mblue\e[0m'
+echo $'\e[31mred\e[0m \e[32mgreen\e[0m \e[34mblue\e[0m'
 ---
 red green blue
 
 ===
 256-color codes are stripped
 ===
-printf '\e[38;5;196mred256\e[0m'
+echo $'\e[38;5;196mred256\e[0m'
 ---
 red256
 
 ===
 RGB color codes are stripped
 ===
-printf '\e[38;2;255;0;0mrgb red\e[0m'
+echo $'\e[38;2;255;0;0mrgb red\e[0m'
 ---
 rgb red
 
 ===
 cursor movement codes are stripped
 ===
-printf 'hello\e[2Dworld'
+echo $'hello\e[2Dworld'
 ---
 helloworld
 
 ===
 mixed formatting is stripped
 ===
-printf '\e[1;4;31mbold underline red\e[0m normal'
+echo $'\e[1;4;31mbold underline red\e[0m normal'
 ---
 bold underline red normal
