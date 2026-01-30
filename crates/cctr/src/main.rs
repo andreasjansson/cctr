@@ -125,7 +125,8 @@ fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
         output.finish_progress();
     });
 
-    let result = run_from_stdin(&content, Some(&progress_tx));
+    let stream_output = verbose_level >= 2;
+    let result = run_from_stdin(&content, Some(&progress_tx), stream_output);
 
     drop(progress_tx);
     progress_handle.join().unwrap();
