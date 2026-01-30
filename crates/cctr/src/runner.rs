@@ -711,7 +711,11 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>) -> SuiteResult {
+pub fn run_from_stdin(
+    content: &str,
+    progress_tx: Option<&Sender<ProgressEvent>>,
+    stream_output: bool,
+) -> SuiteResult {
     let start = Instant::now();
 
     let stdin_path = PathBuf::from("<stdin>");
@@ -785,7 +789,18 @@ pub fn run_from_stdin(content: &str, progress_tx: Option<&Sender<ProgressEvent>>
             });
         }
 
-        let result = run_test(&test, &work_dir, "stdin", &env_vars, corpus.file_shell);
+        let streaming = if stream_output {
+            progress_tx.map(|tx| StreamingContext {
+                progress_tx: tx,
+                suite: "stdin".to_string(),
+                file: "stdin".to_string(),
+                name: test.name.clone(),
+            })
+        } else {
+            None
+        };
+
+        let result = run_test(&test, &work_dir, "stdin", &env_vars, corpus.file_shell, streaming);
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
