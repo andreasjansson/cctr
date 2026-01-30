@@ -38,10 +38,10 @@ impl Output {
         let _ = self.stdout.reset();
     }
 
-    pub fn print_progress(&mut self, event: &ProgressEvent, verbose: bool, update_mode: bool) {
+    pub fn print_progress(&mut self, event: &ProgressEvent, verbose_level: u8, update_mode: bool) {
         match event {
             ProgressEvent::TestStart { suite, file, name } => {
-                if verbose {
+                if verbose_level >= 1 {
                     self.set_dim();
                     writeln!(self.stdout, "starting {}/{}: {}", suite, file, name).unwrap();
                     self.reset();
@@ -49,14 +49,23 @@ impl Output {
                 }
             }
             ProgressEvent::TestComplete(result) => {
-                if verbose {
+                if verbose_level >= 1 {
                     self.print_verbose_result(result, update_mode);
                 } else {
                     self.print_dot(result, update_mode);
                 }
             }
+            ProgressEvent::TestOutput { suite, file, name, line } => {
+                if verbose_level >= 2 {
+                    self.set_dim();
+                    write!(self.stdout, "[{}/{}:{}] ", suite, file, name).unwrap();
+                    self.reset();
+                    writeln!(self.stdout, "{}", line).unwrap();
+                    let _ = self.stdout.flush();
+                }
+            }
             ProgressEvent::Skip { suite, reason } => {
-                if verbose {
+                if verbose_level >= 1 {
                     self.set_color(Color::Yellow);
                     write!(self.stdout, "S").unwrap();
                     self.reset();
