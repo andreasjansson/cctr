@@ -194,8 +194,9 @@ fn run_command(
             let stderr = String::from_utf8_lossy(&output.stderr);
             let combined = format!("{}{}", stdout, stderr);
             let exit_code = output.status.code().unwrap_or(-1);
-            // Normalize line endings (Windows uses \r\n) and trim trailing newlines
-            let normalized = combined.replace("\r\n", "\n");
+            // Strip ANSI escape codes and normalize line endings
+            let stripped = strip_ansi_escapes::strip_str(&combined);
+            let normalized = stripped.replace("\r\n", "\n");
             (normalized.trim_end_matches('\n').to_string(), exit_code)
         }
         Err(e) => (format!("Failed to execute command: {}", e), -1),
