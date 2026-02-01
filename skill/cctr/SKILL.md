@@ -59,16 +59,19 @@ cargo install cctr
 
 Download from [releases](https://github.com/andreasjansson/cctr/releases) for Linux, macOS, Windows (x86_64 and ARM64).
 
-## Claude Code Skill
+## Skill Installation
 
-Copy the skill to your Claude Code skills directory:
+Copy the skill to your skills directory:
 
 ```bash
-# Personal (available across all your projects):
-cp -r skills/cctr ~/.claude/skills/
+# Claude Code - personal (available across all your projects):
+cp -r skill/cctr ~/.claude/skills/
 
-# Project-specific (commit to version control):
-cp -r skills/cctr .claude/skills/
+# Claude Code - project-specific (commit to version control):
+cp -r skill/cctr .claude/skills/
+
+# OpenCode:
+cp -r skill/cctr ~/.config/opencode/skill/
 ```
 
 ## Quick Start
