@@ -1016,6 +1016,17 @@ fn eval_func_call(
             let val = evaluate(&args[0], vars)?;
             Ok(Value::String(val.as_string()?.to_uppercase()))
         }
+        "strip" => {
+            if args.len() != 1 {
+                return Err(EvalError::WrongArgCount {
+                    func: name.to_string(),
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            let val = evaluate(&args[0], vars)?;
+            Ok(Value::String(val.as_string()?.trim().to_string()))
+        }
         "unique" => {
             if args.len() != 1 {
                 return Err(EvalError::WrongArgCount {
