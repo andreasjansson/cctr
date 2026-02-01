@@ -1500,4 +1500,17 @@ mod tests {
         assert!(eval_bool(r#"type(env("CCTR_NONEXISTENT_VAR_12345")) == null"#, &v).unwrap());
         std::env::remove_var("CCTR_TEST_VAR");
     }
+
+    #[test]
+    fn test_strip_function() {
+        let v = vars(&[
+            ("s", Value::String("  hello  ".to_string())),
+            ("t", Value::String("\t\nworld\r\n".to_string())),
+            ("clean", Value::String("no whitespace".to_string())),
+        ]);
+        assert!(eval_bool(r#"strip(s) == "hello""#, &v).unwrap());
+        assert!(eval_bool(r#"strip(t) == "world""#, &v).unwrap());
+        assert!(eval_bool(r#"strip(clean) == "no whitespace""#, &v).unwrap());
+        assert!(eval_bool(r#"strip("  test  ") == "test""#, &v).unwrap());
+    }
 }
