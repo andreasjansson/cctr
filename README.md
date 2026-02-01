@@ -103,14 +103,17 @@ Download from the [releases page](https://github.com/andreasjansson/cctr/release
 
 cctr includes a skill file that teaches AI coding agents (like Claude Code) how to write and run corpus tests effectively. The skill emphasizes that tests serve as both testing AND documentation.
 
-Copy the skill to your Claude Code skills directory:
+Copy the skill to your skills directory:
 
 ```bash
-# Personal (available across all your projects):
-cp -r skills/cctr ~/.claude/skills/
+# Claude Code - personal (available across all your projects):
+cp -r skill/cctr ~/.claude/skills/
 
-# Project-specific (commit to version control):
-cp -r skills/cctr .claude/skills/
+# Claude Code - project-specific (commit to version control):
+cp -r skill/cctr .claude/skills/
+
+# OpenCode:
+cp -r skill/cctr ~/.config/opencode/skill/
 ```
 
 ## Usage
