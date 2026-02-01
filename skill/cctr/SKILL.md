@@ -313,6 +313,27 @@ test one
 ...
 ```
 
+### %require - Sequential Dependencies
+
+Mark tests that must pass for subsequent tests to run:
+
+```
+===
+create workspace
+%require
+===
+mkdir -p /tmp/workspace
+---
+
+===
+use workspace
+===
+touch /tmp/workspace/file.txt
+---
+```
+
+If the required test fails, remaining tests in the file are skipped.
+
 ### %platform - Platform Restriction
 
 ```
