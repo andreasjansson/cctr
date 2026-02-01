@@ -1,0 +1,35 @@
+%platform unix
+===
+require passing runs all tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/require_pass.txt --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
+
+===
+require failing skips subsequent tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/require_fail.txt --no-color 2>&1 | grep -E "(passed|skipped)" | head -1
+---
+{{ p }}: 0/1 tests passed in {{ t }}s, 2 skipped
+
+===
+require failing shows skip reason
+===
+cctr $CCTR_FIXTURE_DIR/tests/require_fail.txt --no-color -v 2>&1 | grep "required test"
+---
+✗ tests/require_fail: required test fails ({{ t }}s)
+
+===
+multiple requires - first two pass, third fails
+===
+cctr $CCTR_FIXTURE_DIR/tests/multiple_require.txt --no-color 2>&1 | grep -E "(passed|skipped)" | head -1
+---
+{{ p }}: 2/3 tests passed in {{ t }}s, 1 skipped
+
+===
+require with skip does not block subsequent tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/require_with_skip.txt --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
