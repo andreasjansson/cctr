@@ -247,6 +247,7 @@ where
 | `unique(arr)` | Remove duplicates |
 | `lower(s)` | Lowercase string |
 | `upper(s)` | Uppercase string |
+| `strip(s)` | Strip whitespace from ends |
 | `env("VAR")` | Get environment variable |
 
 #### JSON Access
