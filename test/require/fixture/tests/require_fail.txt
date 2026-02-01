@@ -1,0 +1,21 @@
+===
+required test fails
+%require
+===
+echo "wrong"
+---
+right
+
+===
+this should be skipped
+===
+echo "should not see this"
+---
+should not see this
+
+===
+this too
+===
+echo "also skipped"
+---
+also skipped
