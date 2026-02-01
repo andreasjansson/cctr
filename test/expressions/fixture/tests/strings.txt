@@ -164,3 +164,73 @@ where
 * e contains "@"
 * e endswith ".com"
 * e matches /^[^@]+@[^@]+\.[^@]+$/
+
+===
+strip leading whitespace
+===
+echo "s:   hello"
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello"
+
+===
+strip trailing whitespace
+===
+echo "s: hello   "
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello"
+
+===
+strip both ends
+===
+echo "s:   hello   "
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello"
+
+===
+strip with tabs and newlines
+===
+printf "s:\t\n hello \t\n"
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello"
+
+===
+strip preserves inner whitespace
+===
+echo "s:   hello world   "
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello world"
+
+===
+strip on clean string
+===
+echo "s: hello"
+---
+s: {{ s }}
+---
+where
+* strip(s) == "hello"
+
+===
+strip with literal string
+===
+echo "x"
+---
+x
+---
+where
+* strip("  test  ") == "test"
