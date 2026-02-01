@@ -66,6 +66,7 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
 - [Environment variables](#environment-variables)
 - [Parallel execution](#parallel-execution)
 - [Updating expected output](#updating-expected-output)
+- [Claude Code Skill](#claude-code-skill)
 - [Development](#development)
 - [License](#license)
 
