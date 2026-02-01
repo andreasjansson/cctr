@@ -1,10 +1,10 @@
 %platform unix
 ===
-all 91 expression tests pass
+all 92 expression tests pass
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1 | tail -1
 ---
-All 91 tests passed in {{ t }}s
+All 92 tests passed in {{ t }}s
 ---
 where
 * t < 30
@@ -14,7 +14,7 @@ verbose shows all tests running
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1 | grep -c "^✓" | tr -d ' '
 ---
-92
+93
 
 ===
 no failures in expression tests
