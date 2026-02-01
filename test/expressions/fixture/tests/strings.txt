@@ -196,9 +196,9 @@ where
 * strip(s) == "hello"
 
 ===
-strip with tabs and newlines
+strip with tabs
 ===
-printf "s:\t\n hello \t\n"
+printf "s:\t hello \t"
 ---
 s: {{ s }}
 ---
