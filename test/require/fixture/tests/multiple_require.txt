@@ -1,0 +1,30 @@
+===
+first required passes
+%require
+===
+echo "first"
+---
+first
+
+===
+second required passes
+%require
+===
+echo "second"
+---
+second
+
+===
+third required fails
+%require
+===
+echo "wrong"
+---
+right
+
+===
+skipped due to third
+===
+echo "skipped"
+---
+skipped
