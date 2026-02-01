@@ -234,3 +234,13 @@ x
 ---
 where
 * strip("  test  ") == "test"
+
+===
+strip with embedded newlines
+===
+printf "\n\n  hello  \n\n"
+---
+{{ s }}
+---
+where
+* strip(s) == "hello"
