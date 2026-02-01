@@ -1,0 +1,14 @@
+===
+required test passes
+%require
+===
+echo "setup done"
+---
+setup done
+
+===
+dependent test runs
+===
+echo "dependent"
+---
+dependent
