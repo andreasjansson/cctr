@@ -1529,4 +1529,67 @@ hello
         let err = result.unwrap_err();
         assert!(err.to_string().contains("not compatible"));
     }
+
+    #[test]
+    fn test_require_directive() {
+        let content = r#"===
+required test
+%require
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].require);
+    }
+
+    #[test]
+    fn test_require_with_skip() {
+        let content = r#"===
+required and skipped
+%require
+%skip
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].require);
+        assert!(file.tests[0].skip.is_some());
+    }
+
+    #[test]
+    fn test_skip_then_require() {
+        let content = r#"===
+skip then require
+%skip
+%require
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].require);
+        assert!(file.tests[0].skip.is_some());
+    }
+
+    #[test]
+    fn test_no_require_by_default() {
+        let content = r#"===
+normal test
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(!file.tests[0].require);
+    }
 }
