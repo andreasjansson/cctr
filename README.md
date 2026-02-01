@@ -753,6 +753,39 @@ cat /special/file
 content
 ```
 
+## Require directive
+
+Use `%require` to mark tests that must pass for subsequent tests to run. If a required test fails, all remaining tests in the file are skipped. This is useful for tests with sequential dependencies.
+
+```
+===
+create temp directory
+%require
+===
+mkdir -p /tmp/test-workspace
+---
+
+===
+write to temp directory
+%require
+===
+echo "data" > /tmp/test-workspace/file.txt
+---
+
+===
+read from temp directory
+===
+cat /tmp/test-workspace/file.txt
+---
+data
+```
+
+If "create temp directory" fails, both subsequent tests are skipped. If "write to temp directory" fails, "read from temp directory" is skipped.
+
+The directive name follows Go's testing convention where `require` assertions stop the test immediately on failure, while `assert` continues.
+
+When a `%require` test is skipped (via `%skip`), it does not trigger the failure behavior—only actual test failures cause subsequent tests to be skipped.
+
 ## Platform directive
 
 Use `%platform` to restrict tests to specific platforms. Tests on non-matching platforms are skipped.
