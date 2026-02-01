@@ -650,6 +650,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         variables,
         constraints,
         skip,
+        require,
     })
 }
 
