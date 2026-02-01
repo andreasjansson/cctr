@@ -107,6 +107,8 @@ pub struct TestCase {
     pub variables: Vec<VariableDecl>,
     pub constraints: Vec<String>,
     pub skip: Option<SkipDirective>,
+    /// If true and this test fails, skip remaining tests in the file
+    pub require: bool,
 }
 
 impl TestCase {
