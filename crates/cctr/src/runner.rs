@@ -533,6 +533,9 @@ fn run_corpus_file(
         .unwrap_or("")
         .to_string();
 
+    // Track if a %require test failed - remaining tests should be skipped
+    let mut require_failed: Option<String> = None;
+
     for test in corpus.tests {
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
@@ -547,6 +550,27 @@ fn run_corpus_file(
                 file: file_stem.clone(),
                 name: test.name.clone(),
             });
+        }
+
+        // If a previous %require test failed, skip remaining tests
+        if let Some(ref failed_test) = require_failed {
+            let result = TestResult {
+                test: test.clone(),
+                passed: true,
+                skipped: true,
+                skip_reason: Some(format!("required test '{}' failed", failed_test)),
+                actual_output: None,
+                expected_output: test.expected_output.clone(),
+                error: None,
+                warning: None,
+                elapsed: Duration::ZERO,
+                suite: suite_name.to_string(),
+            };
+            if let Some(tx) = progress_tx {
+                let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
+            }
+            results.push(result);
+            continue;
         }
 
         let streaming = if stream_output {
@@ -568,6 +592,12 @@ fn run_corpus_file(
             corpus.file_shell,
             streaming,
         );
+
+        // Check if this was a %require test that failed
+        if test.require && !result.passed && !result.skipped {
+            require_failed = Some(test.name.clone());
+        }
+
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
