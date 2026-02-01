@@ -567,15 +567,25 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let name = description_line.parse_next(input)?;
     state.current_line += 1;
 
-    // Parse test-level skip directive (only %skip allowed at test level)
-    let _ = take_while(0.., ' ').parse_next(input)?;
-    let skip = if input.starts_with("%skip") {
-        let s = Some(skip_directive.parse_next(input)?);
-        state.current_line += 1;
-        s
-    } else {
-        None
-    };
+    // Parse test-level directives (%skip and %require allowed at test level)
+    let mut skip = None;
+    let mut require = false;
+
+    loop {
+        let _ = take_while(0.., ' ').parse_next(input)?;
+        if input.starts_with("%skip") && skip.is_none() {
+            skip = Some(skip_directive.parse_next(input)?);
+            state.current_line += 1;
+        } else if input.starts_with("%require") {
+            "%require".parse_next(input)?;
+            let _ = take_while(0.., ' ').parse_next(input)?;
+            let _ = opt('\n').parse_next(input)?;
+            require = true;
+            state.current_line += 1;
+        } else {
+            break;
+        }
+    }
 
     // Check for directives that are only allowed at file level
     let _ = take_while(0.., ' ').parse_next(input)?;
