@@ -1,0 +1,15 @@
+===
+required test
+%require
+%skip
+===
+echo "skipped required"
+---
+skipped required
+
+===
+this still runs because require was skipped not failed
+===
+echo "runs"
+---
+runs
