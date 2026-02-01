@@ -14,11 +14,11 @@ cctr $CCTR_FIXTURE_DIR/tests/require_fail.txt --no-color 2>&1 | grep -E "(passed
 {{ p }}: 0/1 tests passed in {{ t }}s, 2 skipped
 
 ===
-require failing shows skip reason
+require failing shows skip reason in verbose
 ===
-cctr $CCTR_FIXTURE_DIR/tests/require_fail.txt --no-color -v 2>&1 | grep "required test"
+cctr $CCTR_FIXTURE_DIR/tests/require_fail.txt --no-color -v 2>&1 | grep "required test 'required"
 ---
-✗ tests/require_fail: required test fails ({{ t }}s)
+⊘ tests/require_fail: this should be skipped (required test 'required test fails' failed)
 
 ===
 multiple requires - first two pass, third fails
@@ -30,6 +30,6 @@ cctr $CCTR_FIXTURE_DIR/tests/multiple_require.txt --no-color 2>&1 | grep -E "(pa
 ===
 require with skip does not block subsequent tests
 ===
-cctr $CCTR_FIXTURE_DIR/tests/require_with_skip.txt --no-color 2>&1 | tail -1
+cctr $CCTR_FIXTURE_DIR/tests/require_with_skip.txt --no-color 2>&1 | grep -E "passed.*skipped"
 ---
-All 2 tests passed in {{ t }}s
+{{ p }}: 1/1 tests passed in {{ t }}s, 1 skipped
