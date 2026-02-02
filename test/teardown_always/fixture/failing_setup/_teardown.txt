@@ -1,0 +1,5 @@
+===
+teardown that writes marker
+===
+echo "teardown running" >> "$CCTR_WORK_DIR/execution_log.txt"
+---
