@@ -500,6 +500,30 @@ fn shell_directive(input: &mut &str) -> ModalResult<Shell> {
     Ok(shell)
 }
 
+// ============ Exit Directive Parser ============
+
+/// Parse %exit directive - specifies expected exit code
+/// %exit 1        - expect exit code 1
+/// %exit nonzero  - expect any non-zero exit code
+fn exit_directive(input: &mut &str) -> ModalResult<ExpectedExit> {
+    "%exit".parse_next(input)?;
+    let _ = take_while(1.., ' ').parse_next(input)?;
+    let value: &str = take_while(1.., |c: char| c.is_ascii_alphanumeric()).parse_next(input)?;
+    let _ = line_content.parse_next(input)?;
+    opt_newline.parse_next(input)?;
+
+    match value.to_lowercase().as_str() {
+        "nonzero" => Ok(ExpectedExit::NonZero),
+        s => {
+            if let Ok(code) = s.parse::<i32>() {
+                Ok(ExpectedExit::Code(code))
+            } else {
+                Err(winnow::error::ErrMode::Backtrack(ContextError::new()))
+            }
+        }
+    }
+}
+
 // ============ Test Case Parser ============
 
 fn description_line(input: &mut &str) -> ModalResult<String> {
