@@ -62,8 +62,8 @@ rm -f /tmp/cctr_signal_sync_*
 SIGINT during test run goes straight to teardown
 %require
 ===
-# Start cctr in background
-cctr $CCTR_FIXTURE_DIR/signal_sync --no-color &
+# Start cctr in background using exec so signal reaches cctr directly
+(exec cctr $CCTR_FIXTURE_DIR/signal_sync --no-color) &
 CCTR_PID=$!
 
 # Poll until test1 signals it has started (max 5 seconds)
