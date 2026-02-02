@@ -770,6 +770,7 @@ fn run_teardown_if_exists(
             None, // Teardown always runs all tests regardless of pattern
             progress_tx,
             stream_output,
+            true, // CRITICAL: Teardown must ALWAYS run, even if interrupted
         );
         file_results.push(file_result);
     }
