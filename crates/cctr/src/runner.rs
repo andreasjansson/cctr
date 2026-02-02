@@ -4,10 +4,25 @@ use crate::{parse_content, parse_file, TestCase};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
+
+/// Global flag to indicate the process has been interrupted (SIGINT/SIGTERM)
+/// When set, running suites will skip remaining tests but still run teardown
+static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+
+/// Set the interrupted flag - called from signal handler
+pub fn set_interrupted() {
+    INTERRUPTED.store(true, Ordering::SeqCst);
+}
+
+/// Check if the process has been interrupted
+pub fn is_interrupted() -> bool {
+    INTERRUPTED.load(Ordering::SeqCst)
+}
 
 /// Cached bash path - computed once per invocation
 static BASH_PATH: OnceLock<String> = OnceLock::new();
