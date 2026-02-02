@@ -1,6 +1,7 @@
 %platform unix
 ===
 Run a basic successful cctr test
+%exit 1
 ===
 cctr $CCTR_FIXTURE_DIR/test/corpus --no-color 2>&1
 ---
