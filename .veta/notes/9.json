@@ -1,0 +1,9 @@
+{
+  "title": "Teardown always runs - implementation details",
+  "body": "v0.27.0 adds guaranteed teardown execution:\n\n1. Teardown runs even when setup fails (was returning early before)\n2. Teardown runs on SIGINT/SIGTERM (ctrlc crate with termination feature)\n3. Added ignore_interruption param to run_corpus_file for teardown\n\nSignal handling gotcha: When cctr runs in a subshell (bash -c), signal handling may not work reliably because the process can be terminated before teardown runs. Works correctly when cctr runs directly.\n\nKey code changes:\n- run_suite no longer returns early on setup failure\n- Added is_interrupted() check between tests (but not for teardown)\n- run_teardown_if_exists passes ignore_interruption=true",
+  "references": [
+    "crates/cctr/src/runner.rs:640-775",
+    "crates/cctr/src/main.rs:20-30"
+  ],
+  "modified": "2026-02-02 22:00:07"
+}

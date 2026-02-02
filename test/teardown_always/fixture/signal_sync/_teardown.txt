@@ -1,0 +1,5 @@
+===
+teardown
+===
+touch /tmp/cctr_signal_sync_teardown
+---

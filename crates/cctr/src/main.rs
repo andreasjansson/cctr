@@ -2,7 +2,7 @@ use cctr::cli::Cli;
 use cctr::discover::discover_suites;
 use cctr::output::Output;
 use cctr::parse_file;
-use cctr::runner::{run_from_stdin, run_suite, ProgressEvent, SuiteResult};
+use cctr::runner::{run_from_stdin, run_suite, set_interrupted, ProgressEvent, SuiteResult};
 use cctr::update::update_corpus_file;
 use clap::Parser;
 use rayon::prelude::*;
@@ -19,6 +19,19 @@ fn main() -> anyhow::Result<()> {
             libc::signal(libc::SIGPIPE, libc::SIG_DFL);
         }
     }
+
+    // Set up signal handler for graceful shutdown
+    // When interrupted, we set a flag that tells running suites to skip remaining tests
+    // but still run their teardown
+    if let Err(e) = ctrlc::set_handler(move || {
+        // Use write! to stderr directly since eprintln! may not be signal-safe
+        use std::io::Write;
+        let _ = writeln!(std::io::stderr(), "\nInterrupted - running teardown...");
+        set_interrupted();
+    }) {
+        eprintln!("Warning: Could not set signal handler: {}", e);
+    }
+
     let cli = Cli::parse();
 
     let use_color = !cli.no_color && atty::is(atty::Stream::Stdout);

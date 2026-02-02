@@ -1,0 +1,7 @@
+%platform windows
+===
+setup that fails
+===
+echo setup > "$env:TEMP\cctr_teardown_test_setup.txt"
+exit 1
+---

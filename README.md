@@ -234,7 +234,12 @@ seed test data
 ---
 ```
 
-`_teardown.txt` runs after all tests complete, regardless of whether they passed or failed:
+`_teardown.txt` **always runs** after the suite, regardless of:
+- Whether tests passed or failed
+- Whether setup failed (main tests are skipped but teardown still runs)
+- Whether the process was interrupted by SIGINT (Ctrl-C) or SIGTERM
+
+This ensures cleanup happens even in failure scenarios:
 
 ```
 ===

@@ -1,0 +1,6 @@
+===
+setup that fails
+===
+touch /tmp/cctr_teardown_test_setup_ran
+false
+---

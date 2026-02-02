@@ -4,10 +4,25 @@ use crate::{parse_content, parse_file, TestCase};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
+
+/// Global flag to indicate the process has been interrupted (SIGINT/SIGTERM)
+/// When set, running suites will skip remaining tests but still run teardown
+static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+
+/// Set the interrupted flag - called from signal handler
+pub fn set_interrupted() {
+    INTERRUPTED.store(true, Ordering::SeqCst);
+}
+
+/// Check if the process has been interrupted
+pub fn is_interrupted() -> bool {
+    INTERRUPTED.load(Ordering::SeqCst)
+}
 
 /// Cached bash path - computed once per invocation
 static BASH_PATH: OnceLock<String> = OnceLock::new();
@@ -437,6 +452,7 @@ fn run_test(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_corpus_file(
     file_path: &Path,
     work_dir: &Path,
@@ -445,6 +461,7 @@ fn run_corpus_file(
     pattern: Option<&str>,
     progress_tx: Option<&Sender<ProgressEvent>>,
     stream_output: bool,
+    ignore_interruption: bool,
 ) -> FileResult {
     let corpus = match parse_file(file_path) {
         Ok(corpus) => corpus,
@@ -537,6 +554,11 @@ fn run_corpus_file(
     let mut require_failed: Option<String> = None;
 
     for test in corpus.tests {
+        // Check for interruption before starting each test (unless running teardown)
+        if !ignore_interruption && is_interrupted() {
+            break;
+        }
+
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
@@ -602,6 +624,11 @@ fn run_corpus_file(
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
         results.push(result);
+
+        // Check for interruption after each test completes (for faster response)
+        if !ignore_interruption && is_interrupted() {
+            break;
+        }
     }
 
     FileResult {
@@ -658,6 +685,15 @@ pub fn run_suite(
     if suite.has_fixture {
         let fixture_src = suite.path.join("fixture");
         if let Err(e) = copy_dir_recursive(&fixture_src, work_dir) {
+            // Even if fixture copy fails, we should run teardown if it exists
+            run_teardown_if_exists(
+                suite,
+                work_dir,
+                &env_vars,
+                progress_tx,
+                stream_output,
+                &mut file_results,
+            );
             return SuiteResult {
                 suite: suite.clone(),
                 file_results,
@@ -671,6 +707,9 @@ pub fn run_suite(
         ));
     }
 
+    // Track whether setup passed - if not, skip main tests but still run teardown
+    let mut setup_passed = true;
+
     if suite.has_setup {
         let setup_file = suite.path.join("_setup.txt");
         let file_result = run_corpus_file(
@@ -681,53 +720,77 @@ pub fn run_suite(
             None, // Setup always runs all tests regardless of pattern
             progress_tx,
             stream_output,
+            false, // Setup can be interrupted
         );
-        let setup_passed = file_result.passed();
+        setup_passed = file_result.passed();
         file_results.push(file_result);
 
         if !setup_passed {
             setup_error = Some("Setup failed".to_string());
-            return SuiteResult {
-                suite: suite.clone(),
-                file_results,
-                setup_error,
-                elapsed: start.elapsed(),
-            };
+            // Don't return early - fall through to run teardown
         }
     }
 
-    for corpus_file in suite.corpus_files() {
-        let file_result = run_corpus_file(
-            &corpus_file,
-            work_dir,
-            &suite.name,
-            &env_vars,
-            pattern,
-            progress_tx,
-            stream_output,
-        );
-        file_results.push(file_result);
+    // Only run main tests if setup passed (or there was no setup) and not interrupted
+    if setup_passed && !is_interrupted() {
+        for corpus_file in suite.corpus_files() {
+            // Check for interruption before each file
+            if is_interrupted() {
+                break;
+            }
+            let file_result = run_corpus_file(
+                &corpus_file,
+                work_dir,
+                &suite.name,
+                &env_vars,
+                pattern,
+                progress_tx,
+                stream_output,
+                false, // Main tests can be interrupted
+            );
+            file_results.push(file_result);
+        }
     }
 
-    if suite.has_teardown {
-        let teardown_file = suite.path.join("_teardown.txt");
-        let file_result = run_corpus_file(
-            &teardown_file,
-            work_dir,
-            &suite.name,
-            &env_vars,
-            None, // Teardown always runs all tests regardless of pattern
-            progress_tx,
-            stream_output,
-        );
-        file_results.push(file_result);
-    }
+    // ALWAYS run teardown, regardless of setup/test results or interruption
+    run_teardown_if_exists(
+        suite,
+        work_dir,
+        &env_vars,
+        progress_tx,
+        stream_output,
+        &mut file_results,
+    );
 
     SuiteResult {
         suite: suite.clone(),
         file_results,
         setup_error,
         elapsed: start.elapsed(),
+    }
+}
+
+fn run_teardown_if_exists(
+    suite: &Suite,
+    work_dir: &Path,
+    env_vars: &[(String, String)],
+    progress_tx: Option<&Sender<ProgressEvent>>,
+    stream_output: bool,
+    file_results: &mut Vec<FileResult>,
+) {
+    if suite.has_teardown {
+        let teardown_file = suite.path.join("_teardown.txt");
+        let file_result = run_corpus_file(
+            &teardown_file,
+            work_dir,
+            &suite.name,
+            env_vars,
+            None, // Teardown always runs all tests regardless of pattern
+            progress_tx,
+            stream_output,
+            true, // CRITICAL: Teardown must ALWAYS run, even if interrupted
+        );
+        file_results.push(file_result);
     }
 }
 

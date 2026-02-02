@@ -1,3 +1,8 @@
 
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads
+
+# Keep test corpus files with LF endings (Unix-style) on all platforms
+# This ensures the corpus parser works correctly on Windows
+test/**/*.txt text eol=lf
+*.sh text eol=lf

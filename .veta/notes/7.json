@@ -1,0 +1,10 @@
+{
+  "body": "v0.24.0 adds -vv flag for streaming test output in real-time.\n\nImplementation:\n- Uses mpsc channel to receive lines from stdout/stderr as they arrive\n- Two threads read stdout and stderr separately, sending lines to the channel\n- Main thread receives lines and calls the callback immediately\n- StreamingContext struct holds progress_tx and test metadata for sending TestOutput events\n\nKey files:\n- runner.rs: run_command_streaming(), StreamingContext\n- output.rs: print_progress() handles TestOutput event\n- cli.rs: verbose is now u8 (count) instead of bool\n\nNote: With -vv, stdout/stderr lines may interleave in non-deterministic order since both are read concurrently.",
+  "modified": "2026-01-30 14:35:38",
+  "references": [
+    "crates/cctr/src/runner.rs:205-270",
+    "crates/cctr/src/output.rs:41-80",
+    "crates/cctr/src/cli.rs"
+  ],
+  "title": "cctr -vv streaming output implementation"
+}

@@ -1,0 +1,5 @@
+===
+teardown that writes marker
+===
+touch /tmp/cctr_teardown_test_teardown_ran
+---

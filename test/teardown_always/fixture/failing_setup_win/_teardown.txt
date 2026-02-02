@@ -1,0 +1,6 @@
+%platform windows
+===
+teardown that writes marker
+===
+echo teardown > "$env:TEMP\cctr_teardown_test_teardown.txt"
+---

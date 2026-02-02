@@ -1,0 +1,5 @@
+===
+setup
+===
+touch /tmp/cctr_signal_test_setup_ran
+---

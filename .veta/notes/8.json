@@ -1,0 +1,10 @@
+{
+  "body": "v0.24.0 adds automatic stripping of ANSI escape codes from command output using the strip-ansi-escapes crate.\n\nThis allows testing CLI tools that output colored text without needing to disable colors or match escape sequences.\n\nImplementation:\n- Added strip-ansi-escapes = \"0.2\" dependency\n- Both run_command() and run_command_streaming() strip ANSI codes\n- Stripping happens per-line in streaming mode, on combined output in normal mode\n\nTest: test/ansi_stripping/ verifies bold, color, 256-color, RGB, and cursor movement codes are all stripped.",
+  "modified": "2026-01-30 23:05:42",
+  "references": [
+    "crates/cctr/Cargo.toml",
+    "crates/cctr/src/runner.rs:191-199",
+    "test/ansi_stripping/"
+  ],
+  "title": "cctr strips ANSI escape codes from command output"
+}

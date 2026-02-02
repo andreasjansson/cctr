@@ -1,0 +1,6 @@
+{
+  "body": "GitHub CI runs fmt and clippy checks that will fail if code isn't formatted or has warnings.\n\nBefore pushing, always run:\n1. cargo fmt --all\n2. cargo clippy --all-targets --all-features -- -D warnings\n\nOr just run ./script/test which does both.",
+  "modified": "2026-01-29 00:20:33",
+  "references": [],
+  "title": "cctr: always run cargo fmt and clippy before pushing"
+}

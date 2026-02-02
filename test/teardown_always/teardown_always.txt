@@ -1,0 +1,73 @@
+%platform unix
+===
+cleanup any previous marker files
+%require
+===
+rm -f /tmp/cctr_teardown_test_setup_ran /tmp/cctr_teardown_test_teardown_ran /tmp/cctr_teardown_test_main_ran
+---
+
+===
+run suite with failing setup
+%require
+===
+cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1 || true
+---
+F.
+
+⊘ failing_setup: Setup failed (3 tests skipped)
+
+Failures:
+
+✗ failing_setup/_setup: setup that fails
+  {{ path }}_setup.txt:1
+  Command: touch /tmp/cctr_teardown_test_setup_ran
+false
+
+
+Summary: 0 passed, 0 failed, 3 skipped in {{ t }}s
+---
+where
+* t < 5
+* path endswith "failing_setup/"
+
+===
+setup marker file exists
+===
+test -f /tmp/cctr_teardown_test_setup_ran && echo "setup ran"
+---
+setup ran
+
+===
+teardown marker file exists (CRITICAL - teardown must run even when setup fails)
+===
+test -f /tmp/cctr_teardown_test_teardown_ran && echo "teardown ran"
+---
+teardown ran
+
+===
+main test marker file does NOT exist (main tests skipped when setup fails)
+===
+test ! -f /tmp/cctr_teardown_test_main_ran && echo "main skipped"
+---
+main skipped
+
+===
+cleanup signal sync markers
+%require
+===
+rm -f /tmp/cctr_signal_sync_*
+---
+
+===
+SIGINT during test run goes straight to teardown
+%require
+===
+# Use helper script for more reliable signal testing
+# Redirect stderr to /dev/null to suppress cctr's output
+"$CCTR_TEST_PATH/fixture/signal_test.sh" "$CCTR_FIXTURE_DIR" 2>&1 | grep -E "^(teardown_exists|test1_started|test2_ran)="
+---
+teardown_exists=yes
+test1_started=yes
+test2_ran=no
+
+

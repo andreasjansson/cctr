@@ -1,0 +1,9 @@
+{
+  "body": "On Windows, `bash` in PATH may point to WSL's bash.exe (in C:\\Windows\\System32) which:\n1. Doesn't work with Windows filesystem paths  \n2. Errors out asking you to install a WSL distribution\n\nv0.23.1 tried to fix this by hardcoding Git Bash path, but that broke systems without Git Bash.\n\nv0.23.2 fix: Use OnceLock to cache bash detection. Try `bash -c 'echo ok'` first - if it returns 'ok', use PATH bash. Otherwise fall back to Git Bash at C:\\Program Files\\Git\\bin\\bash.exe.\n\nAdded test/windows/bash.txt to verify bash works on Windows CI.",
+  "modified": "2026-01-29 11:41:12",
+  "references": [
+    "crates/cctr/src/runner.rs:15-45",
+    "test/windows/bash.txt"
+  ],
+  "title": "Windows bash detection: WSL vs Git Bash"
+}

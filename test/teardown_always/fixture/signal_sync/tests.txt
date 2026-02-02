@@ -1,0 +1,31 @@
+===
+test 1 - signals ready then waits
+===
+touch /tmp/cctr_signal_sync_test1_started
+sleep 5
+touch /tmp/cctr_signal_sync_test1_finished
+---
+
+===
+test 2 - should be skipped if interrupted during test 1
+===
+touch /tmp/cctr_signal_sync_test2
+---
+
+===
+test 3 - should be skipped if interrupted during test 1
+===
+touch /tmp/cctr_signal_sync_test3
+---
+
+===
+test 4 - should be skipped if interrupted during test 1
+===
+touch /tmp/cctr_signal_sync_test4
+---
+
+===
+test 5 - should be skipped if interrupted during test 1
+===
+touch /tmp/cctr_signal_sync_test5
+---
