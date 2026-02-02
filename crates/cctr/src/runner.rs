@@ -16,9 +16,7 @@ static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 
 /// Set the interrupted flag - called from signal handler
 pub fn set_interrupted() {
-    eprintln!("[DEBUG] set_interrupted called, setting to true");
     INTERRUPTED.store(true, Ordering::SeqCst);
-    eprintln!("[DEBUG] INTERRUPTED is now: {}", INTERRUPTED.load(Ordering::SeqCst));
 }
 
 /// Check if the process has been interrupted
