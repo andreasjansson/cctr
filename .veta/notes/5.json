@@ -1,0 +1,10 @@
+{
+  "body": "Refactored directive design:\n\n## %skip\n- Works at: _setup.txt (skips suite), file-level, test-level\n- Syntax: %skip, %skip(message), %skip if: command, %skip(message) if: command  \n- Conditional skip runs in the file's shell (or default)\n\n## %platform (NEW)\n- Works at: _setup.txt, file-level only\n- Syntax: %platform windows or %platform unix, mac, linux\n- Comma-separated list, no 'not' support\n- Skips all tests if current platform not in list\n\n## %shell\n- Works at: file-level only (no test-level!)\n- Co-validated with %platform before tests run\n- Error if incompatible (e.g. %shell cmd + %platform unix)\n\nDefaults: bash on Unix, PowerShell on Windows",
+  "modified": "2026-01-29 09:25:56",
+  "references": [
+    "crates/cctr/src/runner.rs",
+    "crates/cctr-corpus/src/lib.rs",
+    "README.md"
+  ],
+  "title": "cctr directive design: %skip, %platform, %shell"
+}

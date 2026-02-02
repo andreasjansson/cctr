@@ -1,0 +1,8 @@
+{
+  "body": "cmd.exe has several issues with multi-line commands:\n1. `cmd /C` only executes the first line of a multi-line command\n2. For loop variables need `%%i` in batch files but `%i` interactively\n3. `echo content >` includes trailing space before redirect - need `echo content>`\n4. Same trailing space issue with pipes: `echo hello |` vs `echo hello|`\n\nPowerShell is cleaner:\n- `powershell -Command` handles multi-line commands directly (like bash -c)\n- Consistent $variable syntax in scripts and interactive\n- No trailing space issues\n- Can use: `powershell -ExecutionPolicy Bypass -Command $command`\n\nDecision: Default to PowerShell on Windows, bash on Unix. Add %shell directive for override.",
+  "modified": "2026-01-29 07:11:39",
+  "references": [
+    "crates/cctr/src/runner.rs"
+  ],
+  "title": "Windows shell execution: PowerShell vs cmd.exe"
+}

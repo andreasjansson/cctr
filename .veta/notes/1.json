@@ -1,0 +1,6 @@
+{
+  "body": "When running cctr tests that call cctr recursively (e.g., tests that run 'cctr $CCTR_FIXTURE_DIR/tests'), the nested invocation uses the installed cctr binary (e.g., ~/.local/bin/cctr), NOT the debug build (./target/debug/cctr).\n\nThis causes confusing test failures when developing new features - the outer test uses the new code, but inner tests use the old installed version.\n\nFix: Run './script/install' to update the installed binary before running tests, or use PATH manipulation to ensure the debug build is found first.",
+  "modified": "2026-01-29 00:12:54",
+  "references": [],
+  "title": "cctr: nested tests use installed binary, not debug build"
+}

@@ -1,0 +1,8 @@
+{
+  "body": "When bumping the version, update all 3 occurrences in the root Cargo.toml:\n\n1. [workspace.package] version = \"X.Y.Z\"\n2. cctr-expr = { version = \"X.Y.Z\", ... }\n3. cctr-corpus = { version = \"X.Y.Z\", ... }\n\nAll three must match or cargo build will fail.",
+  "modified": "2026-01-29 00:15:33",
+  "references": [
+    "Cargo.toml"
+  ],
+  "title": "cctr: version bump requires 3 places in Cargo.toml"
+}
