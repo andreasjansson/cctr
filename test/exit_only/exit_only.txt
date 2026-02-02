@@ -7,18 +7,11 @@ cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 starting tests/exit: exit zero passes
 ✓ tests/exit: exit zero passes {{ t1 }}s
 starting tests/exit: exit nonzero fails
-✗ tests/exit: exit nonzero fails {{ t2 }}s
+✓ tests/exit: exit nonzero fails {{ t2 }}s
 
-✗ tests: 1/2 tests passed in {{ suite_time }}s
+✓ tests: 2/2 tests passed in {{ suite_time }}s
 
-Failures:
-
-✗ tests/exit: exit nonzero fails
-  tests/exit.txt:6
-  Command: false
-
-
-Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
+All 2 tests passed in {{ total_time }}s
 ---
 where
 * t1 < 5
@@ -31,18 +24,11 @@ exit only non-verbose output
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 ---
-.F
+..
 
-✗ tests: 1/2 tests passed in {{ suite_time }}s
+✓ tests: 2/2 tests passed in {{ suite_time }}s
 
-Failures:
-
-✗ tests/exit: exit nonzero fails
-  tests/exit.txt:6
-  Command: false
-
-
-Summary: 1 passed, 1 failed, 0 skipped in {{ total_time }}s
+All 2 tests passed in {{ total_time }}s
 ---
 where
 * suite_time < 5
