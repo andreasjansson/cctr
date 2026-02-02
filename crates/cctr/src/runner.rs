@@ -345,6 +345,32 @@ pub struct StreamingContext<'a> {
     pub name: String,
 }
 
+fn check_exit_code(actual: i32, expected: ExpectedExit) -> Result<(), String> {
+    match expected {
+        ExpectedExit::Success => {
+            if actual == 0 {
+                Ok(())
+            } else {
+                Err(format!("expected exit code 0, got {}", actual))
+            }
+        }
+        ExpectedExit::Code(code) => {
+            if actual == code {
+                Ok(())
+            } else {
+                Err(format!("expected exit code {}, got {}", code, actual))
+            }
+        }
+        ExpectedExit::NonZero => {
+            if actual != 0 {
+                Ok(())
+            } else {
+                Err("expected non-zero exit code, got 0".to_string())
+            }
+        }
+    }
+}
+
 fn run_test(
     test: &TestCase,
     work_dir: &Path,
@@ -408,21 +434,48 @@ fn run_test(
     };
     let elapsed = start.elapsed();
 
-    let (passed, error, expected_output) = if test.variables.is_empty() {
-        let expected = &test.expected_output;
-        if expected.is_empty() {
-            (exit_code == 0, None, expected.clone())
-        } else {
-            (actual_output == *expected, None, expected.clone())
-        }
+    // Always check exit code first
+    if let Err(exit_error) = check_exit_code(exit_code, test.expected_exit) {
+        return TestResult {
+            test: test.clone(),
+            passed: false,
+            skipped: false,
+            skip_reason: None,
+            actual_output: Some(actual_output),
+            expected_output: test.expected_output.clone(),
+            error: Some(exit_error),
+            warning,
+            elapsed,
+            suite: suite_name.to_string(),
+        };
+    }
+
+    // If no expected output (exit-only test), we're done
+    let Some(expected) = &test.expected_output else {
+        return TestResult {
+            test: test.clone(),
+            passed: true,
+            skipped: false,
+            skip_reason: None,
+            actual_output: Some(actual_output),
+            expected_output: None,
+            error: None,
+            warning,
+            elapsed,
+            suite: suite_name.to_string(),
+        };
+    };
+
+    // Check output
+    let (passed, error) = if test.variables.is_empty() {
+        (actual_output == *expected, None)
     } else {
         let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
-        let result = match matcher.matches(&test.expected_output, &actual_output) {
+        match matcher.matches(expected, &actual_output) {
             Ok(true) => (true, None),
             Ok(false) => (false, None),
             Err(e) => (false, Some(e.to_string())),
-        };
-        (result.0, result.1, test.expected_output.clone())
+        }
     };
 
     TestResult {
@@ -431,7 +484,7 @@ fn run_test(
         skipped: false,
         skip_reason: None,
         actual_output: Some(actual_output),
-        expected_output,
+        expected_output: test.expected_output.clone(),
         error,
         warning,
         elapsed,
