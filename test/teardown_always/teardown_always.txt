@@ -1,0 +1,39 @@
+%platform unix
+===
+teardown runs even when setup fails
+===
+# Run cctr on the failing_setup suite, then check the execution log
+cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1
+# Now check what ran - setup and teardown should both be in log, but not main test
+cat "$CCTR_FIXTURE_DIR/execution_log.txt" 2>/dev/null || echo "no log file"
+---
+F.
+
+✗ failing_setup: 1/2 tests passed in {{ t1 }}s
+  Setup failed
+
+Failures:
+
+✗ failing_setup/_setup: setup that fails
+  failing_setup/_setup.txt:1
+  Command: echo "setup running" >> "$CCTR_WORK_DIR/execution_log.txt"
+false
+
+-
++setup running
+
+Summary: 1 passed, 1 failed, 0 skipped in {{ t2 }}s
+setup running
+teardown running
+---
+where
+* t1 < 5
+* t2 < 5
+
+===
+main tests are skipped when setup fails
+===
+# Verify that "main test running" is NOT in the log (main test was skipped)
+grep -c "main test running" "$CCTR_FIXTURE_DIR/execution_log.txt" 2>/dev/null || echo "0"
+---
+0
