@@ -1005,13 +1005,13 @@ mod tests {
     fn test_env_vars() {
         let tmp = TempDir::new().unwrap();
         let suite = create_suite(tmp.path(), "envvars");
+        // Exit-only test: verifies env var is set (non-empty output means var exists)
         create_test_file(
             &suite.path.join("test.txt"),
-            "===\nenv var test\n===\necho $CCTR_WORK_DIR\n---\n",
+            "===\nenv var test\n===\ntest -n \"$CCTR_WORK_DIR\"\n",
         );
 
         let result = run_suite(&suite, None, None, false);
-        // Just checks exit code 0 since expected is empty
         assert!(result.passed());
     }
 
