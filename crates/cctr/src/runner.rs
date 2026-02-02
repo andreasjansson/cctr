@@ -680,7 +680,14 @@ pub fn run_suite(
         let fixture_src = suite.path.join("fixture");
         if let Err(e) = copy_dir_recursive(&fixture_src, work_dir) {
             // Even if fixture copy fails, we should run teardown if it exists
-            run_teardown_if_exists(suite, work_dir, &env_vars, progress_tx, stream_output, &mut file_results);
+            run_teardown_if_exists(
+                suite,
+                work_dir,
+                &env_vars,
+                progress_tx,
+                stream_output,
+                &mut file_results,
+            );
             return SuiteResult {
                 suite: suite.clone(),
                 file_results,
@@ -740,7 +747,14 @@ pub fn run_suite(
     }
 
     // ALWAYS run teardown, regardless of setup/test results or interruption
-    run_teardown_if_exists(suite, work_dir, &env_vars, progress_tx, stream_output, &mut file_results);
+    run_teardown_if_exists(
+        suite,
+        work_dir,
+        &env_vars,
+        progress_tx,
+        stream_output,
+        &mut file_results,
+    );
 
     SuiteResult {
         suite: suite.clone(),
