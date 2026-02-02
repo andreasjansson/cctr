@@ -55,6 +55,7 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Conditional skip](#conditional-skip)
   - [File-level skip](#file-level-skip)
 - [Require directive](#require-directive)
+- [Exit directive](#exit-directive)
 - [Platform directive](#platform-directive)
   - [File-level platform](#file-level-platform)
   - [Supported platforms](#supported-platforms)
