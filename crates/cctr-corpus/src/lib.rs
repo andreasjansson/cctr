@@ -1290,7 +1290,7 @@ world
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 2);
-        assert_eq!(file.tests[0].expected_output, "short");
+        assert_eq!(file.tests[0].expected_output, Some("short".to_string()));
         assert_eq!(file.tests[1].expected_output, Some("world".to_string()));
     }
 
