@@ -50,3 +50,39 @@ main test marker file does NOT exist (main tests skipped when setup fails)
 test ! -f /tmp/cctr_teardown_test_main_ran && echo "main skipped"
 ---
 main skipped
+
+===
+cleanup signal test markers
+%require
+===
+rm -f /tmp/cctr_signal_test_*
+---
+
+===
+teardown runs even when interrupted by SIGTERM
+===
+# Start cctr in background running slow tests
+cctr $CCTR_FIXTURE_DIR/slow_tests --no-color 2>&1 &
+CCTR_PID=$!
+# Wait for setup to complete
+sleep 0.3
+# Send SIGTERM
+kill -TERM $CCTR_PID 2>/dev/null || true
+# Wait for cctr to finish
+wait $CCTR_PID 2>/dev/null || true
+# Check that teardown ran
+test -f /tmp/cctr_signal_test_teardown_ran && echo "teardown ran after SIGTERM"
+---
+teardown ran after SIGTERM
+
+===
+not all slow tests completed when interrupted
+===
+# Count how many test markers exist (should be fewer than 5)
+count=$(ls /tmp/cctr_signal_test_test*_ran 2>/dev/null | wc -l | tr -d ' ')
+if [ "$count" -lt 5 ]; then echo "interrupted early: $count tests ran"; else echo "all 5 tests ran"; fi
+---
+interrupted early: {{ n }} tests ran
+---
+where
+* n < 5
