@@ -39,6 +39,7 @@ corpus [fixture]
 
 ===
 verbose mode shows starting and completion
+%exit 1
 ===
 cctr $CCTR_FIXTURE_DIR/test/corpus --no-color -v 2>&1
 ---
