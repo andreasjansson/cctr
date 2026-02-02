@@ -941,7 +941,7 @@ where
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "empty string");
-        assert_eq!(file.tests[0].expected_output, "val: {{ s: string }}");
+        assert_eq!(file.tests[0].expected_output, Some("val: {{ s: string }}".to_string()));
         assert_eq!(file.tests[0].variables.len(), 1);
         assert_eq!(file.tests[0].variables[0].name, "s");
         assert_eq!(file.tests[0].variables[0].var_type, Some(VarType::String));
