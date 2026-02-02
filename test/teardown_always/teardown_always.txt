@@ -1,39 +1,53 @@
 %platform unix
 ===
-teardown runs even when setup fails
+cleanup any previous marker files
+%require
 ===
-# Run cctr on the failing_setup suite, then check the execution log
-cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1
-# Now check what ran - setup and teardown should both be in log, but not main test
-cat "$CCTR_FIXTURE_DIR/execution_log.txt" 2>/dev/null || echo "no log file"
+rm -f /tmp/cctr_teardown_test_setup_ran /tmp/cctr_teardown_test_teardown_ran /tmp/cctr_teardown_test_main_ran
+---
+
+===
+run suite with failing setup
+%require
+===
+cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1 || true
 ---
 F.
 
-✗ failing_setup: 1/2 tests passed in {{ t1 }}s
-  Setup failed
+⊘ failing_setup: Setup failed (3 tests skipped)
 
 Failures:
 
 ✗ failing_setup/_setup: setup that fails
   failing_setup/_setup.txt:1
-  Command: echo "setup running" >> "$CCTR_WORK_DIR/execution_log.txt"
+  Command: touch /tmp/cctr_teardown_test_setup_ran
 false
 
 -
-+setup running
++
 
-Summary: 1 passed, 1 failed, 0 skipped in {{ t2 }}s
-setup running
-teardown running
+Summary: 0 passed, 0 failed, 3 skipped in {{ t }}s
 ---
 where
-* t1 < 5
-* t2 < 5
+* t < 5
 
 ===
-main tests are skipped when setup fails
+setup marker file exists
 ===
-# Verify that "main test running" is NOT in the log (main test was skipped)
-grep -c "main test running" "$CCTR_FIXTURE_DIR/execution_log.txt" 2>/dev/null || echo "0"
+test -f /tmp/cctr_teardown_test_setup_ran && echo "setup ran"
 ---
-0
+setup ran
+
+===
+teardown marker file exists (CRITICAL - teardown must run even when setup fails)
+===
+test -f /tmp/cctr_teardown_test_teardown_ran && echo "teardown ran"
+---
+teardown ran
+
+===
+main test marker file does NOT exist (main tests skipped when setup fails)
+===
+test ! -f /tmp/cctr_teardown_test_main_ran && echo "main skipped"
+---
+main skipped
