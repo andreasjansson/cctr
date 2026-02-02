@@ -71,6 +71,18 @@ pub struct SkipDirective {
     pub condition: Option<String>,
 }
 
+/// Expected exit code for a test
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum ExpectedExit {
+    /// Command must exit with code 0 (default)
+    #[default]
+    Success,
+    /// Command must exit with a specific code
+    Code(i32),
+    /// Command must exit with any non-zero code
+    NonZero,
+}
+
 /// Supported platforms
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Platform {
