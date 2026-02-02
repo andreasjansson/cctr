@@ -828,7 +828,7 @@ line3
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "line1\nline2\nline3");
+        assert_eq!(file.tests[0].expected_output, Some("line1\nline2\nline3".to_string()));
     }
 
     #[test]
