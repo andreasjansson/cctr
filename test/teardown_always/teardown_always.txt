@@ -63,7 +63,8 @@ SIGINT during test run goes straight to teardown
 %require
 ===
 # Use helper script for more reliable signal testing
-"$CCTR_TEST_PATH/fixture/signal_test.sh" "$CCTR_FIXTURE_DIR" 2>/dev/null
+# Redirect stderr to /dev/null to suppress cctr's output
+"$CCTR_TEST_PATH/fixture/signal_test.sh" "$CCTR_FIXTURE_DIR" 2>&1 | grep -E "^(teardown_exists|test1_started|test2_ran)="
 ---
 teardown_exists=yes
 test1_started=yes
