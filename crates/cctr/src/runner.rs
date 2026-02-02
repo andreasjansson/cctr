@@ -553,8 +553,8 @@ fn run_corpus_file(
     let mut require_failed: Option<String> = None;
 
     for test in corpus.tests {
-        // Check for interruption before starting each test
-        if is_interrupted() {
+        // Check for interruption before starting each test (unless running teardown)
+        if !ignore_interruption && is_interrupted() {
             break;
         }
 
