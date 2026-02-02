@@ -410,22 +410,41 @@ cat config.json
 `_setup.txt` runs before all tests (if it fails, suite is skipped).
 `_teardown.txt` runs after all tests (always, even if tests fail).
 
-## Environment Variables
+## Execution Environment
+
+Each test suite runs in an isolated temporary directory. The `fixture/` directory (if present) is copied into this temp directory, and the test's working directory is set to the copied fixture directory. This means:
+
+- Tests can modify fixture files without affecting the originals
+- Relative paths work directly: `./data.txt` instead of `$CCTR_FIXTURE_DIR/data.txt`
+- Each suite gets a fresh copy of fixtures
+
+```
+===
+read fixture file directly
+===
+cat ./data.txt
+---
+test data content
+
+===
+modify fixture without affecting original
+===
+echo "modified" >> ./data.txt
+cat ./data.txt
+---
+test data content
+modified
+```
+
+### Environment Variables
 
 | Variable | Description |
 |----------|-------------|
 | `$CCTR_WORK_DIR` | Temp directory where tests run |
-| `$CCTR_FIXTURE_DIR` | Location of copied fixture files |
+| `$CCTR_FIXTURE_DIR` | Location of copied fixture files (same as working dir) |
 | `$CCTR_TEST_PATH` | Original test directory path |
 
-```
-===
-use fixture data
-===
-cat "$CCTR_FIXTURE_DIR/data.txt"
----
-test data content
-```
+The environment variables are available but rarely needed since the working directory is already set correctly.
 
 ## Output Handling
 
