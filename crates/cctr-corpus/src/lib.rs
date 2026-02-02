@@ -828,7 +828,10 @@ line3
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, Some("line1\nline2\nline3".to_string()));
+        assert_eq!(
+            file.tests[0].expected_output,
+            Some("line1\nline2\nline3".to_string())
+        );
     }
 
     #[test]
@@ -941,7 +944,10 @@ where
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "empty string");
-        assert_eq!(file.tests[0].expected_output, Some("val: {{ s: string }}".to_string()));
+        assert_eq!(
+            file.tests[0].expected_output,
+            Some("val: {{ s: string }}".to_string())
+        );
         assert_eq!(file.tests[0].variables.len(), 1);
         assert_eq!(file.tests[0].variables[0].name, "s");
         assert_eq!(file.tests[0].variables[0].var_type, Some(VarType::String));
@@ -1267,7 +1273,10 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, Some("---\nhello".to_string()));
+        assert_eq!(
+            file.tests[0].expected_output,
+            Some("---\nhello".to_string())
+        );
     }
 
     #[test]
@@ -1312,7 +1321,11 @@ this looks like a test but is content
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         // The ===== block is included as content
-        assert!(file.tests[0].expected_output.as_ref().unwrap().contains("====="));
+        assert!(file.tests[0]
+            .expected_output
+            .as_ref()
+            .unwrap()
+            .contains("====="));
     }
 
     #[test]
