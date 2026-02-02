@@ -1,6 +1,7 @@
 %platform unix
 ===
 variables verbose output
+%exit 1
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color -v 2>&1
 ---
