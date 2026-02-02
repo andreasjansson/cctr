@@ -1,0 +1,52 @@
+%platform unix
+===
+exit directive tests run correctly
+%exit 1
+===
+cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
+---
+..F..F.F..F
+
+✗ tests: 6/10 tests passed in {{ suite_time }}s
+
+Failures:
+
+✗ tests/exit_codes: exit 0 by default fails on nonzero
+  Error: expected exit code 0, got 1
+
+✗ tests/exit_codes: exit specific code fails on wrong code
+  Error: expected exit code 2, got 1
+
+✗ tests/exit_codes: exit nonzero fails on zero
+  Error: expected non-zero exit code, got 0
+
+✗ tests/exit_codes: exit with output checking fails on wrong output
+  tests/exit_codes.txt:33
+  Command: echo "wrong message"; exit 1
+
+-error message
++wrong message
+
+Summary: 6 passed, 4 failed, 0 skipped in {{ total_time }}s
+---
+where
+* suite_time < 5
+* total_time < 5
+
+===
+list shows all exit tests
+===
+cctr $CCTR_FIXTURE_DIR/tests --list
+---
+
+tests
+  exit_codes: 10 test(s)
+    - exit 0 by default passes
+    - exit 0 by default fails on nonzero
+    - exit specific code passes
+    - exit specific code fails on wrong code
+    - exit nonzero passes
+    - exit nonzero fails on zero
+    - exit with output checking passes
+    - exit with output checking fails on wrong output
+    - exit with empty output checking
