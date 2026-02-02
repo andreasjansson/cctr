@@ -1,6 +1,7 @@
 use crate::discover::Suite;
 use crate::matcher::Matcher;
 use crate::{parse_content, parse_file, TestCase};
+use cctr_corpus::ExpectedExit;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
