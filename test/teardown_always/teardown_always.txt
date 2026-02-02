@@ -52,22 +52,63 @@ test ! -f /tmp/cctr_teardown_test_main_ran && echo "main skipped"
 main skipped
 
 ===
-cleanup signal test markers
+cleanup signal sync markers
+%require
 ===
-rm -f /tmp/cctr_signal_test_*
+rm -f /tmp/cctr_signal_sync_*
 ---
 
 ===
-signal handling works when run directly (manual verification)
-%skip(signal tests unreliable in subshell - verify manually: cctr fixture/slow_tests & sleep 0.8; kill -TERM $!)
+SIGINT during test run goes straight to teardown
+%require
 ===
-# This test is skipped because signal handling behavior differs when running
-# through bash -c vs directly. The signal handler works correctly when cctr
-# is run directly, but in a subshell the process may be terminated before
-# teardown can run. Manually verify with:
-#   cctr test/teardown_always/fixture/slow_tests &
-#   sleep 0.8
-#   kill -TERM $!
-# And check that /tmp/cctr_signal_test_teardown_ran exists.
-true
+# Start cctr in background
+cctr $CCTR_FIXTURE_DIR/signal_sync --no-color &
+CCTR_PID=$!
+
+# Poll until test1 signals it has started (max 5 seconds)
+for i in $(seq 1 50); do
+  if [ -f /tmp/cctr_signal_sync_test1_started ]; then
+    break
+  fi
+  sleep 0.1
+done
+
+# Send SIGINT now that test1 is running
+kill -INT $CCTR_PID 2>/dev/null
+
+# Wait for cctr to finish
+wait $CCTR_PID 2>/dev/null
+
+echo "done"
 ---
+done
+
+===
+teardown ran after SIGINT
+===
+test -f /tmp/cctr_signal_sync_teardown && echo "teardown ran"
+---
+teardown ran
+
+===
+test 1 started but did not finish (was interrupted)
+===
+if [ -f /tmp/cctr_signal_sync_test1_started ] && [ ! -f /tmp/cctr_signal_sync_test1_finished ]; then
+  echo "test1 interrupted correctly"
+else
+  echo "test1 started=$(test -f /tmp/cctr_signal_sync_test1_started && echo yes || echo no) finished=$(test -f /tmp/cctr_signal_sync_test1_finished && echo yes || echo no)"
+fi
+---
+test1 interrupted correctly
+
+===
+tests 2-5 were skipped (did not run)
+===
+count=0
+for f in /tmp/cctr_signal_sync_test2 /tmp/cctr_signal_sync_test3 /tmp/cctr_signal_sync_test4 /tmp/cctr_signal_sync_test5; do
+  [ -f "$f" ] && count=$((count + 1))
+done
+echo "skipped tests that ran: $count"
+---
+skipped tests that ran: 0
