@@ -1,0 +1,34 @@
+===
+slow test 1
+===
+sleep 0.5
+touch /tmp/cctr_signal_test_test1_ran
+---
+
+===
+slow test 2
+===
+sleep 0.5
+touch /tmp/cctr_signal_test_test2_ran
+---
+
+===
+slow test 3
+===
+sleep 0.5
+touch /tmp/cctr_signal_test_test3_ran
+---
+
+===
+slow test 4
+===
+sleep 0.5
+touch /tmp/cctr_signal_test_test4_ran
+---
+
+===
+slow test 5
+===
+sleep 0.5
+touch /tmp/cctr_signal_test_test5_ran
+---
