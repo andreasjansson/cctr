@@ -5,6 +5,5 @@ true
 
 ===
 exit nonzero fails
-%exit nonzero
 ===
 false
