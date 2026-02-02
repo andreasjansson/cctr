@@ -2,10 +2,9 @@
 exit zero passes
 ===
 true
----
 
 ===
 exit nonzero fails
+%exit nonzero
 ===
 false
----
