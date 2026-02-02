@@ -1,6 +1,6 @@
 ===
 setup that fails
 ===
-echo "setup running" >> "$CCTR_WORK_DIR/execution_log.txt"
+touch /tmp/cctr_teardown_test_setup_ran
 false
 ---
