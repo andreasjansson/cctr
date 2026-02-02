@@ -1161,7 +1161,7 @@ printf "---\n----\n"
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "---\n----");
+        assert_eq!(file.tests[0].expected_output, Some("---\n----".to_string()));
     }
 
     #[test]
