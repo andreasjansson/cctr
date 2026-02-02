@@ -857,7 +857,7 @@ Completed in {{ n: number }}s
         assert_eq!(file.tests.len(), 1);
         assert_eq!(
             file.tests[0].expected_output,
-            "Completed in {{ n: number }}s"
+            Some("Completed in {{ n: number }}s".to_string())
         );
         assert_eq!(file.tests[0].variables.len(), 1);
         assert_eq!(file.tests[0].variables[0].name, "n");
