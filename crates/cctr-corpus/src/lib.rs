@@ -1267,7 +1267,7 @@ hello
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
-        assert_eq!(file.tests[0].expected_output, "---\nhello");
+        assert_eq!(file.tests[0].expected_output, Some("---\nhello".to_string()));
     }
 
     #[test]
