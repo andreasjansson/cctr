@@ -606,9 +606,10 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let name = description_line.parse_next(input)?;
     state.current_line += 1;
 
-    // Parse test-level directives (%skip and %require allowed at test level)
+    // Parse test-level directives (%skip, %require, %exit allowed at test level)
     let mut skip = None;
     let mut require = false;
+    let mut expected_exit = ExpectedExit::Success;
 
     loop {
         let _ = take_while(0.., ' ').parse_next(input)?;
@@ -620,6 +621,9 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
             let _ = take_while(0.., ' ').parse_next(input)?;
             let _ = opt('\n').parse_next(input)?;
             require = true;
+            state.current_line += 1;
+        } else if input.starts_with("%exit") {
+            expected_exit = exit_directive.parse_next(input)?;
             state.current_line += 1;
         } else {
             break;
@@ -655,29 +659,39 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     let command = read_block_until_separator(input, delimiter_len);
     state.current_line = command_start + command.lines().count().max(1);
 
-    dash_sep_exact(input, delimiter_len)?;
-    opt_newline.parse_next(input)?;
-    state.current_line += 1;
-
-    let expected_start = state.current_line;
-    let expected_output = read_block_until_separator(input, delimiter_len);
-    let expected_lines = expected_output.lines().count();
-    state.current_line =
-        expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
-
-    let constraints = opt(|i: &mut &str| where_section(i, delimiter_len))
+    // Check if there's a --- separator (optional - if missing, it's exit-only mode)
+    let has_output_separator = opt(|i: &mut &str| dash_sep_exact(i, delimiter_len))
         .parse_next(input)?
-        .unwrap_or_default();
-    if !constraints.is_empty() {
-        state.current_line += 2 + constraints.len();
-    }
+        .is_some();
+
+    let (expected_output, variables, constraints) = if has_output_separator {
+        opt_newline.parse_next(input)?;
+        state.current_line += 1;
+
+        let expected_start = state.current_line;
+        let expected_output = read_block_until_separator(input, delimiter_len);
+        let expected_lines = expected_output.lines().count();
+        state.current_line =
+            expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
+
+        let constraints = opt(|i: &mut &str| where_section(i, delimiter_len))
+            .parse_next(input)?
+            .unwrap_or_default();
+        if !constraints.is_empty() {
+            state.current_line += 2 + constraints.len();
+        }
+
+        let variables = extract_variables_from_expected(&expected_output)
+            .map_err(|_| winnow::error::ErrMode::Backtrack(ContextError::new()))?;
+
+        (Some(expected_output), variables, constraints)
+    } else {
+        (None, Vec::new(), Vec::new())
+    };
 
     skip_blank_lines.parse_next(input)?;
 
     let end_line = state.current_line;
-
-    let variables = extract_variables_from_expected(&expected_output)
-        .map_err(|_| winnow::error::ErrMode::Backtrack(ContextError::new()))?;
 
     Ok(TestCase {
         name,
@@ -690,6 +704,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         constraints,
         skip,
         require,
+        expected_exit,
     })
 }
 
