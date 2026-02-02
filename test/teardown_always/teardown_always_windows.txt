@@ -1,0 +1,42 @@
+%platform windows
+===
+cleanup any previous marker files
+%require
+===
+Remove-Item -Path "$env:TEMP\cctr_teardown_test_*.txt" -Force -ErrorAction SilentlyContinue
+Write-Output "cleaned"
+---
+cleaned
+
+===
+run suite with failing setup
+%require
+===
+cctr $env:CCTR_FIXTURE_DIR\failing_setup_win --no-color 2>&1 | Out-String
+$true
+---
+{{ output }}
+---
+where
+* output contains "Setup failed"
+
+===
+setup marker file exists
+===
+if (Test-Path "$env:TEMP\cctr_teardown_test_setup.txt") { "setup ran" } else { "no setup" }
+---
+setup ran
+
+===
+teardown marker file exists (CRITICAL - teardown must run even when setup fails)
+===
+if (Test-Path "$env:TEMP\cctr_teardown_test_teardown.txt") { "teardown ran" } else { "no teardown" }
+---
+teardown ran
+
+===
+main test marker file does NOT exist (main tests skipped when setup fails)
+===
+if (-not (Test-Path "$env:TEMP\cctr_teardown_test_main.txt")) { "main skipped" } else { "main ran" }
+---
+main skipped
