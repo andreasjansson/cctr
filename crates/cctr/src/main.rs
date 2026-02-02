@@ -23,11 +23,14 @@ fn main() -> anyhow::Result<()> {
     // Set up signal handler for graceful shutdown
     // When interrupted, we set a flag that tells running suites to skip remaining tests
     // but still run their teardown
-    ctrlc::set_handler(move || {
-        eprintln!("\nInterrupted - running teardown...");
+    if let Err(e) = ctrlc::set_handler(move || {
+        // Use write! to stderr directly since eprintln! may not be signal-safe
+        use std::io::Write;
+        let _ = writeln!(std::io::stderr(), "\nInterrupted - running teardown...");
         set_interrupted();
-    })
-    .expect("Error setting Ctrl-C handler");
+    }) {
+        eprintln!("Warning: Could not set signal handler: {}", e);
+    }
 
     let cli = Cli::parse();
 
