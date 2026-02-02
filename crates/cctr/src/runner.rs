@@ -555,7 +555,6 @@ fn run_corpus_file(
     for test in corpus.tests {
         // Check for interruption before starting each test (unless running teardown)
         if !ignore_interruption && is_interrupted() {
-            eprintln!("[DEBUG] Breaking due to interrupt before test: {}", test.name);
             break;
         }
 
