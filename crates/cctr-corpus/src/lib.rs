@@ -112,7 +112,8 @@ pub enum Shell {
 pub struct TestCase {
     pub name: String,
     pub command: String,
-    pub expected_output: String,
+    /// Expected output - None means no output checking (exit-only test without `---` separator)
+    pub expected_output: Option<String>,
     pub file_path: PathBuf,
     pub start_line: usize,
     pub end_line: usize,
@@ -121,6 +122,8 @@ pub struct TestCase {
     pub skip: Option<SkipDirective>,
     /// If true and this test fails, skip remaining tests in the file
     pub require: bool,
+    /// Expected exit code (default: must be 0)
+    pub expected_exit: ExpectedExit,
 }
 
 impl TestCase {
