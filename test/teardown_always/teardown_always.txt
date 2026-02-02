@@ -69,31 +69,4 @@ teardown_exists=yes
 test1_started=yes
 test2_ran=no
 
-===
-teardown ran after SIGINT
-===
-test -f /tmp/cctr_signal_sync_teardown && echo "teardown ran"
----
-teardown ran
 
-===
-test 1 started but did not finish (was interrupted)
-===
-if [ -f /tmp/cctr_signal_sync_test1_started ] && [ ! -f /tmp/cctr_signal_sync_test1_finished ]; then
-  echo "test1 interrupted correctly"
-else
-  echo "test1 started=$(test -f /tmp/cctr_signal_sync_test1_started && echo yes || echo no) finished=$(test -f /tmp/cctr_signal_sync_test1_finished && echo yes || echo no)"
-fi
----
-test1 interrupted correctly
-
-===
-tests 2-5 were skipped (did not run)
-===
-count=0
-for f in /tmp/cctr_signal_sync_test2 /tmp/cctr_signal_sync_test3 /tmp/cctr_signal_sync_test4 /tmp/cctr_signal_sync_test5; do
-  [ -f "$f" ] && count=$((count + 1))
-done
-echo "skipped tests that ran: $count"
----
-skipped tests that ran: 0
