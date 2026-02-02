@@ -1,5 +1,5 @@
 ===
 main test that should be skipped
 ===
-echo "main test running" >> "$CCTR_WORK_DIR/execution_log.txt"
+touch /tmp/cctr_teardown_test_main_ran
 ---
