@@ -787,7 +787,7 @@ hello
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "test name");
         assert_eq!(file.tests[0].command, "echo hello");
-        assert_eq!(file.tests[0].expected_output, "hello");
+        assert_eq!(file.tests[0].expected_output, Some("hello".to_string()));
         assert!(file.tests[0].variables.is_empty());
         assert!(file.tests[0].constraints.is_empty());
         assert!(file.tests[0].skip.is_none());
@@ -1130,7 +1130,7 @@ hello
         assert_eq!(file.tests.len(), 1);
         assert_eq!(file.tests[0].name, "test with longer delimiters");
         assert_eq!(file.tests[0].command, "echo hello");
-        assert_eq!(file.tests[0].expected_output, "hello");
+        assert_eq!(file.tests[0].expected_output, Some("hello".to_string()));
     }
 
     #[test]
@@ -1207,7 +1207,7 @@ world
 "#;
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 2);
-        assert_eq!(file.tests[0].expected_output, "hello");
+        assert_eq!(file.tests[0].expected_output, Some("hello".to_string()));
         assert_eq!(file.tests[1].expected_output, "world");
     }
 
