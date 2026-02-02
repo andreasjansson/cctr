@@ -5,9 +5,9 @@ exit directive tests run correctly
 ===
 cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 ---
-..F..F.F..F
+.F.F.F.F.
 
-✗ tests: 6/10 tests passed in {{ suite_time }}s
+✗ tests: 5/9 tests passed in {{ suite_time }}s
 
 Failures:
 
@@ -21,13 +21,13 @@ Failures:
   Error: expected non-zero exit code, got 0
 
 ✗ tests/exit_codes: exit with output checking fails on wrong output
-  tests/exit_codes.txt:33
+  tests/exit_codes.txt:36
   Command: echo "wrong message"; exit 1
 
 -error message
 +wrong message
 
-Summary: 6 passed, 4 failed, 0 skipped in {{ total_time }}s
+Summary: 5 passed, 4 failed, 0 skipped in {{ total_time }}s
 ---
 where
 * suite_time < 5
@@ -40,7 +40,7 @@ cctr $CCTR_FIXTURE_DIR/tests --list
 ---
 
 tests
-  exit_codes: 10 test(s)
+  exit_codes: 9 test(s)
     - exit 0 by default passes
     - exit 0 by default fails on nonzero
     - exit specific code passes
