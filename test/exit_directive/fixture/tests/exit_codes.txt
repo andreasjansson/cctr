@@ -1,0 +1,59 @@
+===
+exit 0 by default passes
+===
+true
+
+===
+exit 0 by default fails on nonzero
+===
+false
+---
+
+===
+exit specific code passes
+%exit 1
+===
+exit 1
+
+===
+exit specific code fails on wrong code
+%exit 2
+===
+exit 1
+---
+
+===
+exit nonzero passes
+%exit nonzero
+===
+exit 42
+
+===
+exit nonzero fails on zero
+%exit nonzero
+===
+exit 0
+---
+
+===
+exit with output checking passes
+%exit 1
+===
+echo "error message"; exit 1
+---
+error message
+
+===
+exit with output checking fails on wrong output
+%exit 1
+===
+echo "wrong message"; exit 1
+---
+error message
+
+===
+exit with empty output checking
+%exit 0
+===
+true
+---
