@@ -452,6 +452,7 @@ fn run_test(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_corpus_file(
     file_path: &Path,
     work_dir: &Path,
