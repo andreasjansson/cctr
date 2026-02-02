@@ -800,6 +800,62 @@ The directive name follows Go's testing convention where `require` assertions st
 
 When a `%require` test is skipped (via `%skip`), it does not trigger the failure behavior—only actual test failures cause subsequent tests to be skipped.
 
+## Exit directive
+
+By default, cctr expects all commands to exit with code 0. Use `%exit` to specify a different expected exit code.
+
+### Exit code values
+
+| Syntax | Description |
+|--------|-------------|
+| `%exit 0` | Expect exit code 0 (same as default) |
+| `%exit 1` | Expect exit code 1 |
+| `%exit 42` | Expect any specific exit code |
+| `%exit nonzero` | Expect any non-zero exit code |
+
+### Examples
+
+Test that a command fails:
+
+```
+===
+invalid input causes error
+%exit 1
+===
+my-tool --invalid-option
+```
+
+Test that a command fails with any non-zero code:
+
+```
+===
+missing file causes error
+%exit nonzero
+===
+cat /nonexistent/file
+```
+
+Combine exit code with output checking:
+
+```
+===
+error message on failure
+%exit 1
+===
+my-tool --invalid-option 2>&1
+---
+Error: unknown option '--invalid-option'
+```
+
+### Exit code checking behavior
+
+Exit code checking is always performed:
+
+1. If `%exit` is not specified, the command must exit with code 0
+2. If the exit code doesn't match, the test fails immediately (before output checking)
+3. If the exit code matches and there's expected output (`---` section), output is checked
+4. If there's no `---` section (exit-only test), only the exit code is verified
+
 ## Platform directive
 
 Use `%platform` to restrict tests to specific platforms. Tests on non-matching platforms are skipped.
