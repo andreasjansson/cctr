@@ -739,10 +739,8 @@ pub fn run_suite(
         }
     }
 
-    // ALWAYS run teardown, regardless of setup/test results
-    eprintln!("[DEBUG] About to run teardown, has_teardown={}", suite.has_teardown);
+    // ALWAYS run teardown, regardless of setup/test results or interruption
     run_teardown_if_exists(suite, work_dir, &env_vars, progress_tx, stream_output, &mut file_results);
-    eprintln!("[DEBUG] Teardown complete");
 
     SuiteResult {
         suite: suite.clone(),
