@@ -64,8 +64,8 @@ teardown runs even when interrupted by SIGTERM
 # Start cctr in background running slow tests
 cctr $CCTR_FIXTURE_DIR/slow_tests --no-color 2>&1 &
 CCTR_PID=$!
-# Wait for setup to complete
-sleep 0.3
+# Wait long enough for setup AND first test to start
+sleep 0.7
 # Send SIGTERM
 kill -TERM $CCTR_PID 2>/dev/null || true
 # Wait for cctr to finish
