@@ -1646,4 +1646,112 @@ hello
         assert_eq!(file.tests.len(), 1);
         assert!(!file.tests[0].require);
     }
+
+    #[test]
+    fn test_exit_only_no_separator() {
+        let content = r#"===
+exit only without separator
+===
+true
+
+===
+second test
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].name, "exit only without separator");
+        assert_eq!(file.tests[0].expected_output, None);
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::Success);
+        assert_eq!(file.tests[1].expected_output, Some("hello".to_string()));
+    }
+
+    #[test]
+    fn test_exit_directive_specific_code() {
+        let content = r#"===
+expect exit 1
+%exit 1
+===
+false
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::Code(1));
+        assert_eq!(file.tests[0].expected_output, None);
+    }
+
+    #[test]
+    fn test_exit_directive_nonzero() {
+        let content = r#"===
+expect nonzero
+%exit nonzero
+===
+false
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::NonZero);
+    }
+
+    #[test]
+    fn test_exit_directive_with_output() {
+        let content = r#"===
+exit 1 with output
+%exit 1
+===
+echo "error" >&2; exit 1
+---
+error
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::Code(1));
+        assert_eq!(file.tests[0].expected_output, Some("error".to_string()));
+    }
+
+    #[test]
+    fn test_empty_output_with_separator() {
+        let content = r#"===
+empty output check
+===
+true
+---
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_output, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_exit_directive_with_skip() {
+        let content = r#"===
+skipped exit test
+%skip
+%exit 1
+===
+false
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].skip.is_some());
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::Code(1));
+    }
+
+    #[test]
+    fn test_exit_directive_with_require() {
+        let content = r#"===
+required exit test
+%require
+%exit 0
+===
+true
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert!(file.tests[0].require);
+        assert_eq!(file.tests[0].expected_exit, ExpectedExit::Code(0));
+    }
 }
