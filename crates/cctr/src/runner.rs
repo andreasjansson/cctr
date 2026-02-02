@@ -51,7 +51,8 @@ pub struct TestResult {
     pub skipped: bool,
     pub skip_reason: Option<String>,
     pub actual_output: Option<String>,
-    pub expected_output: String,
+    /// Expected output - None means exit-only test (no output checking)
+    pub expected_output: Option<String>,
     pub error: Option<String>,
     pub warning: Option<String>,
     pub elapsed: Duration,
