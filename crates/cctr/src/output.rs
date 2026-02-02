@@ -349,7 +349,9 @@ impl Output {
 
                 if let Some(error) = &result.error {
                     writeln!(self.stdout, "  Error: {}", error).unwrap();
-                } else if let Some(actual) = &result.actual_output {
+                } else if let (Some(expected), Some(actual)) =
+                    (&result.expected_output, &result.actual_output)
+                {
                     let display_path = std::env::current_dir()
                         .ok()
                         .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
@@ -364,7 +366,7 @@ impl Output {
                     .unwrap();
                     writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
                     writeln!(self.stdout).unwrap();
-                    self.print_diff(&result.expected_output, actual);
+                    self.print_diff(expected, actual);
                 }
             }
         }
