@@ -711,9 +711,13 @@ pub fn run_suite(
         }
     }
 
-    // Only run main tests if setup passed (or there was no setup)
-    if setup_passed {
+    // Only run main tests if setup passed (or there was no setup) and not interrupted
+    if setup_passed && !is_interrupted() {
         for corpus_file in suite.corpus_files() {
+            // Check for interruption before each file
+            if is_interrupted() {
+                break;
+            }
             let file_result = run_corpus_file(
                 &corpus_file,
                 work_dir,
