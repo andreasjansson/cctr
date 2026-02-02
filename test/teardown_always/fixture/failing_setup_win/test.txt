@@ -1,0 +1,6 @@
+%platform windows
+===
+main test that should be skipped
+===
+echo main > "$env:TEMP\cctr_teardown_test_main.txt"
+---
