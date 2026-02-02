@@ -333,19 +333,32 @@ echo $((6 * 7))
 
 ### Exit-only tests
 
-Omit the expected output to only verify that the command exits successfully (exit code 0):
+Omit the `---` separator entirely to only verify that the command exits successfully (exit code 0):
 
 ```
 ===
 check file exists
 ===
 test -f /etc/passwd
----
 
 ===
 directory is writable
 ===
 test -w /tmp
+```
+
+Note: If you include `---` followed by nothing, it checks for *empty* output. This is different from exit-only mode:
+
+```
+===
+exit-only mode (no output checking)
+===
+some-command
+
+===
+empty output checking (must produce no output)
+===
+some-silent-command
 ---
 ```
 
