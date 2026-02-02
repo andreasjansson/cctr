@@ -707,6 +707,7 @@ pub fn run_suite(
             None, // Setup always runs all tests regardless of pattern
             progress_tx,
             stream_output,
+            false, // Setup can be interrupted
         );
         setup_passed = file_result.passed();
         file_results.push(file_result);
@@ -732,6 +733,7 @@ pub fn run_suite(
                 pattern,
                 progress_tx,
                 stream_output,
+                false, // Main tests can be interrupted
             );
             file_results.push(file_result);
         }
