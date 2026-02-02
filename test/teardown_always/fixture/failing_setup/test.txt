@@ -1,0 +1,5 @@
+===
+main test that should be skipped
+===
+echo "main test running" >> "$CCTR_WORK_DIR/execution_log.txt"
+---
