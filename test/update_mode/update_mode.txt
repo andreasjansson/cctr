@@ -1,6 +1,7 @@
 %platform unix
 ===
 update mode output format
+%exit 1
 ===
 cctr $CCTR_FIXTURE_DIR/tests -u --no-color 2>&1
 ---
