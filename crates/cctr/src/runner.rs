@@ -626,7 +626,6 @@ fn run_corpus_file(
 
         // Check for interruption after each test completes (for faster response)
         if !ignore_interruption && is_interrupted() {
-            eprintln!("[DEBUG] Breaking due to interrupt after test: {}", test.name);
             break;
         }
     }
