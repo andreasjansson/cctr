@@ -19,17 +19,16 @@ F.
 Failures:
 
 ✗ failing_setup/_setup: setup that fails
-  failing_setup/_setup.txt:1
+  {{ path }}_setup.txt:1
   Command: touch /tmp/cctr_teardown_test_setup_ran
 false
 
--
-+
 
 Summary: 0 passed, 0 failed, 3 skipped in {{ t }}s
 ---
 where
 * t < 5
+* path endswith "failing_setup/"
 
 ===
 setup marker file exists
