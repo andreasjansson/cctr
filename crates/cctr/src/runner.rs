@@ -623,6 +623,11 @@ fn run_corpus_file(
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
         results.push(result);
+
+        // Check for interruption after each test completes (for faster response)
+        if !ignore_interruption && is_interrupted() {
+            break;
+        }
     }
 
     FileResult {
