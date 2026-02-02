@@ -148,16 +148,61 @@ echo world
 world
 ```
 
-### Exit-Only Tests (No Expected Output)
+### Exit-Only Tests (No Output Checking)
 
-Omit expected output to only verify exit code 0:
+Omit the `---` separator entirely to only verify exit code:
 
 ```
 ===
 file exists check
 ===
 test -f config.json
+
+===
+directory is writable
+===
+test -w /tmp
+```
+
+**Important:** Including `---` with nothing after it checks for *empty* output, which is different:
+
+```
+===
+exit-only (no output checking)
+===
+some-command
+
+===
+empty output (must produce no output)
+===
+some-silent-command
 ---
+```
+
+### Exit Code Checking
+
+By default, commands must exit with code 0. Use `%exit` to expect other codes:
+
+```
+===
+invalid input causes error
+%exit 1
+===
+mytool --invalid-option
+
+===
+any non-zero exit
+%exit nonzero
+===
+cat /nonexistent/file
+
+===
+error with output checking
+%exit 1
+===
+mytool --invalid 2>&1
+---
+Error: unknown option
 ```
 
 ### Multiline Commands
