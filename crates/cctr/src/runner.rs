@@ -552,6 +552,11 @@ fn run_corpus_file(
     let mut require_failed: Option<String> = None;
 
     for test in corpus.tests {
+        // Check for interruption before starting each test
+        if is_interrupted() {
+            break;
+        }
+
         if let Some(pat) = pattern {
             // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
