@@ -1312,7 +1312,7 @@ this looks like a test but is content
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         // The ===== block is included as content
-        assert!(file.tests[0].expected_output.contains("====="));
+        assert!(file.tests[0].expected_output.as_ref().unwrap().contains("====="));
     }
 
     #[test]
