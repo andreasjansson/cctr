@@ -24,9 +24,12 @@ fn main() -> anyhow::Result<()> {
     // When interrupted, we set a flag that tells running suites to skip remaining tests
     // but still run their teardown
     if let Err(e) = ctrlc::set_handler(move || {
-        // Use write! to stderr directly since eprintln! may not be signal-safe
         use std::io::Write;
-        let _ = writeln!(std::io::stderr(), "\nInterrupted - running teardown...");
+        if is_interrupted() {
+            let _ = writeln!(std::io::stderr(), "\nForce quit");
+            std::process::exit(130);
+        }
+        let _ = writeln!(std::io::stderr(), "\nInterrupted - running teardown... (press Ctrl-C again to force quit)");
         set_interrupted();
     }) {
         eprintln!("Warning: Could not set signal handler: {}", e);
