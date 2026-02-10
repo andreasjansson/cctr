@@ -70,4 +70,22 @@ teardown_exists=yes
 test1_started=yes
 test2_ran=no
 
+===
+cleanup signal setup markers
+%require
+===
+rm -f /tmp/cctr_signal_setup_*
+---
+
+===
+SIGINT during setup kills setup and runs teardown
+%require
+===
+"$CCTR_TEST_PATH/fixture/signal_setup_test.sh" "$CCTR_FIXTURE_DIR" 2>&1 | grep -E "^(setup_started|setup_step2_ran|teardown_ran|main_ran)="
+---
+setup_started=yes
+setup_step2_ran=no
+teardown_ran=yes
+main_ran=no
+
 

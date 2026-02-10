@@ -1,0 +1,12 @@
+===
+setup step 1 - signals ready then sleeps
+===
+touch /tmp/cctr_signal_setup_started
+sleep 10
+---
+
+===
+setup step 2 - should not run if interrupted during step 1
+===
+touch /tmp/cctr_signal_setup_step2
+---

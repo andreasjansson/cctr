@@ -1,0 +1,5 @@
+===
+main test - should not run if setup was interrupted
+===
+touch /tmp/cctr_signal_setup_main
+---

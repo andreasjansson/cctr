@@ -199,23 +199,45 @@ fn run_command(
     work_dir: &Path,
     env_vars: &[(String, String)],
     shell: Option<Shell>,
+    interruptible: bool,
 ) -> (String, i32) {
     let shell = shell.unwrap_or_else(default_shell);
     let mut cmd = build_command(command, work_dir, env_vars, shell);
 
-    match cmd.output() {
-        Ok(output) => {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let combined = format!("{}{}", stdout, stderr);
-            let exit_code = output.status.code().unwrap_or(-1);
-            // Strip ANSI escape codes and normalize line endings
-            let stripped = strip_ansi_escapes::strip_str(&combined);
-            let normalized = stripped.replace("\r\n", "\n");
-            (normalized.trim_end_matches('\n').to_string(), exit_code)
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = match cmd.spawn() {
+        Ok(child) => child,
+        Err(e) => return (format!("Failed to execute command: {}", e), -1),
+    };
+
+    let exit_status = loop {
+        if interruptible && is_interrupted() {
+            let _ = child.kill();
+            let _ = child.wait();
+            return (String::new(), 130);
         }
-        Err(e) => (format!("Failed to execute command: {}", e), -1),
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => std::thread::sleep(Duration::from_millis(10)),
+            Err(e) => return (format!("Failed to wait for command: {}", e), -1),
+        }
+    };
+
+    let exit_code = exit_status.code().unwrap_or(-1);
+    let mut stdout_str = String::new();
+    let mut stderr_str = String::new();
+    if let Some(mut r) = child.stdout.take() {
+        let _ = std::io::Read::read_to_string(&mut r, &mut stdout_str);
     }
+    if let Some(mut r) = child.stderr.take() {
+        let _ = std::io::Read::read_to_string(&mut r, &mut stderr_str);
+    }
+    let combined = format!("{}{}", stdout_str, stderr_str);
+    let stripped = strip_ansi_escapes::strip_str(&combined);
+    let normalized = stripped.replace("\r\n", "\n");
+    (normalized.trim_end_matches('\n').to_string(), exit_code)
 }
 
 /// Callback for streaming output lines
@@ -227,6 +249,7 @@ fn run_command_streaming(
     env_vars: &[(String, String)],
     shell: Option<Shell>,
     on_line: OutputCallback,
+    interruptible: bool,
 ) -> (String, i32) {
     use std::sync::mpsc::channel;
 
@@ -263,19 +286,30 @@ fn run_command_streaming(
         }
     });
 
-    // Collect lines and stream them as they arrive
     let mut output_lines = Vec::new();
 
-    // Process lines as they come in from either stdout or stderr
-    // The channel closes when both senders are dropped (threads complete)
-    for line in rx {
-        // Strip ANSI escape codes from each line
-        let stripped = strip_ansi_escapes::strip_str(&line);
-        on_line(&stripped);
-        output_lines.push(stripped);
+    loop {
+        match rx.recv_timeout(Duration::from_millis(10)) {
+            Ok(line) => {
+                let stripped = strip_ansi_escapes::strip_str(&line);
+                on_line(&stripped);
+                output_lines.push(stripped);
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                if interruptible && is_interrupted() {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = stdout_handle.join();
+                    let _ = stderr_handle.join();
+                    let combined = output_lines.join("\n");
+                    let normalized = combined.replace("\r\n", "\n");
+                    return (normalized, 130);
+                }
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+        }
     }
 
-    // Wait for threads to complete
     let _ = stdout_handle.join();
     let _ = stderr_handle.join();
 
@@ -322,7 +356,7 @@ fn should_skip(
     // Check shell condition - use file_shell if specified, otherwise default
     match &skip.condition {
         Some(condition) => {
-            let (output, exit_code) = run_command(condition, work_dir, env_vars, file_shell);
+            let (output, exit_code) = run_command(condition, work_dir, env_vars, file_shell, true);
             if debug {
                 eprintln!(
                     "[DEBUG SKIP] condition: {:?}, exit_code: {}, output: {:?}, is_windows: {}",
@@ -365,6 +399,7 @@ fn run_test(
     env_vars: &[(String, String)],
     file_shell: Option<Shell>,
     streaming: Option<StreamingContext<'_>>,
+    interruptible: bool,
 ) -> TestResult {
     let start = Instant::now();
 
@@ -415,9 +450,10 @@ fn run_test(
                     line: line.to_string(),
                 });
             }),
+            interruptible,
         )
     } else {
-        run_command(&test.command, work_dir, env_vars, file_shell)
+        run_command(&test.command, work_dir, env_vars, file_shell, interruptible)
     };
     let elapsed = start.elapsed();
 
@@ -613,6 +649,7 @@ fn run_corpus_file(
             env_vars,
             corpus.file_shell,
             streaming,
+            !ignore_interruption,
         );
 
         // Check if this was a %require test that failed
@@ -910,6 +947,7 @@ pub fn run_from_stdin(
             &env_vars,
             corpus.file_shell,
             streaming,
+            true,
         );
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
