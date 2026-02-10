@@ -13,6 +13,7 @@ use tempfile::TempDir;
 /// Global flag to indicate the process has been interrupted (SIGINT/SIGTERM)
 /// When set, running suites will skip remaining tests but still run teardown
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+static IN_TEARDOWN: AtomicBool = AtomicBool::new(false);
 
 /// Set the interrupted flag - called from signal handler
 pub fn set_interrupted() {
@@ -22,6 +23,10 @@ pub fn set_interrupted() {
 /// Check if the process has been interrupted
 pub fn is_interrupted() -> bool {
     INTERRUPTED.load(Ordering::SeqCst)
+}
+
+pub fn is_in_teardown() -> bool {
+    IN_TEARDOWN.load(Ordering::SeqCst)
 }
 
 /// Cached bash path - computed once per invocation
@@ -816,6 +821,7 @@ fn run_teardown_if_exists(
     file_results: &mut Vec<FileResult>,
 ) {
     if suite.has_teardown {
+        IN_TEARDOWN.store(true, Ordering::SeqCst);
         let teardown_file = suite.path.join("_teardown.txt");
         let file_result = run_corpus_file(
             &teardown_file,
@@ -828,6 +834,7 @@ fn run_teardown_if_exists(
             true, // CRITICAL: Teardown must ALWAYS run, even if interrupted
         );
         file_results.push(file_result);
+        IN_TEARDOWN.store(false, Ordering::SeqCst);
     }
 }
 

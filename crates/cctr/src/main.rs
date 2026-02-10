@@ -3,7 +3,8 @@ use cctr::discover::discover_suites;
 use cctr::output::Output;
 use cctr::parse_file;
 use cctr::runner::{
-    is_interrupted, run_from_stdin, run_suite, set_interrupted, ProgressEvent, SuiteResult,
+    is_in_teardown, is_interrupted, run_from_stdin, run_suite, set_interrupted, ProgressEvent,
+    SuiteResult,
 };
 use cctr::update::update_corpus_file;
 use clap::Parser;
@@ -31,10 +32,17 @@ fn main() -> anyhow::Result<()> {
             let _ = writeln!(std::io::stderr(), "\nForce quit");
             std::process::exit(130);
         }
-        let _ = writeln!(
-            std::io::stderr(),
-            "\nInterrupted - cleaning up... (press Ctrl-C again to force quit)"
-        );
+        if is_in_teardown() {
+            let _ = writeln!(
+                std::io::stderr(),
+                "\nInterrupted during teardown (press Ctrl-C again to force quit)"
+            );
+        } else {
+            let _ = writeln!(
+                std::io::stderr(),
+                "\nInterrupted - running teardown... (press Ctrl-C again to force quit)"
+            );
+        }
         set_interrupted();
     }) {
         eprintln!("Warning: Could not set signal handler: {}", e);
