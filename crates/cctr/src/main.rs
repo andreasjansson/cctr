@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
         if is_in_teardown() {
             let _ = writeln!(
                 std::io::stderr(),
-                "\nInterrupted during teardown (press Ctrl-C again to force quit)"
+                "\nAttempted to interrupt during teardown (press Ctrl-C again to force quit)"
             );
         } else {
             let _ = writeln!(
