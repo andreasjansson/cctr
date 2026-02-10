@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
         }
         let _ = writeln!(
             std::io::stderr(),
-            "\nInterrupted - running teardown... (press Ctrl-C again to force quit)"
+            "\nInterrupted - cleaning up... (press Ctrl-C again to force quit)"
         );
         set_interrupted();
     }) {
