@@ -366,6 +366,10 @@ mod tests {
         }
     }
 
+    fn no_prior() -> HashMap<String, Value> {
+        HashMap::new()
+    }
+
     #[test]
     fn test_simple_number_match() {
         let vars = vec![make_var("n", Some("number"))];
@@ -373,8 +377,9 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
-            .matches("passed in {{ n }}s", "passed in 0.05s")
-            .unwrap());
+            .matches("passed in {{ n }}s", "passed in 0.05s", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -383,7 +388,10 @@ mod tests {
         let constraints = vec!["n > 0".to_string(), "n < 1".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("time: {{ n }}s", "time: 0.5s").unwrap());
+        assert!(matcher
+            .matches("time: {{ n }}s", "time: 0.5s", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -392,7 +400,7 @@ mod tests {
         let constraints = vec!["n < 0".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        let result = matcher.matches("time: {{ n }}s", "time: 0.5s");
+        let result = matcher.matches("time: {{ n }}s", "time: 0.5s", &no_prior());
         assert!(matches!(
             result,
             Err(MatchError::ConstraintNotSatisfied { .. })
@@ -406,8 +414,9 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(!matcher
-            .matches("passed in {{ n }}s", "failed in 0.05s")
-            .unwrap());
+            .matches("passed in {{ n }}s", "failed in 0.05s", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -416,7 +425,10 @@ mod tests {
         let constraints = vec!["len(s) == 0".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("val: {{ s }}", "val: ").unwrap());
+        assert!(matcher
+            .matches("val: {{ s }}", "val: ", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -425,7 +437,10 @@ mod tests {
         let constraints = vec![r#"s == "hello""#.to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
+        assert!(matcher
+            .matches("{{ s }}", r#""hello""#, &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -434,7 +449,10 @@ mod tests {
         let constraints = vec!["len(s) == 5".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ s }}", r#""hello""#).unwrap());
+        assert!(matcher
+            .matches("{{ s }}", r#""hello""#, &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -443,7 +461,10 @@ mod tests {
         let constraints = vec!["b == true".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ b }}", "true").unwrap());
+        assert!(matcher
+            .matches("{{ b }}", "true", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -452,7 +473,10 @@ mod tests {
         let constraints = vec!["b == false".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ b }}", "false").unwrap());
+        assert!(matcher
+            .matches("{{ b }}", "false", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -461,7 +485,10 @@ mod tests {
         let constraints = vec!["len(a) == 3".to_string(), "a[0] == 1".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
+        assert!(matcher
+            .matches("{{ a }}", "[1, 2, 3]", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -471,8 +498,9 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
-            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
-            .unwrap());
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#, &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -482,8 +510,9 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         assert!(matcher
-            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#)
-            .unwrap());
+            .matches("{{ o }}", r#"{"name": "alice", "age": 30}"#, &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -492,7 +521,10 @@ mod tests {
         let constraints = vec!["x <= 3 forall x in a".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("{{ a }}", "[1, 2, 3]").unwrap());
+        assert!(matcher
+            .matches("{{ a }}", "[1, 2, 3]", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -501,7 +533,10 @@ mod tests {
         let constraints = vec!["x > 0".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("val: {{ x }}", "val: 42").unwrap());
+        assert!(matcher
+            .matches("val: {{ x }}", "val: 42", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -510,7 +545,10 @@ mod tests {
         let constraints = vec!["len(x) == 5".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("val: {{ x }}", "val: hello").unwrap());
+        assert!(matcher
+            .matches("val: {{ x }}", "val: hello", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -519,7 +557,10 @@ mod tests {
         let constraints = vec!["x == true".to_string()];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        assert!(matcher.matches("val: {{ x }}", "val: true").unwrap());
+        assert!(matcher
+            .matches("val: {{ x }}", "val: true", &no_prior())
+            .unwrap()
+            .matched);
     }
 
     #[test]
@@ -528,7 +569,38 @@ mod tests {
         let constraints = vec![];
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
-        // The pattern has inline type annotation which should be stripped
-        assert!(matcher.matches("val: {{ n: number }}", "val: 42").unwrap());
+        assert!(matcher
+            .matches("val: {{ n: number }}", "val: 42", &no_prior())
+            .unwrap()
+            .matched);
+    }
+
+    #[test]
+    fn test_prior_vars_available_in_constraints() {
+        let vars = vec![make_var("b", Some("number"))];
+        let constraints = vec!["b == a + 1".to_string()];
+        let matcher = Matcher::new(&vars, &constraints, &[]);
+
+        let mut prior = HashMap::new();
+        prior.insert("a".to_string(), Value::Number(41.0));
+
+        assert!(matcher
+            .matches("{{ b }}", "42", &prior)
+            .unwrap()
+            .matched);
+    }
+
+    #[test]
+    fn test_prior_vars_overridden_by_new_capture() {
+        let vars = vec![make_var("x", Some("number"))];
+        let constraints = vec!["x == 99".to_string()];
+        let matcher = Matcher::new(&vars, &constraints, &[]);
+
+        let mut prior = HashMap::new();
+        prior.insert("x".to_string(), Value::Number(1.0));
+
+        let result = matcher.matches("{{ x }}", "99", &prior).unwrap();
+        assert!(result.matched);
+        assert_eq!(result.captured.get("x"), Some(&Value::Number(99.0)));
     }
 }
