@@ -203,16 +203,13 @@ impl<'a> Matcher<'a> {
         re.replace_all(pattern, "{{ $1 }}").to_string()
     }
 
-    fn format_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
-        self.variables
+    fn format_all_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
+        let mut bindings: Vec<_> = values
             .iter()
-            .filter_map(|var| {
-                values.get(&var.name).map(|v| {
-                    let formatted = format_value(v);
-                    (var.name.clone(), formatted)
-                })
-            })
-            .collect()
+            .map(|(name, v)| (name.clone(), format_value(v)))
+            .collect();
+        bindings.sort_by(|a, b| a.0.cmp(&b.0));
+        bindings
     }
 
     fn build_regex(&self, pattern: &str) -> Result<Regex, MatchError> {
