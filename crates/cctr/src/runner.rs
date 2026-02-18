@@ -405,29 +405,32 @@ fn run_test(
     file_shell: Option<Shell>,
     streaming: Option<StreamingContext<'_>>,
     interruptible: bool,
-) -> TestResult {
+    prior_vars: &HashMap<String, Value>,
+) -> (TestResult, HashMap<String, Value>) {
     let start = Instant::now();
 
     if let Some(skip) = &test.skip {
         if let Some(reason) = should_skip(skip, work_dir, env_vars, file_shell) {
-            return TestResult {
-                test: test.clone(),
-                passed: true,
-                skipped: true,
-                skip_reason: Some(reason),
-                actual_output: None,
-                expected_output: test.expected_output.clone(),
-                error: None,
-                warning: None,
-                elapsed: start.elapsed(),
-                suite: suite_name.to_string(),
-            };
+            return (
+                TestResult {
+                    test: test.clone(),
+                    passed: true,
+                    skipped: true,
+                    skip_reason: Some(reason),
+                    actual_output: None,
+                    expected_output: test.expected_output.clone(),
+                    error: None,
+                    warning: None,
+                    elapsed: start.elapsed(),
+                    suite: suite_name.to_string(),
+                },
+                HashMap::new(),
+            );
         }
     }
 
     let effective_shell = file_shell.unwrap_or_else(default_shell);
 
-    // Warn if using cmd with multiline command
     let warning = if effective_shell == Shell::Cmd && is_multiline(&test.command) {
         Some(
             "cmd.exe does not support multi-line commands; only the first line will execute"
@@ -462,35 +465,71 @@ fn run_test(
     };
     let elapsed = start.elapsed();
 
-    let (passed, error, expected_output) = if test.variables.is_empty() {
+    let (passed, error, expected_output, captured) = if test.variables.is_empty()
+        && test.constraints.is_empty()
+    {
         let expected = &test.expected_output;
         if expected.is_empty() {
-            (exit_code == 0, None, expected.clone())
+            (exit_code == 0, None, expected.clone(), HashMap::new())
         } else {
-            (actual_output == *expected, None, expected.clone())
+            (
+                actual_output == *expected,
+                None,
+                expected.clone(),
+                HashMap::new(),
+            )
+        }
+    } else if !test.variables.is_empty() {
+        let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
+        match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
+            Ok(match_result) => {
+                if match_result.matched {
+                    (true, None, test.expected_output.clone(), match_result.captured)
+                } else {
+                    (false, None, test.expected_output.clone(), HashMap::new())
+                }
+            }
+            Err(e) => (
+                false,
+                Some(e.to_string()),
+                test.expected_output.clone(),
+                HashMap::new(),
+            ),
         }
     } else {
+        // No variables but has constraints referencing prior vars
         let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
-        let result = match matcher.matches(&test.expected_output, &actual_output) {
-            Ok(true) => (true, None),
-            Ok(false) => (false, None),
-            Err(e) => (false, Some(e.to_string())),
+        let expected = &test.expected_output;
+        let output_matches = if expected.is_empty() {
+            exit_code == 0
+        } else {
+            actual_output == *expected
         };
-        (result.0, result.1, test.expected_output.clone())
+        if output_matches {
+            match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
+                Ok(_) => (true, None, expected.clone(), HashMap::new()),
+                Err(e) => (false, Some(e.to_string()), expected.clone(), HashMap::new()),
+            }
+        } else {
+            (false, None, expected.clone(), HashMap::new())
+        }
     };
 
-    TestResult {
-        test: test.clone(),
-        passed,
-        skipped: false,
-        skip_reason: None,
-        actual_output: Some(actual_output),
-        expected_output,
-        error,
-        warning,
-        elapsed,
-        suite: suite_name.to_string(),
-    }
+    (
+        TestResult {
+            test: test.clone(),
+            passed,
+            skipped: false,
+            skip_reason: None,
+            actual_output: Some(actual_output),
+            expected_output,
+            error,
+            warning,
+            elapsed,
+            suite: suite_name.to_string(),
+        },
+        captured,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
