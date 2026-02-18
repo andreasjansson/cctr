@@ -1,0 +1,29 @@
+===
+capture variable in first test
+===
+echo "count: 42"
+---
+count: {{ n }}
+---
+where
+* n == 42
+
+===
+use captured variable in second test
+===
+echo "count: 42"
+---
+count: {{ m }}
+---
+where
+* m == n
+
+===
+chain three tests deep
+===
+echo "total: 84"
+---
+total: {{ total }}
+---
+where
+* total == n + m
