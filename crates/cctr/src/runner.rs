@@ -399,6 +399,7 @@ pub struct StreamingContext<'a> {
     pub name: String,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_test(
     test: &TestCase,
     work_dir: &Path,
@@ -467,55 +468,59 @@ fn run_test(
     };
     let elapsed = start.elapsed();
 
-    let (passed, error, expected_output, captured) = if test.variables.is_empty()
-        && test.constraints.is_empty()
-    {
-        let expected = &test.expected_output;
-        if expected.is_empty() {
-            (exit_code == 0, None, expected.clone(), HashMap::new())
-        } else {
-            (
-                actual_output == *expected,
-                None,
-                expected.clone(),
-                HashMap::new(),
-            )
-        }
-    } else if !test.variables.is_empty() {
-        let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
-        match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
-            Ok(match_result) => {
-                if match_result.matched {
-                    (true, None, test.expected_output.clone(), match_result.captured)
-                } else {
-                    (false, None, test.expected_output.clone(), HashMap::new())
-                }
+    let (passed, error, expected_output, captured) =
+        if test.variables.is_empty() && test.constraints.is_empty() {
+            let expected = &test.expected_output;
+            if expected.is_empty() {
+                (exit_code == 0, None, expected.clone(), HashMap::new())
+            } else {
+                (
+                    actual_output == *expected,
+                    None,
+                    expected.clone(),
+                    HashMap::new(),
+                )
             }
-            Err(e) => (
-                false,
-                Some(e.to_string()),
-                test.expected_output.clone(),
-                HashMap::new(),
-            ),
-        }
-    } else {
-        // No variables but has constraints referencing prior vars
-        let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
-        let expected = &test.expected_output;
-        let output_matches = if expected.is_empty() {
-            exit_code == 0
-        } else {
-            actual_output == *expected
-        };
-        if output_matches {
+        } else if !test.variables.is_empty() {
+            let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
             match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
-                Ok(_) => (true, None, expected.clone(), HashMap::new()),
-                Err(e) => (false, Some(e.to_string()), expected.clone(), HashMap::new()),
+                Ok(match_result) => {
+                    if match_result.matched {
+                        (
+                            true,
+                            None,
+                            test.expected_output.clone(),
+                            match_result.captured,
+                        )
+                    } else {
+                        (false, None, test.expected_output.clone(), HashMap::new())
+                    }
+                }
+                Err(e) => (
+                    false,
+                    Some(e.to_string()),
+                    test.expected_output.clone(),
+                    HashMap::new(),
+                ),
             }
         } else {
-            (false, None, expected.clone(), HashMap::new())
-        }
-    };
+            // No variables but has constraints referencing prior vars
+            let matcher = Matcher::new(&test.variables, &test.constraints, env_vars);
+            let expected = &test.expected_output;
+            let output_matches = if expected.is_empty() {
+                exit_code == 0
+            } else {
+                actual_output == *expected
+            };
+            if output_matches {
+                match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
+                    Ok(_) => (true, None, expected.clone(), HashMap::new()),
+                    Err(e) => (false, Some(e.to_string()), expected.clone(), HashMap::new()),
+                }
+            } else {
+                (false, None, expected.clone(), HashMap::new())
+            }
+        };
 
     (
         TestResult {
