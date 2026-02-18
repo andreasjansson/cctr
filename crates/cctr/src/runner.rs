@@ -634,15 +634,15 @@ fn run_corpus_file(
 
     // Track if a %require test failed - remaining tests should be skipped
     let mut require_failed: Option<String> = None;
+    // Accumulate variables captured across tests within this file
+    let mut persistent_vars: HashMap<String, Value> = HashMap::new();
 
     for test in corpus.tests {
-        // Check for interruption before starting each test (unless running teardown)
         if !ignore_interruption && is_interrupted() {
             break;
         }
 
         if let Some(pat) = pattern {
-            // Match if either the file name OR the test name contains the pattern
             if !file_matches && !test.name.contains(pat) {
                 continue;
             }
@@ -656,7 +656,6 @@ fn run_corpus_file(
             });
         }
 
-        // If a previous %require test failed, skip remaining tests
         if let Some(ref failed_test) = require_failed {
             let result = TestResult {
                 test: test.clone(),
@@ -688,7 +687,7 @@ fn run_corpus_file(
             None
         };
 
-        let result = run_test(
+        let (result, captured) = run_test(
             &test,
             work_dir,
             suite_name,
@@ -696,9 +695,13 @@ fn run_corpus_file(
             corpus.file_shell,
             streaming,
             !ignore_interruption,
+            &persistent_vars,
         );
 
-        // Check if this was a %require test that failed
+        if result.passed && !result.skipped {
+            persistent_vars.extend(captured);
+        }
+
         if test.require && !result.passed && !result.skipped {
             require_failed = Some(test.name.clone());
         }
