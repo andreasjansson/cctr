@@ -418,6 +418,34 @@ where
 * time < 60
 ```
 
+### Persistent variables
+
+Variables captured in one test case persist to subsequent test cases within the same file. This lets you reference values from earlier tests in later constraints:
+
+```
+===
+count items before delete
+===
+./count-items
+---
+{{ before_count }}
+---
+where
+* before_count > 0
+
+===
+delete one item and verify
+===
+./delete-item && ./count-items
+---
+{{ after_count }}
+---
+where
+* after_count == before_count - 1
+```
+
+Variables can be redefined — new captures override prior values. Variables only persist from passing tests; if a test fails, its captured values are not carried forward.
+
 ### Duck typing
 
 When no type is specified, cctr automatically infers the type from the captured value:
