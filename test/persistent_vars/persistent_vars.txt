@@ -4,9 +4,6 @@ basic persistent vars across tests
 cctr $CCTR_FIXTURE_DIR/tests/basic.txt --no-color 2>&1 | tail -1
 ---
 All 3 tests passed in {{ t }}s
----
-where
-* t: number
 
 ===
 variables can be overridden
@@ -14,9 +11,6 @@ variables can be overridden
 cctr $CCTR_FIXTURE_DIR/tests/override.txt --no-color 2>&1 | tail -1
 ---
 All 3 tests passed in {{ t }}s
----
-where
-* t: number
 
 ===
 no-var tests work fine after var tests
@@ -24,9 +18,6 @@ no-var tests work fine after var tests
 cctr $CCTR_FIXTURE_DIR/tests/no_vars_with_prior.txt --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t }}s
----
-where
-* t: number
 
 ===
 json vars persist across tests
@@ -34,9 +25,6 @@ json vars persist across tests
 cctr $CCTR_FIXTURE_DIR/tests/json_persist.txt --no-color 2>&1 | tail -1
 ---
 All 2 tests passed in {{ t }}s
----
-where
-* t: number
 
 ===
 constraint with prior var can fail
@@ -46,4 +34,4 @@ cctr $CCTR_FIXTURE_DIR/tests/constraint_fail.txt --no-color 2>&1 | head -1
 {{ result }}
 ---
 where
-* result startswith "constraint_fail"
+* result contains "1 passed, 1 failed"
