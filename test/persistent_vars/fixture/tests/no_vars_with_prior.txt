@@ -1,0 +1,13 @@
+===
+capture val
+===
+echo "hello"
+---
+{{ val }}
+
+===
+test without vars still has exact match
+===
+echo "world"
+---
+world
