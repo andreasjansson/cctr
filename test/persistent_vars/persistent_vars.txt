@@ -27,6 +27,13 @@ cctr $CCTR_FIXTURE_DIR/tests/json_persist.txt --no-color 2>&1 | tail -1
 All 2 tests passed in {{ t }}s
 
 ===
+constraints reference prior vars without new captures
+===
+cctr $CCTR_FIXTURE_DIR/tests/constraints_only.txt --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
+
+===
 constraint with prior var can fail
 ===
 cctr $CCTR_FIXTURE_DIR/tests/constraint_fail.txt --no-color 2>&1 | tail -1
