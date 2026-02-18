@@ -1,0 +1,19 @@
+===
+capture first value
+===
+echo "10"
+---
+{{ a }}
+---
+where
+* a == 10
+
+===
+constraint with prior var fails
+===
+echo "5"
+---
+{{ b }}
+---
+where
+* b > a
