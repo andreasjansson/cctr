@@ -1,0 +1,17 @@
+===
+capture json object
+===
+echo '{"name": "alice", "age": 30}'
+---
+{{ data: json object }}
+
+===
+use persisted json in constraints
+===
+echo "alice is 30"
+---
+{{ name }} is {{ age }}
+---
+where
+* name == data.name
+* age == data.age
