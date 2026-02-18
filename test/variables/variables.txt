@@ -23,7 +23,7 @@ Failures:
 
 ✗ tests/numbers: number constraint fail
   Error: constraint 't < 1' not satisfied
-  where t = 2
+  where n = 42, t = 2
 
 Summary: 5 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
