@@ -139,13 +139,20 @@ impl<'a> Matcher<'a> {
         }
     }
 
-    pub fn matches(&self, pattern: &str, actual: &str) -> Result<bool, MatchError> {
-        // Strip inline type annotations from pattern for regex matching
+    pub fn matches(
+        &self,
+        pattern: &str,
+        actual: &str,
+        prior_vars: &HashMap<String, Value>,
+    ) -> Result<MatchResult, MatchError> {
         let clean_pattern = self.strip_type_annotations(pattern);
         let regex = self.build_regex(&clean_pattern)?;
 
         let Some(caps) = regex.captures(actual) else {
-            return Ok(false);
+            return Ok(MatchResult {
+                matched: false,
+                captured: HashMap::new(),
+            });
         };
 
         // Set CCTR_* env vars so env() function can access them
@@ -153,11 +160,16 @@ impl<'a> Matcher<'a> {
             std::env::set_var(key, value);
         }
 
-        let values = self.extract_values(&caps)?;
-        let bindings = self.format_bindings(&values);
+        let captured = self.extract_values(&caps)?;
+
+        // Merge prior variables with newly captured ones (new values override)
+        let mut all_values = prior_vars.clone();
+        all_values.extend(captured.clone());
+
+        let bindings = self.format_all_bindings(&all_values);
 
         for constraint in self.constraints {
-            match eval_bool(constraint, &values) {
+            match eval_bool(constraint, &all_values) {
                 Ok(true) => {}
                 Ok(false) => {
                     return Err(MatchError::ConstraintNotSatisfied {
@@ -174,7 +186,10 @@ impl<'a> Matcher<'a> {
             }
         }
 
-        Ok(true)
+        Ok(MatchResult {
+            matched: true,
+            captured,
+        })
     }
 
     /// Strip type annotations from placeholders: {{ x: number }} -> {{ x }}
