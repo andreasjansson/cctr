@@ -1,0 +1,29 @@
+===
+capture x as 10
+===
+echo "10"
+---
+{{ x }}
+---
+where
+* x == 10
+
+===
+override x with 20
+===
+echo "20"
+---
+{{ x }}
+---
+where
+* x == 20
+
+===
+x is now 20
+===
+echo "20"
+---
+{{ y }}
+---
+where
+* y == x
