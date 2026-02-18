@@ -120,6 +120,11 @@ fn duck_type_value(text: &str) -> Value {
     Value::String(text.to_string())
 }
 
+pub struct MatchResult {
+    pub matched: bool,
+    pub captured: HashMap<String, Value>,
+}
+
 pub struct Matcher<'a> {
     variables: &'a [VariableDecl],
     constraints: &'a [String],
