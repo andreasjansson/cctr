@@ -1,0 +1,19 @@
+===
+capture a value
+===
+echo "42"
+---
+{{ n }}
+---
+where
+* n == 42
+
+===
+use prior var in constraint-only test
+===
+echo "the answer is 42"
+---
+the answer is 42
+---
+where
+* n == 42
