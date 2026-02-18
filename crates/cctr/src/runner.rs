@@ -971,6 +971,7 @@ pub fn run_from_stdin(
     ];
 
     let mut results = Vec::new();
+    let mut persistent_vars: HashMap<String, Value> = HashMap::new();
     for test in corpus.tests {
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestStart {
@@ -991,7 +992,7 @@ pub fn run_from_stdin(
             None
         };
 
-        let result = run_test(
+        let (result, captured) = run_test(
             &test,
             &work_dir,
             "stdin",
@@ -999,7 +1000,11 @@ pub fn run_from_stdin(
             corpus.file_shell,
             streaming,
             true,
+            &persistent_vars,
         );
+        if result.passed && !result.skipped {
+            persistent_vars.extend(captured);
+        }
         if let Some(tx) = progress_tx {
             let _ = tx.send(ProgressEvent::TestComplete(Box::new(result.clone())));
         }
