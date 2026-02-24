@@ -180,7 +180,7 @@ fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
 
 fn list_tests(
     root: &std::path::Path,
-    pattern: Option<&str>,
+    pattern: Option<&Regex>,
     output: &mut Output,
 ) -> anyhow::Result<()> {
     let suites = discover_suites(root)?;
@@ -191,19 +191,17 @@ fn list_tests(
         for file in suite.corpus_files() {
             let corpus = parse_file(&file)?;
 
-            // Check if file name matches the pattern
             let file_matches = pattern.is_none_or(|pat| {
                 file.file_stem()
                     .and_then(|s| s.to_str())
-                    .is_some_and(|name| name.contains(pat))
+                    .is_some_and(|name| pat.is_match(name))
             });
 
-            // Keep tests where either the file matches or the test name matches
             let filtered: Vec<_> = if let Some(pat) = pattern {
                 corpus
                     .tests
                     .into_iter()
-                    .filter(|t| file_matches || t.name.contains(pat))
+                    .filter(|t| file_matches || pat.is_match(&t.name))
                     .collect()
             } else {
                 corpus.tests
