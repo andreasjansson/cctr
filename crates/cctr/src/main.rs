@@ -64,8 +64,16 @@ fn main() -> anyhow::Result<()> {
         .canonicalize()
         .unwrap_or(cli.test_root.clone());
 
+    let pattern = cli
+        .pattern
+        .as_deref()
+        .map(|p| Regex::new(p).unwrap_or_else(|e| {
+            eprintln!("Invalid pattern '{}': {}", p, e);
+            std::process::exit(1);
+        }));
+
     if cli.list {
-        list_tests(&root, cli.pattern.as_deref(), &mut output)?;
+        list_tests(&root, pattern.as_ref(), &mut output)?;
         return Ok(());
     }
 
