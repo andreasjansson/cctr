@@ -2,6 +2,7 @@ use crate::discover::Suite;
 use crate::matcher::Matcher;
 use crate::{parse_content, parse_file, TestCase};
 use cctr_expr::Value;
+use regex::Regex;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
