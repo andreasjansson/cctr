@@ -66,4 +66,4 @@ Failures:
 +wrong output
 
 Summary: 0 passed, 0 failed, 2 skipped in {{ time }}s
-exit: $rc
+exit: 1
