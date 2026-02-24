@@ -623,12 +623,11 @@ fn run_corpus_file(
 
     let mut results = Vec::new();
 
-    // Check if file name matches the pattern (excluding .txt extension)
     let file_matches = pattern.is_none_or(|pat| {
         file_path
             .file_stem()
             .and_then(|s| s.to_str())
-            .is_some_and(|name| name.contains(pat))
+            .is_some_and(|name| pat.is_match(name))
     });
 
     let file_stem = file_path
