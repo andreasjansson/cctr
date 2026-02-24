@@ -12,6 +12,6 @@ where
 ===
 failing test exits non-zero
 ===
-cctr $CCTR_FIXTURE_DIR/failing --no-color >/dev/null 2>&1; echo "exit: $?"
+rc=0; cctr $CCTR_FIXTURE_DIR/failing --no-color >/dev/null 2>&1 || rc=$?; echo "exit: $rc"
 ---
 exit: 1
