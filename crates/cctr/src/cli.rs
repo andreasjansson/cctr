@@ -8,7 +8,7 @@ pub struct Cli {
     #[arg(default_value = ".")]
     pub test_root: PathBuf,
 
-    /// Filter tests by name pattern
+    /// Filter tests by name pattern (regex)
     #[arg(short, long)]
     pub pattern: Option<String>,
 
