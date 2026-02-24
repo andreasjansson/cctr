@@ -1,0 +1,10 @@
+{
+  "title": "SIGINT during setup: spawn+poll loop with interruptible flag",
+  "body": "v0.27.0 adds proper SIGINT handling during setup (and all commands). Previously run_command() used blocking cmd.output() which ignored SIGINT. Now uses spawn()+try_wait() poll loop checking is_interrupted() every 10ms, killing child if interrupted.\n\nKey design: 'interruptible' bool threaded through run_command -> run_test -> run_corpus_file. Teardown passes interruptible=false so commands complete despite SIGINT. Setup/tests pass interruptible=true.\n\nGotcha: ~/.local/bin/cctr vs ~/.cargo/bin/cctr - the install script puts it in .local/bin which takes priority in PATH. Always use ./script/install, not cargo install.",
+  "references": [
+    "crates/cctr/src/runner.rs:197",
+    "test/teardown_always/fixture/signal_setup_test.sh",
+    "test/teardown_always/teardown_always.txt"
+  ],
+  "modified": "2026-02-10 12:32:32"
+}

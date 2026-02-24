@@ -1,0 +1,10 @@
+{
+  "title": "Persistent variables across test cases within a file",
+  "body": "v0.29+ adds persistent variables: variables captured in one test case persist to subsequent tests in the same file. Implementation: run_corpus_file accumulates a HashMap<String, Value> (persistent_vars) across tests. run_test receives prior_vars and returns newly captured vars. Matcher::matches merges prior_vars with new captures for constraint evaluation. Only passing tests contribute to persistent_vars. Variables can be overridden by later tests.",
+  "references": [
+    "crates/cctr/src/runner.rs:638",
+    "crates/cctr/src/matcher.rs:147",
+    "test/persistent_vars/"
+  ],
+  "modified": "2026-02-18 22:03:38"
+}
