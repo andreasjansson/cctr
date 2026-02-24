@@ -731,7 +731,7 @@ fn run_corpus_file(
 
 pub fn run_suite(
     suite: &Suite,
-    pattern: Option<&str>,
+    pattern: Option<&Regex>,
     progress_tx: Option<&Sender<ProgressEvent>>,
     stream_output: bool,
 ) -> SuiteResult {
