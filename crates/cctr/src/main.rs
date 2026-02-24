@@ -9,6 +9,7 @@ use cctr::runner::{
 use cctr::update::update_corpus_file;
 use clap::Parser;
 use rayon::prelude::*;
+use regex::Regex;
 use std::io::Read;
 use std::sync::mpsc;
 use std::thread;
