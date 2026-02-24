@@ -145,11 +145,12 @@ Run all tests in a directory:
 cctr tests/
 ```
 
-Run tests matching a pattern:
+Run tests matching a pattern (regex):
 
 ```bash
 cctr tests/ -p auth
 cctr tests/ -p "user.*create"
+cctr tests/ -p "login|logout|signup"
 ```
 
 ## Corpus test directory structure
