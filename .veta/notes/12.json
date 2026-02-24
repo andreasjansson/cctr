@@ -1,0 +1,9 @@
+{
+  "title": "set -e and pipefail for multi-line command blocks",
+  "body": "v0.30+ adds set -e (and set -o pipefail for bash/zsh) to all shell command execution. This means multi-line command blocks fail immediately when any command fails, rather than only checking the exit code of the last command. sh only gets set -e because pipefail is not POSIX-portable.",
+  "references": [
+    "crates/cctr/src/runner.rs:177",
+    "test/set_e/set_e.txt"
+  ],
+  "modified": "2026-02-24 13:13:48"
+}
