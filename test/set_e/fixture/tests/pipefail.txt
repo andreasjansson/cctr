@@ -1,0 +1,7 @@
+%platform unix
+%shell bash
+===
+pipefail catches failure in pipe
+===
+false | cat
+---
