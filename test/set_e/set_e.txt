@@ -1,0 +1,61 @@
+%platform unix
+===
+multiline block where all commands pass
+===
+cctr $CCTR_FIXTURE_DIR/tests/multiline_pass.txt --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
+---
+where
+* t < 5
+
+===
+multiline block fails when first command fails
+===
+rc=0; cctr $CCTR_FIXTURE_DIR/tests/multiline_fail.txt --no-color 2>&1 || rc=$?; echo "exit: $rc"
+---
+.F
+
+✗ tests/multiline_fail: 0/1 tests passed in {{ t1 }}s
+
+Failures:
+
+✗ tests/multiline_fail: first command fails in multiline block
+  {{ path }}
+  Command: false
+echo "should not reach here"
+
+-should not reach here
++
+
+Summary: 0 passed, 1 failed, 0 skipped in {{ t2 }}s
+exit: 1
+---
+where
+* t1 < 5
+* t2 < 5
+
+===
+pipefail catches failure in pipe
+===
+rc=0; cctr $CCTR_FIXTURE_DIR/tests/pipefail.txt --no-color 2>&1 || rc=$?; echo "exit: $rc"
+---
+F
+
+✗ tests/pipefail: 0/1 tests passed in {{ t1 }}s
+
+Failures:
+
+✗ tests/pipefail: pipefail catches failure in pipe
+  {{ path }}
+  Command: false | cat
+
+  Expected exit code 0, got {{ code }}
+
+Summary: 0 passed, 1 failed, 0 skipped in {{ t2 }}s
+exit: 1
+---
+where
+* t1 < 5
+* t2 < 5
+* code != 0
