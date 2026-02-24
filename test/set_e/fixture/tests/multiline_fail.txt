@@ -1,0 +1,8 @@
+%platform unix
+===
+first command fails in multiline block
+===
+false
+echo "should not reach here"
+---
+should not reach here
