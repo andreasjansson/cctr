@@ -126,7 +126,7 @@ Arguments:
   [TEST_ROOT]  Root directory for test discovery [default: .]
 
 Options:
-  -p, --pattern <PATTERN>  Filter tests by name pattern
+  -p, --pattern <PATTERN>  Filter tests by name pattern (regex)
   -u, --update             Update expected outputs from actual results
   -l, --list               List all available tests
   -v, --verbose            Show each test as it completes with timing
