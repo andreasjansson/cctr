@@ -50,7 +50,7 @@ tests [setup, teardown]
 ===
 setup failure causes non-zero exit code
 ===
-cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1; echo "exit: $?"
+rc=0; cctr $CCTR_FIXTURE_DIR/failing_setup --no-color 2>&1 || rc=$?; echo "exit: $rc"
 ---
 F
 
@@ -66,4 +66,4 @@ Failures:
 +wrong output
 
 Summary: 0 passed, 0 failed, 2 skipped in {{ time }}s
-exit: 1
+exit: $rc
