@@ -309,6 +309,8 @@ expected output
 
 The description appears in test listings and failure messages. The command is executed in a shell (`sh -c`). The expected output is compared against stdout.
 
+Commands run with `set -e` enabled, so multi-line command blocks fail immediately if any command exits non-zero. On bash and zsh, `set -o pipefail` is also enabled, so pipe failures are caught too.
+
 ### Multiple tests per file
 
 Put multiple tests in a single corpus file:
