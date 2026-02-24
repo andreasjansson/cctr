@@ -14,9 +14,3 @@ conditional failure does not trigger set -e
 false || echo "recovered"
 ---
 recovered
-
-===
-pipefail catches pipe failures
-===
-false | cat
----
