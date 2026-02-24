@@ -545,7 +545,7 @@ fn run_corpus_file(
     work_dir: &Path,
     suite_name: &str,
     env_vars: &[(String, String)],
-    pattern: Option<&str>,
+    pattern: Option<&Regex>,
     progress_tx: Option<&Sender<ProgressEvent>>,
     stream_output: bool,
     ignore_interruption: bool,
