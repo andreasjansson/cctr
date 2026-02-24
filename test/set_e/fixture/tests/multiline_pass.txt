@@ -1,0 +1,22 @@
+%platform unix
+===
+all commands succeed in multiline block
+===
+echo "line1"
+echo "line2"
+---
+line1
+line2
+
+===
+conditional failure does not trigger set -e
+===
+false || echo "recovered"
+---
+recovered
+
+===
+pipefail catches pipe failures
+===
+false | cat
+---
