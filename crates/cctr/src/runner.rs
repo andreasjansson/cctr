@@ -177,17 +177,19 @@ fn build_command(
         Shell::Bash => {
             let bash_path = find_working_bash();
             let mut c = Command::new(bash_path);
-            c.arg("-c").arg(command);
+            c.arg("-c")
+                .arg(format!("set -e -o pipefail\n{command}"));
             c
         }
         Shell::Sh => {
             let mut c = Command::new("sh");
-            c.arg("-c").arg(command);
+            c.arg("-c").arg(format!("set -e\n{command}"));
             c
         }
         Shell::Zsh => {
             let mut c = Command::new("zsh");
-            c.arg("-c").arg(command);
+            c.arg("-c")
+                .arg(format!("set -e -o pipefail\n{command}"));
             c
         }
     };
