@@ -647,7 +647,7 @@ fn run_corpus_file(
         }
 
         if let Some(pat) = pattern {
-            if !file_matches && !test.name.contains(pat) {
+            if !file_matches && !pat.is_match(&test.name) {
                 continue;
             }
         }
