@@ -4,9 +4,9 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(name = "cctr", about = "CLI Corpus Test Runner", version)]
 pub struct Cli {
-    /// Root directory for test discovery, or "-" to read from stdin
+    /// Test files or directories (or "-" to read from stdin)
     #[arg(default_value = ".")]
-    pub test_root: PathBuf,
+    pub paths: Vec<PathBuf>,
 
     /// Filter tests by name pattern (regex)
     #[arg(short, long)]
