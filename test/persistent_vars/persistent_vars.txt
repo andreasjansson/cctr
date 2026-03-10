@@ -1,3 +1,4 @@
+%platform unix
 ===
 basic persistent vars across tests
 ===
