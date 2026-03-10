@@ -1,5 +1,5 @@
 use cctr::cli::Cli;
-use cctr::discover::discover_suites;
+use cctr::discover::{discover_suites, Suite};
 use cctr::output::Output;
 use cctr::parse_file;
 use cctr::runner::{
@@ -16,7 +16,6 @@ use std::thread;
 use std::time::Instant;
 
 fn main() -> anyhow::Result<()> {
-    // Reset SIGPIPE handler to default (terminate) so piping to head/tail works correctly
     #[cfg(unix)]
     {
         unsafe {
@@ -24,9 +23,6 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Set up signal handler for graceful shutdown
-    // When interrupted, we set a flag that tells running suites to skip remaining tests
-    // but still run their teardown
     if let Err(e) = ctrlc::set_handler(move || {
         use std::io::Write;
         if is_interrupted() {
@@ -54,15 +50,9 @@ fn main() -> anyhow::Result<()> {
     let use_color = !cli.no_color && atty::is(atty::Stream::Stdout);
     let mut output = Output::new(use_color);
 
-    // Check for stdin mode
-    if cli.test_root.as_os_str() == "-" {
+    if cli.paths.len() == 1 && cli.paths[0].as_os_str() == "-" {
         return run_stdin_mode(&cli, &mut output);
     }
-
-    let root = cli
-        .test_root
-        .canonicalize()
-        .unwrap_or(cli.test_root.clone());
 
     let pattern = cli.pattern.as_deref().map(|p| {
         Regex::new(p).unwrap_or_else(|e| {
@@ -71,13 +61,12 @@ fn main() -> anyhow::Result<()> {
         })
     });
 
+    let suites = discover_all(&cli.paths)?;
+
     if cli.list {
-        list_tests(&root, pattern.as_ref(), &mut output)?;
+        list_tests(&suites, pattern.as_ref(), &mut output)?;
         return Ok(());
     }
-
-    let all_suites = discover_suites(&root)?;
-    let suites: Vec<_> = all_suites.into_iter().collect();
 
     if suites.is_empty() {
         eprintln!("No test suites found");
@@ -143,6 +132,19 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(if all_passed { 0 } else { 1 });
 }
 
+fn discover_all(paths: &[std::path::PathBuf]) -> anyhow::Result<Vec<Suite>> {
+    let mut all_suites = Vec::new();
+    for path in paths {
+        let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+        let suites = discover_suites(&canonical)?;
+        all_suites.extend(suites);
+    }
+    // Deduplicate suites by path (in case overlapping dirs are given)
+    all_suites.sort_by(|a, b| a.name.cmp(&b.name));
+    all_suites.dedup_by(|a, b| a.path == b.path && a.single_file == b.single_file);
+    Ok(all_suites)
+}
+
 fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
     let mut content = String::new();
     std::io::stdin().read_to_string(&mut content)?;
@@ -178,14 +180,12 @@ fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
 }
 
 fn list_tests(
-    root: &std::path::Path,
+    suites: &[Suite],
     pattern: Option<&Regex>,
     output: &mut Output,
 ) -> anyhow::Result<()> {
-    let suites = discover_suites(root)?;
-
     let mut suite_tests = Vec::new();
-    for suite in &suites {
+    for suite in suites {
         let mut all_tests = Vec::new();
         for file in suite.corpus_files() {
             let corpus = parse_file(&file)?;
