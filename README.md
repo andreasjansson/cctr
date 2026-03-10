@@ -120,10 +120,10 @@ cp -r skill/cctr ~/.config/opencode/skill/
 ## Usage
 
 ```
-cctr [OPTIONS] [TEST_ROOT]
+cctr [OPTIONS] [PATHS]...
 
 Arguments:
-  [TEST_ROOT]  Root directory for test discovery [default: .]
+  [PATHS]...  Test files or directories (or "-" to read from stdin) [default: .]
 
 Options:
   -p, --pattern <PATTERN>  Filter tests by name pattern (regex)
