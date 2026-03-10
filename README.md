@@ -145,6 +145,13 @@ Run all tests in a directory:
 cctr tests/
 ```
 
+Run specific files or directories:
+
+```bash
+cctr tests/auth/login.txt tests/auth/logout.txt
+cctr tests/auth/ tests/api/
+```
+
 Run tests matching a pattern (regex):
 
 ```bash
