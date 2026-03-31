@@ -1,0 +1,9 @@
+===
+stream ordering tests pass
+===
+cctr $CCTR_FIXTURE_DIR/tests/stream_order.txt --no-color 2>&1 | tail -1
+---
+All {{ n: number }} tests passed in {{ t }}s
+---
+where
+* n == 6

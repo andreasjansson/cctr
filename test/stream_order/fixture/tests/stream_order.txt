@@ -1,0 +1,47 @@
+===
+stderr before stdout preserves order
+===
+bash -c 'echo "first line" >&2; sleep 0.01; echo "second line"'
+---
+first line
+second line
+
+===
+stdout before stderr preserves order
+===
+bash -c 'echo "first line"; sleep 0.01; echo "second line" >&2'
+---
+first line
+second line
+
+===
+interleaved stderr and stdout
+===
+bash -c 'echo "line1" >&2; sleep 0.01; echo "line2"; sleep 0.01; echo "line3" >&2; sleep 0.01; echo "line4"'
+---
+line1
+line2
+line3
+line4
+
+===
+stderr only
+===
+bash -c 'echo "error output" >&2'
+---
+error output
+
+===
+stdout only
+===
+echo "normal output"
+---
+normal output
+
+===
+stderr first with delay before stdout
+===
+bash -c 'echo "early stderr" >&2; sleep 0.05; echo "late stdout"'
+---
+early stderr
+late stdout
