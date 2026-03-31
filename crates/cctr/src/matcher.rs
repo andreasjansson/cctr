@@ -120,6 +120,10 @@ fn duck_type_value(text: &str) -> Value {
     Value::String(text.to_string())
 }
 
+fn regex_str_push_capture(result: &mut String, var_name: &str, capture_pattern: &str) {
+    result.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
+}
+
 pub struct MatchResult {
     pub matched: bool,
     pub captured: HashMap<String, Value>,
@@ -198,6 +202,7 @@ impl<'a> Matcher<'a> {
     }
 
     /// Strip type annotations from placeholders: {{ x: number }} -> {{ x }}
+    /// Also strips optional modifier: {{ x: optional number }} -> {{ x }}
     fn strip_type_annotations(&self, pattern: &str) -> String {
         let re = Regex::new(r"\{\{\s*(\w+)\s*:\s*[^}]+\}\}").unwrap();
         re.replace_all(pattern, "{{ $1 }}").to_string()
@@ -212,6 +217,39 @@ impl<'a> Matcher<'a> {
         bindings
     }
 
+    fn build_line_regex(&self, line: &str, var_pattern: &Regex) -> Result<String, MatchError> {
+        let mut result = String::new();
+        let mut last_end = 0;
+
+        for cap in var_pattern.captures_iter(line) {
+            let full_match = cap.get(0).unwrap();
+            let var_name = cap.get(1).unwrap().as_str();
+
+            let literal = &line[last_end..full_match.start()];
+            result.push_str(&regex::escape(literal));
+
+            if let Some(var) = self.variables.iter().find(|v| v.name == var_name) {
+                let capture_pattern = match var.var_type {
+                    Some(VarType::Number) => r"-?\d+(?:\.\d+)?",
+                    Some(VarType::String) => r".*?",
+                    Some(VarType::JsonString) => r#""(?:[^"\\]|\\.)*""#,
+                    Some(VarType::JsonBool) => r"true|false",
+                    Some(VarType::JsonArray) => r"\[[\s\S]*\]",
+                    Some(VarType::JsonObject) => r"\{[\s\S]*\}",
+                    None => r".*?",
+                };
+                regex_str_push_capture(&mut result, var_name, capture_pattern);
+            } else {
+                result.push_str(&regex::escape(&line[full_match.start()..full_match.end()]));
+            }
+
+            last_end = full_match.end();
+        }
+        result.push_str(&regex::escape(&line[last_end..]));
+
+        Ok(result)
+    }
+
     fn build_regex(&self, pattern: &str) -> Result<Regex, MatchError> {
         let var_pattern = Regex::new(r"\{\{\s*(\w+)\s*\}\}").unwrap();
 
@@ -224,40 +262,68 @@ impl<'a> Matcher<'a> {
             }
         }
 
+        let lines: Vec<&str> = pattern.split('\n').collect();
+        let is_optional_line: Vec<bool> = lines
+            .iter()
+            .map(|line| {
+                let trimmed = line.trim();
+                if let Some(caps) = var_pattern.captures(trimmed) {
+                    if caps.get(0).unwrap().as_str() == trimmed {
+                        let var_name = caps.get(1).unwrap().as_str();
+                        return self
+                            .variables
+                            .iter()
+                            .any(|v| v.name == var_name && v.optional);
+                    }
+                }
+                false
+            })
+            .collect();
+
+        // Build regex line by line to handle optional lines.
+        //
+        // For optional lines in the middle: "header\n{{ opt }}\nfooter"
+        //   -> regex: header\n(?:(?P<opt>.*?)\n)?footer
+        //   The \n before opt is always present (from header), the \n after opt is in the group.
+        //
+        // For optional lines at the start: "{{ opt }}\nfooter"
+        //   -> regex: (?:(?P<opt>.*?)\n)?footer
+        //
+        // For optional lines at the end: "header\n{{ opt }}"
+        //   -> regex: header(?:\n(?P<opt>.*?))?
+        //
+        // For optional-only pattern: "{{ opt }}"
+        //   -> regex: (?:(?P<opt>.*?))?
         let mut regex_str = String::new();
-        let mut last_end = 0;
+        let mut prev_was_optional = false;
 
-        for cap in var_pattern.captures_iter(pattern) {
-            let full_match = cap.get(0).unwrap();
-            let var_name = cap.get(1).unwrap().as_str();
+        for (i, line) in lines.iter().enumerate() {
+            let line_regex = self.build_line_regex(line, &var_pattern)?;
 
-            let literal = &pattern[last_end..full_match.start()];
-            regex_str.push_str(&regex::escape(literal));
-
-            if let Some(var) = self.variables.iter().find(|v| v.name == var_name) {
-                // For JSON types, we use a greedy approach that captures balanced brackets/braces.
-                // The actual JSON validation happens in extract_values via serde_json.
-                let capture_pattern = match var.var_type {
-                    Some(VarType::Number) => r"-?\d+(?:\.\d+)?",
-                    Some(VarType::String) => r".*?",
-                    Some(VarType::JsonString) => r#""(?:[^"\\]|\\.)*""#,
-                    Some(VarType::JsonBool) => r"true|false",
-                    Some(VarType::JsonArray) => r"\[[\s\S]*\]",
-                    Some(VarType::JsonObject) => r"\{[\s\S]*\}",
-                    // Duck-typed: match anything (greedy but stops at next literal)
-                    None => r".*?",
-                };
-                regex_str.push_str(&format!("(?P<{}>{})", var_name, capture_pattern));
+            if is_optional_line[i] {
+                let is_last = i == lines.len() - 1;
+                if is_last && i > 0 {
+                    // Last line (not first): \n is part of the optional group
+                    regex_str.push_str(&format!("(?:\\n{})?", line_regex));
+                } else if !is_last {
+                    // First or middle line with more lines after: \n after content is in group
+                    if i > 0 && !prev_was_optional {
+                        regex_str.push_str("\\n");
+                    }
+                    regex_str.push_str(&format!("(?:{}\\n)?", line_regex));
+                } else {
+                    // Only line
+                    regex_str.push_str(&format!("(?:{})?", line_regex));
+                }
+                prev_was_optional = true;
             } else {
-                regex_str.push_str(&regex::escape(
-                    &pattern[full_match.start()..full_match.end()],
-                ));
+                if i > 0 && !prev_was_optional {
+                    regex_str.push_str("\\n");
+                }
+                regex_str.push_str(&line_regex);
+                prev_was_optional = false;
             }
-
-            last_end = full_match.end();
         }
-
-        regex_str.push_str(&regex::escape(&pattern[last_end..]));
         let regex_str = format!("(?s)^{}$", regex_str);
 
         Ok(Regex::new(&regex_str)?)
@@ -363,6 +429,14 @@ mod tests {
                 "json object" => VarType::JsonObject,
                 _ => VarType::String,
             }),
+            optional: false,
+        }
+    }
+
+    fn make_optional_var(name: &str, var_type: Option<&str>) -> VariableDecl {
+        VariableDecl {
+            optional: true,
+            ..make_var(name, var_type)
         }
     }
 
@@ -631,5 +705,174 @@ mod tests {
         let result = matcher.matches("{{ x }}", "99", &prior).unwrap();
         assert!(result.matched);
         assert_eq!(result.captured.get("x"), Some(&Value::Number(99.0)));
+    }
+
+    #[test]
+    fn test_optional_var_present_at_start() {
+        let vars = vec![
+            make_optional_var("header", Some("string")),
+            make_var("val", Some("number")),
+        ];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches(
+                "{{ header }}\nresult: {{ val }}",
+                "progress info\nresult: 42",
+                &no_prior(),
+            )
+            .unwrap();
+        assert!(result.matched);
+        assert_eq!(
+            result.captured.get("header"),
+            Some(&Value::String("progress info".to_string()))
+        );
+        assert_eq!(result.captured.get("val"), Some(&Value::Number(42.0)));
+    }
+
+    #[test]
+    fn test_optional_var_absent_at_start() {
+        let vars = vec![
+            make_optional_var("header", Some("string")),
+            make_var("val", Some("number")),
+        ];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches("{{ header }}\nresult: {{ val }}", "result: 42", &no_prior())
+            .unwrap();
+        assert!(result.matched);
+        assert!(!result.captured.contains_key("header"));
+        assert_eq!(result.captured.get("val"), Some(&Value::Number(42.0)));
+    }
+
+    #[test]
+    fn test_optional_var_present_in_middle() {
+        let vars = vec![make_optional_var("mid", Some("string"))];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches(
+                "header\n{{ mid }}\nfooter",
+                "header\nmiddle line\nfooter",
+                &no_prior(),
+            )
+            .unwrap();
+        assert!(result.matched);
+        assert_eq!(
+            result.captured.get("mid"),
+            Some(&Value::String("middle line".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_optional_var_absent_in_middle() {
+        let vars = vec![make_optional_var("mid", Some("string"))];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches("header\n{{ mid }}\nfooter", "header\nfooter", &no_prior())
+            .unwrap();
+        assert!(result.matched);
+        assert!(!result.captured.contains_key("mid"));
+    }
+
+    #[test]
+    fn test_optional_var_present_at_end() {
+        let vars = vec![make_optional_var("trail", Some("string"))];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches("header\n{{ trail }}", "header\ntrailer", &no_prior())
+            .unwrap();
+        assert!(result.matched);
+        assert_eq!(
+            result.captured.get("trail"),
+            Some(&Value::String("trailer".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_optional_var_absent_at_end() {
+        let vars = vec![make_optional_var("trail", Some("string"))];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches("header\n{{ trail }}", "header", &no_prior())
+            .unwrap();
+        assert!(result.matched);
+        assert!(!result.captured.contains_key("trail"));
+    }
+
+    #[test]
+    fn test_optional_var_only_line() {
+        let vars = vec![make_optional_var("x", Some("string"))];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        // Present
+        assert!(
+            matcher
+                .matches("{{ x }}", "hello", &no_prior())
+                .unwrap()
+                .matched
+        );
+        // Absent
+        assert!(matcher.matches("{{ x }}", "", &no_prior()).unwrap().matched);
+    }
+
+    #[test]
+    fn test_optional_duck_typed() {
+        let vars = vec![make_optional_var("x", None)];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        let result = matcher
+            .matches("header\n{{ x }}\nfooter", "header\n42\nfooter", &no_prior())
+            .unwrap();
+        assert!(result.matched);
+        assert_eq!(result.captured.get("x"), Some(&Value::Number(42.0)));
+    }
+
+    #[test]
+    fn test_optional_with_constraint_when_present() {
+        let vars = vec![
+            make_optional_var("opt", Some("number")),
+            make_var("val", Some("number")),
+        ];
+        let constraints = vec!["val > 0".to_string()];
+        let matcher = Matcher::new(&vars, &constraints, &[]);
+
+        let result = matcher
+            .matches(
+                "{{ opt }}\nresult: {{ val }}",
+                "99\nresult: 42",
+                &no_prior(),
+            )
+            .unwrap();
+        assert!(result.matched);
+    }
+
+    #[test]
+    fn test_optional_multiple_consecutive() {
+        let vars = vec![
+            make_optional_var("a", Some("string")),
+            make_optional_var("b", Some("string")),
+        ];
+        let matcher = Matcher::new(&vars, &[], &[]);
+
+        // Both present
+        let result = matcher
+            .matches(
+                "{{ a }}\n{{ b }}\nfooter",
+                "line1\nline2\nfooter",
+                &no_prior(),
+            )
+            .unwrap();
+        assert!(result.matched);
+
+        // Both absent
+        let result = matcher
+            .matches("{{ a }}\n{{ b }}\nfooter", "footer", &no_prior())
+            .unwrap();
+        assert!(result.matched);
     }
 }

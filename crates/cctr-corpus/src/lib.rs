@@ -61,6 +61,7 @@ pub enum VarType {
 pub struct VariableDecl {
     pub name: String,
     pub var_type: Option<VarType>,
+    pub optional: bool,
 }
 
 /// Skip directive - unconditional or conditional (with shell command)
@@ -272,20 +273,35 @@ const RESERVED_KEYWORDS: &[&str] = &[
     "array",
     "object",
     "env",
+    "optional",
 ];
 
 fn is_reserved_keyword(name: &str) -> bool {
     RESERVED_KEYWORDS.contains(&name)
 }
 
-fn parse_placeholder(content: &str) -> Result<(String, Option<VarType>), String> {
+fn parse_placeholder(content: &str) -> Result<(String, Option<VarType>, bool), String> {
     let content = content.trim();
-    let (name, var_type) = if let Some(colon_pos) = content.find(':') {
+    let (name, var_type, optional) = if let Some(colon_pos) = content.find(':') {
         let name = content[..colon_pos].trim().to_string();
         let type_str = content[colon_pos + 1..].trim();
-        (name, parse_type_annotation(type_str))
+        let (optional, type_str) = if let Some(rest) = type_str
+            .strip_prefix("optional")
+            .filter(|r| r.is_empty() || r.starts_with(' '))
+        {
+            let rest = rest.trim();
+            (true, rest)
+        } else {
+            (false, type_str)
+        };
+        let var_type = if type_str.is_empty() {
+            None
+        } else {
+            parse_type_annotation(type_str)
+        };
+        (name, var_type, optional)
     } else {
-        (content.to_string(), None)
+        (content.to_string(), None, false)
     };
 
     if is_reserved_keyword(&name) {
@@ -295,7 +311,7 @@ fn parse_placeholder(content: &str) -> Result<(String, Option<VarType>), String>
         ));
     }
 
-    Ok((name, var_type))
+    Ok((name, var_type, optional))
 }
 
 fn extract_variables_from_expected(expected: &str) -> Result<Vec<VariableDecl>, String> {
@@ -306,9 +322,13 @@ fn extract_variables_from_expected(expected: &str) -> Result<Vec<VariableDecl>, 
     while let Some(start) = remaining.find("{{") {
         if let Some(end) = remaining[start..].find("}}") {
             let content = &remaining[start + 2..start + end];
-            let (name, var_type) = parse_placeholder(content)?;
+            let (name, var_type, optional) = parse_placeholder(content)?;
             if !name.is_empty() && seen.insert(name.clone()) {
-                variables.push(VariableDecl { name, var_type });
+                variables.push(VariableDecl {
+                    name,
+                    var_type,
+                    optional,
+                });
             }
             remaining = &remaining[start + end + 2..];
         } else {
@@ -1591,5 +1611,86 @@ hello
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         assert!(!file.tests[0].require);
+    }
+
+    #[test]
+    fn test_optional_string_variable() {
+        let content = r#"===
+optional test
+===
+some_command
+---
+{{ header: optional string }}
+fixed line
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].variables.len(), 1);
+        assert_eq!(file.tests[0].variables[0].name, "header");
+        assert_eq!(file.tests[0].variables[0].var_type, Some(VarType::String));
+        assert!(file.tests[0].variables[0].optional);
+    }
+
+    #[test]
+    fn test_optional_number_variable() {
+        let content = r#"===
+optional number
+===
+some_command
+---
+{{ n: optional number }}
+result: done
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests[0].variables[0].name, "n");
+        assert_eq!(file.tests[0].variables[0].var_type, Some(VarType::Number));
+        assert!(file.tests[0].variables[0].optional);
+    }
+
+    #[test]
+    fn test_optional_duck_typed() {
+        let content = r#"===
+optional duck
+===
+some_command
+---
+{{ x: optional }}
+footer
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests[0].variables[0].name, "x");
+        assert_eq!(file.tests[0].variables[0].var_type, None);
+        assert!(file.tests[0].variables[0].optional);
+    }
+
+    #[test]
+    fn test_non_optional_variable() {
+        let content = r#"===
+regular var
+===
+some_command
+---
+{{ x: number }}
+"#;
+        let file = parse_test(content);
+        assert!(!file.tests[0].variables[0].optional);
+    }
+
+    #[test]
+    fn test_optional_json_object() {
+        let content = r#"===
+optional json
+===
+some_command
+---
+{{ data: optional json object }}
+result
+"#;
+        let file = parse_test(content);
+        assert_eq!(
+            file.tests[0].variables[0].var_type,
+            Some(VarType::JsonObject)
+        );
+        assert!(file.tests[0].variables[0].optional);
     }
 }

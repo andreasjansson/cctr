@@ -1,0 +1,9 @@
+===
+optional_vars passing tests
+===
+cctr $CCTR_FIXTURE_DIR/tests/optional_vars.txt --no-color 2>&1 | tail -1
+---
+All {{ n: number }} tests passed in {{ t }}s
+---
+where
+* n == 18

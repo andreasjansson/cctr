@@ -41,6 +41,7 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Exit-only tests](#exit-only-tests)
   - [Multiline output](#multiline-output)
 - [Variables](#variables)
+  - [Optional variables](#optional-variables)
 - [Constraints](#constraints)
   - [Comparison operators](#comparison-operators)
   - [Arithmetic operators](#arithmetic-operators)
@@ -523,6 +524,40 @@ Access patterns:
 - Bracket notation: `obj["key-with-dashes"]`
 
 JSON values may contain `null`, which can be tested with `== null` or `type(x) == null`.
+
+### Optional variables
+
+Use the `optional` modifier to mark a variable that may or may not appear in the output. An optional variable must occupy an entire line by itself.
+
+```
+===
+test with optional progress line
+===
+./my-command
+---
+{{ progress: optional string }}
+result: {{ value: number }}
+---
+where
+* value > 0
+```
+
+This test passes whether or not a progress line appears before the result. If the output is `result: 42`, the optional line is skipped. If the output is `Processing...\nresult: 42`, the variable `progress` captures `Processing...`.
+
+The `optional` modifier works with any type: `optional number`, `optional string`, `optional json object`, etc. With no type specified, `{{ x: optional }}` uses duck typing.
+
+Multiple consecutive optional lines are supported:
+
+```
+===
+command with optional headers
+===
+./verbose-command
+---
+{{ line1: optional string }}
+{{ line2: optional string }}
+actual output
+```
 
 ## Constraints
 
