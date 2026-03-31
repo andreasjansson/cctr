@@ -1,0 +1,163 @@
+===
+optional string at start - present
+===
+printf 'progress line\nresult: 42\n'
+---
+{{ header: optional string }}
+result: 42
+
+===
+optional string at start - absent
+===
+printf 'result: 42\n'
+---
+{{ header: optional string }}
+result: 42
+
+===
+optional string in middle - present
+===
+printf 'header\noptional content\nfooter\n'
+---
+header
+{{ mid: optional string }}
+footer
+
+===
+optional string in middle - absent
+===
+printf 'header\nfooter\n'
+---
+header
+{{ mid: optional string }}
+footer
+
+===
+optional string at end - present
+===
+printf 'header\ntrailer line\n'
+---
+header
+{{ trail: optional string }}
+
+===
+optional string at end - absent
+===
+printf 'header\n'
+---
+header
+{{ trail: optional string }}
+
+===
+optional number - present
+===
+printf '42\nresult: ok\n'
+---
+{{ n: optional number }}
+result: ok
+---
+where
+* n == 42
+
+===
+optional number - absent
+===
+printf 'result: ok\n'
+---
+{{ n: optional number }}
+result: ok
+
+===
+optional duck typed - present as number
+===
+printf '123\nfooter\n'
+---
+{{ x: optional }}
+footer
+---
+where
+* x == 123
+
+===
+optional duck typed - absent
+===
+printf 'footer\n'
+---
+{{ x: optional }}
+footer
+
+===
+optional only line - present
+===
+printf 'hello\n'
+---
+{{ x: optional string }}
+
+===
+optional only line - absent
+===
+printf ''
+---
+{{ x: optional string }}
+
+===
+two consecutive optional - both present
+===
+printf 'line1\nline2\nfooter\n'
+---
+{{ a: optional string }}
+{{ b: optional string }}
+footer
+
+===
+two consecutive optional - both absent
+===
+printf 'footer\n'
+---
+{{ a: optional string }}
+{{ b: optional string }}
+footer
+
+===
+two consecutive optional - first present second absent
+===
+printf 'line1\nfooter\n'
+---
+{{ a: optional string }}
+{{ b: optional string }}
+footer
+
+===
+optional with constraint when present
+===
+printf '99\nresult: 42\n'
+---
+{{ opt: optional number }}
+result: {{ val: number }}
+---
+where
+* val == 42
+
+===
+mixed optional and required
+===
+printf 'header: test\nprogress info\ncount: 5\n'
+---
+header: {{ name }}
+{{ progress: optional string }}
+count: {{ count: number }}
+---
+where
+* count == 5
+
+===
+mixed optional and required - optional absent
+===
+printf 'header: test\ncount: 5\n'
+---
+header: {{ name }}
+{{ progress: optional string }}
+count: {{ count: number }}
+---
+where
+* count == 5

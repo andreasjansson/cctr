@@ -209,6 +209,8 @@ fn run_command(
     shell: Option<Shell>,
     interruptible: bool,
 ) -> (String, i32) {
+    use std::sync::mpsc::channel;
+
     let shell = shell.unwrap_or_else(default_shell);
     let mut cmd = build_command(command, work_dir, env_vars, shell);
 
@@ -220,31 +222,58 @@ fn run_command(
         Err(e) => return (format!("Failed to execute command: {}", e), -1),
     };
 
-    let exit_status = loop {
-        if interruptible && is_interrupted() {
-            let _ = child.kill();
-            let _ = child.wait();
-            return (String::new(), 130);
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+
+    let (tx, rx) = channel::<String>();
+
+    let tx_stdout = tx.clone();
+    let stdout_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().map_while(Result::ok) {
+            let _ = tx_stdout.send(line);
         }
-        match child.try_wait() {
-            Ok(Some(status)) => break status,
-            Ok(None) => std::thread::sleep(Duration::from_millis(10)),
-            Err(e) => return (format!("Failed to wait for command: {}", e), -1),
+    });
+
+    let tx_stderr = tx;
+    let stderr_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines().map_while(Result::ok) {
+            let _ = tx_stderr.send(line);
         }
+    });
+
+    let mut output_lines = Vec::new();
+
+    loop {
+        match rx.recv_timeout(Duration::from_millis(10)) {
+            Ok(line) => {
+                let stripped = strip_ansi_escapes::strip_str(&line);
+                output_lines.push(stripped);
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                if interruptible && is_interrupted() {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = stdout_handle.join();
+                    let _ = stderr_handle.join();
+                    return (String::new(), 130);
+                }
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+        }
+    }
+
+    let _ = stdout_handle.join();
+    let _ = stderr_handle.join();
+
+    let exit_code = match child.wait() {
+        Ok(status) => status.code().unwrap_or(-1),
+        Err(e) => return (format!("Failed to wait for command: {}", e), -1),
     };
 
-    let exit_code = exit_status.code().unwrap_or(-1);
-    let mut stdout_str = String::new();
-    let mut stderr_str = String::new();
-    if let Some(mut r) = child.stdout.take() {
-        let _ = std::io::Read::read_to_string(&mut r, &mut stdout_str);
-    }
-    if let Some(mut r) = child.stderr.take() {
-        let _ = std::io::Read::read_to_string(&mut r, &mut stderr_str);
-    }
-    let combined = format!("{}{}", stdout_str, stderr_str);
-    let stripped = strip_ansi_escapes::strip_str(&combined);
-    let normalized = stripped.replace("\r\n", "\n");
+    let combined = output_lines.join("\n");
+    let normalized = combined.replace("\r\n", "\n");
     (normalized.trim_end_matches('\n').to_string(), exit_code)
 }
 
