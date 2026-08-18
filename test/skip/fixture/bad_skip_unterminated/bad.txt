@@ -1,0 +1,7 @@
+===
+first
+%skip(never closed
+===
+echo hi
+---
+hi

@@ -94,3 +94,48 @@ Summary: 0 passed, 0 failed, 2 skipped in {{ total_time }}s
 where
 * suite_time >= 0
 * total_time >= 0
+
+===
+parenthesised skip reasons parse and later cases still run
+===
+cctr $CCTR_FIXTURE_DIR/tests/paren_reasons.txt --no-color 2>&1 | tail -1
+---
+Summary: 1 passed, 0 failed, 4 skipped in {{ t }}s
+---
+where
+* t >= 0
+
+===
+nested parens in a skip reason are reported in full
+===
+cctr $CCTR_FIXTURE_DIR/tests/paren_reasons.txt --no-color -v 2>&1 | grep '⊘.*skip reason containing'
+---
+⊘ tests/paren_reasons: skip reason containing a parenthetical (gets Terra (4.00) instead of Luna)
+
+===
+a condition containing parens stays the condition
+===
+cctr $CCTR_FIXTURE_DIR/tests/paren_reasons.txt --no-color -v 2>&1 | grep '⊘.*command substitution'
+---
+⊘ tests/paren_reasons: condition containing a command substitution (reason here)
+
+===
+unterminated skip reason names the problem
+===
+cctr $CCTR_FIXTURE_DIR/bad_skip_unterminated --no-color 2>&1 | grep 'parse error'
+---
+  parse error at line 3: unterminated %skip(...) - no matching ')' on this line
+
+===
+unterminated skip reason exits non-zero
+===
+cctr $CCTR_FIXTURE_DIR/bad_skip_unterminated --no-color > /dev/null 2>&1 || echo "exit=$?"
+---
+exit=1
+
+===
+trailing text after a skip reason names the problem
+===
+cctr $CCTR_FIXTURE_DIR/bad_skip_trailing --no-color 2>&1 | grep 'parse error'
+---
+  parse error at line 3: unexpected text after %skip(...): "then junk)" - expected end of line or 'if:'

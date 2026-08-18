@@ -1,0 +1,7 @@
+===
+first
+%skip(reason) then junk)
+===
+echo hi
+---
+hi

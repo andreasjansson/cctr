@@ -1,0 +1,45 @@
+%platform unix
+
+===
+prose header is a parse error naming the line
+===
+cctr $CCTR_FIXTURE_DIR/prose_header --no-color 2>&1 | grep 'parse error'
+---
+  parse error at line 1: expected a test case header ('===') but found: This file has a prose header that is not a comment and not a directive.
+
+===
+prose header exits non-zero
+===
+cctr $CCTR_FIXTURE_DIR/prose_header --no-color > /dev/null 2>&1 || echo "exit=$?"
+---
+exit=1
+
+===
+prose header never prints the success banner
+===
+cctr $CCTR_FIXTURE_DIR/prose_header --no-color 2>&1 | grep -c 'All .* tests passed' || true
+---
+0
+
+===
+stray content after a terminated block is a parse error
+===
+cctr $CCTR_FIXTURE_DIR/stray_content --no-color 2>&1 | grep -c 'parse error'
+---
+1
+
+===
+bare separator terminator parses all cases
+===
+cctr $CCTR_FIXTURE_DIR/valid --no-color 2>&1 | tail -1
+---
+All 2 tests passed in {{ t }}s
+
+===
+no tests matched pattern exits non-zero with a distinct message
+===
+cctr $CCTR_FIXTURE_DIR/valid -p no_such_test --no-color > out.txt 2>&1 || echo "exit=$?"
+grep -c "No tests matched pattern 'no_such_test'" out.txt
+---
+exit=1
+1
