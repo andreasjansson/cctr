@@ -1,12 +1,12 @@
 %platform unix
-===
+====
 update mode output format
-===
+====
 cctr $CCTR_FIXTURE_DIR/tests -u --no-color 2>&1
----
+----
 .U
 
-Updated: {{ path }}
+Updated 1 test(s) in: {{ path }}
 ↺ tests: 1/2 tests passed in {{ time1 }}s
 
 Updated:
@@ -19,15 +19,62 @@ Updated:
 +hello
 
 Summary: 1 left unchanged, 1 updated, 0 skipped in {{ time2 }}s
----
-===
+----
+
+====
 file is actually updated
-===
+====
 cat $CCTR_FIXTURE_DIR/tests/needs_update.txt
----
+----
 ===
 wrong output
 ===
 echo hello
 ---
 hello
+
+====
+update writes each output into its own case
+====
+cd $CCTR_FIXTURE_DIR/multi
+cctr shifting.txt -u --no-color > /dev/null 2>&1 || true
+cat shifting.txt
+----
+===
+alpha
+===
+printf "a1\na2\na3\n"
+---
+a1
+a2
+a3
+
+===
+beta
+===
+echo beta
+---
+beta
+
+===
+gamma
+===
+echo gamma
+---
+gamma
+
+====
+updated file passes on a second run
+====
+cd $CCTR_FIXTURE_DIR/multi
+cctr shifting.txt --no-color 2>&1 | tail -1
+----
+All 3 tests passed in {{ t }}s
+
+====
+update preserves blank separators between cases
+====
+cd $CCTR_FIXTURE_DIR/multi
+grep -c '^$' shifting.txt
+----
+2
