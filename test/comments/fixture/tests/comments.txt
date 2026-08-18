@@ -1,0 +1,35 @@
+# This corpus documents comment handling.
+#
+# Comments are only recognised in the file header, before the first test
+# case. Everywhere else a '#' is legitimate command or output content.
+
+%platform unix
+
+===
+header comments above did not affect parsing
+===
+echo hello
+---
+hello
+
+===
+hash is literal in expected output
+===
+printf '# one\n## two\n'
+---
+# one
+## two
+
+===
+hash only line is literal
+===
+echo '#'
+---
+#
+
+===
+trailing shell comment in command still runs
+===
+echo value # this is a shell comment
+---
+value

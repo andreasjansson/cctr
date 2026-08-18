@@ -40,6 +40,9 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Multiple tests per file](#multiple-tests-per-file)
   - [Exit-only tests](#exit-only-tests)
   - [Multiline output](#multiline-output)
+  - [Explicitly ending an expected block](#explicitly-ending-an-expected-block)
+- [Comments](#comments)
+- [Parse errors](#parse-errors)
 - [Variables](#variables)
 - [Constraints](#constraints)
   - [Comparison operators](#comparison-operators)
@@ -411,6 +414,27 @@ More content
 
 **Note:** While `---` can appear in expected output when using longer delimiters, `===` always signals the start of a new test regardless of delimiter length.
 
+### Explicitly ending an expected block
+
+A separator on its own line, with no `where` section after it, explicitly closes the expected-output block. This is useful when the expected output ends in blank lines you want to keep visible, or simply to make the end of a long block obvious:
+
+```
+===
+first
+===
+echo hello
+---
+hello
+---
+
+===
+second
+===
+echo world
+---
+world
+```
+
 ## Variables
 
 Variables capture dynamic parts of the output using `{{ name }}` or `{{ name: type }}` syntax. Types can be specified inline or omitted for automatic duck-typing.
@@ -746,6 +770,20 @@ another-feature
 expected output
 ```
 
+The reason may contain parentheses, including nested ones:
+
+```
+===
+picks the wrong model
+%skip(gets Terra (4.00) instead of Luna)
+===
+./route --pick
+---
+Luna
+```
+
+A `%skip(` whose parenthesis is never closed on the same line is a parse error rather than a silently discarded reason.
+
 ### Conditional skip
 
 Use `if:` for custom skip logic using shell commands. The test is skipped if the command exits with code 0:
@@ -1046,7 +1084,74 @@ cctr tests/ -u
 
 This replaces the expected output in failing tests with the actual output. Review the changes with `git diff` before committing.
 
-Only tests without variables are updated. Tests with variables must be updated manually.
+Tests whose expected block contains variables or a `where` section are **not** updated, because the block is a pattern rather than a literal — overwriting it would strip the placeholders and leave the constraints referring to variables that no longer exist. These are reported separately so you can update them by hand:
+
+```
+Updated 3 test(s) in: tests/api.txt
+Skipped 1 test(s) with variables or constraints in: tests/api.txt (update these manually)
+
+...
+
+Not auto-updatable (pattern tests - update manually):
+
+✗ api/users: list users
+  Error: constraint 'count == 5' not satisfied
+```
+
+Blank lines between test cases are preserved, so a `git diff` after `-u` shows only the expected-output lines that actually changed.
+
+## Comments
+
+Lines beginning with `#` are comments, and are only recognised in the file header — before the first `===`. This is where prose about the corpus belongs:
+
+```
+# Corpus: authentication behaviour
+#
+# Each case drives ./auth-cli against the fixture user database.
+
+%platform unix
+
+===
+login with valid credentials
+===
+./auth-cli login alice hunter2
+---
+ok
+```
+
+Comments may be interleaved with file-level directives.
+
+Past the first `===` every line is either a command or expected output, where `#` is legitimate content and is preserved verbatim:
+
+```
+===
+hash is literal here
+===
+printf '# not a comment\n'
+---
+# not a comment
+```
+
+## Parse errors
+
+Anything cctr cannot parse is a hard error naming the line, and exits non-zero. A file never silently yields zero test cases:
+
+```
+$ cctr tests/
+✗ tests: 0/0 tests passed in 0.00s
+
+Parse Errors:
+
+✗ tests/api.txt
+  parse error at line 1: expected a test case header ('===') but found: Some prose
+```
+
+If no tests run at all, cctr distinguishes an empty selection from a filter that matched nothing, and exits non-zero in both cases:
+
+```
+No tests found
+No tests matched pattern 'nonexistent'
+```
 
 ## Development
 

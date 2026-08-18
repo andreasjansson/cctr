@@ -116,9 +116,26 @@ fn main() -> anyhow::Result<()> {
                     .filter(|r| !r.passed && r.actual_output.is_some())
                     .collect();
 
-                if !failed.is_empty() {
-                    update_corpus_file(&file_result.file_path, &failed)?;
-                    eprintln!("Updated: {}", file_result.file_path.display());
+                if failed.is_empty() {
+                    continue;
+                }
+
+                let updated = update_corpus_file(&file_result.file_path, &failed)?;
+                if updated > 0 {
+                    eprintln!(
+                        "Updated {} test(s) in: {}",
+                        updated,
+                        file_result.file_path.display()
+                    );
+                }
+
+                let skipped = failed.len() - updated;
+                if skipped > 0 {
+                    eprintln!(
+                        "Skipped {} test(s) with variables or constraints in: {} (update these manually)",
+                        skipped,
+                        file_result.file_path.display()
+                    );
                 }
             }
         }
@@ -126,6 +143,20 @@ fn main() -> anyhow::Result<()> {
 
     let elapsed = start_time.elapsed();
     output.print_results(&results, elapsed, cli.update);
+
+    let total_tests: usize = results.iter().map(|r| r.total_tests()).sum();
+    let had_parse_error = results
+        .iter()
+        .flat_map(|r| &r.file_results)
+        .any(|f| f.parse_error.is_some());
+
+    if total_tests == 0 && !had_parse_error {
+        match cli.pattern.as_deref() {
+            Some(p) => eprintln!("No tests matched pattern '{}'", p),
+            None => eprintln!("No tests found"),
+        }
+        std::process::exit(1);
+    }
 
     let all_passed = results.iter().all(|r| r.passed());
 
