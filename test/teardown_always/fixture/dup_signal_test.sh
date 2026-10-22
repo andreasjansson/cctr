@@ -33,4 +33,4 @@ sleep 0.3
 
 echo "teardown_ran=$(test -f /tmp/cctr_sigdup_teardown && echo yes || echo no)"
 echo "force_quit=$(grep -q 'Force quit' /tmp/cctr_sigdup_out && echo yes || echo no)"
-echo "leftover_children=$(pgrep -f 'sleep 300' | wc -l | tr -d ' ')"
+echo "leftover_children=$(pgrep -f 'sleep 31337' | wc -l | tr -d ' ')"

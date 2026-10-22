@@ -93,8 +93,7 @@ main_ran=no
 cleanup signal duplication markers
 %require
 ===
-rm -f /tmp/cctr_sigdup_* /tmp/cctr_slowtd_*
-pkill -f 'sleep 300' 2>/dev/null || true
+"$CCTR_TEST_PATH/fixture/cleanup_signal_procs.sh"
 ---
 
 ===
@@ -138,6 +137,5 @@ teardown_completed=no
 ===
 cleanup after signal tests
 ===
-rm -f /tmp/cctr_sigdup_* /tmp/cctr_slowtd_*
-pkill -f 'sleep 300' 2>/dev/null || true
+"$CCTR_TEST_PATH/fixture/cleanup_signal_procs.sh"
 ---
