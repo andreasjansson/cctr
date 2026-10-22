@@ -1,0 +1,5 @@
+===
+clear markers
+===
+rm -f /tmp/cctr_slowtd_started /tmp/cctr_slowtd_teardown_done
+---

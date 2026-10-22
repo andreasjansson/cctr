@@ -1,0 +1,5 @@
+===
+mark teardown
+===
+touch /tmp/cctr_sigdup_teardown
+---

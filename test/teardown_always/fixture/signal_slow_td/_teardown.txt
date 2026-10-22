@@ -1,0 +1,6 @@
+===
+slow teardown
+===
+sleep 5
+touch /tmp/cctr_slowtd_teardown_done
+---

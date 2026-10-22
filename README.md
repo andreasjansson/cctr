@@ -247,6 +247,22 @@ seed test data
 - Whether setup failed (main tests are skipped but teardown still runs)
 - Whether the process was interrupted by SIGINT (Ctrl-C) or SIGTERM
 
+A single SIGINT or SIGTERM means graceful shutdown: cctr stops running tests,
+kills the process group of any test command still in flight, and runs teardown
+for every suite that had started. Suites that had not started yet are not begun,
+so their setup side effects never happen.
+
+Because a single shutdown event can deliver the same signal more than once —
+`timeout`, for instance, signals both the process group and the monitored child,
+so cctr receives SIGTERM twice — repeat signals arriving within half a second
+are treated as the same request. Only a genuinely later second signal forces an
+immediate quit, which skips any remaining teardown.
+
+Test commands run in their own process group, so killing an interrupted test
+takes down everything it spawned. Processes that deliberately detach with
+`setsid` are outside that group and survive by design; cleaning those up is what
+teardown is for.
+
 This ensures cleanup happens even in failure scenarios:
 
 ```
