@@ -1,0 +1,7 @@
+===
+long running test that also spawns a background grandchild
+===
+touch /tmp/cctr_sigdup_started
+sleep 300 &
+sleep 300
+---

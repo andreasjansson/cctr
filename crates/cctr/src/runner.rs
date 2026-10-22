@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
+use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
@@ -17,6 +18,56 @@ use tempfile::TempDir;
 /// When set, running suites will skip remaining tests but still run teardown
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 static IN_TEARDOWN: AtomicBool = AtomicBool::new(false);
+
+/// Process group ids of test commands that are currently running.
+///
+/// Each test command is put in its own process group so that its entire
+/// subtree can be killed; killing just the shell we spawned would leave its
+/// children behind. The ids are tracked so that a force quit can take them
+/// down as well, since they no longer die along with cctr's own group.
+static CHILD_GROUPS: Mutex<Vec<i32>> = Mutex::new(Vec::new());
+
+fn register_child_group(pid: u32) {
+    CHILD_GROUPS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push(pid as i32);
+}
+
+fn unregister_child_group(pid: u32) {
+    CHILD_GROUPS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .retain(|p| *p != pid as i32);
+}
+
+/// Kill the process group of every test command still running.
+pub fn kill_all_child_groups() {
+    let groups: Vec<i32> = CHILD_GROUPS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    for pgid in groups {
+        kill_process_group(pgid);
+    }
+}
+
+#[cfg(unix)]
+fn kill_process_group(pgid: i32) {
+    unsafe {
+        libc::killpg(pgid, libc::SIGKILL);
+    }
+}
+
+#[cfg(not(unix))]
+fn kill_process_group(_pgid: i32) {}
+
+/// Kill a test command and everything it spawned, then reap it.
+fn kill_child_tree(child: &mut std::process::Child) {
+    kill_process_group(child.id() as i32);
+    let _ = child.kill();
+    let _ = child.wait();
+}
 
 /// Set the interrupted flag - called from signal handler
 pub fn set_interrupted() {
@@ -199,6 +250,19 @@ fn build_command(
         cmd.env(key, value);
     }
 
+    // Put the command in its own process group so that it and everything it
+    // spawns can be killed as a unit.
+    #[cfg(unix)]
+    unsafe {
+        use std::os::unix::process::CommandExt;
+        cmd.pre_exec(|| {
+            if libc::setpgid(0, 0) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+
     cmd
 }
 
@@ -219,19 +283,25 @@ fn run_command(
         Ok(child) => child,
         Err(e) => return (format!("Failed to execute command: {}", e), -1),
     };
+    let child_pid = child.id();
+    register_child_group(child_pid);
 
     let exit_status = loop {
         if interruptible && is_interrupted() {
-            let _ = child.kill();
-            let _ = child.wait();
+            kill_child_tree(&mut child);
+            unregister_child_group(child_pid);
             return (String::new(), 130);
         }
         match child.try_wait() {
             Ok(Some(status)) => break status,
             Ok(None) => std::thread::sleep(Duration::from_millis(10)),
-            Err(e) => return (format!("Failed to wait for command: {}", e), -1),
+            Err(e) => {
+                unregister_child_group(child_pid);
+                return (format!("Failed to wait for command: {}", e), -1);
+            }
         }
     };
+    unregister_child_group(child_pid);
 
     let exit_code = exit_status.code().unwrap_or(-1);
     let mut stdout_str = String::new();
@@ -271,6 +341,8 @@ fn run_command_streaming(
         Ok(child) => child,
         Err(e) => return (format!("Failed to execute command: {}", e), -1),
     };
+    let child_pid = child.id();
+    register_child_group(child_pid);
 
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
@@ -305,8 +377,8 @@ fn run_command_streaming(
             }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
                 if interruptible && is_interrupted() {
-                    let _ = child.kill();
-                    let _ = child.wait();
+                    kill_child_tree(&mut child);
+                    unregister_child_group(child_pid);
                     let _ = stdout_handle.join();
                     let _ = stderr_handle.join();
                     let combined = output_lines.join("\n");
@@ -325,6 +397,7 @@ fn run_command_streaming(
         Ok(status) => status.code().unwrap_or(-1),
         Err(_) => -1,
     };
+    unregister_child_group(child_pid);
 
     let combined = output_lines.join("\n");
     // Normalize line endings (Windows uses \r\n)
@@ -738,6 +811,18 @@ pub fn run_suite(
     let start = Instant::now();
     let mut file_results = Vec::new();
     let mut setup_error = None;
+
+    // Don't begin a suite that hasn't started yet: running its setup only to
+    // tear it straight back down performs side effects for no benefit. Suites
+    // already in flight still run their teardown.
+    if is_interrupted() {
+        return SuiteResult {
+            suite: suite.clone(),
+            file_results,
+            setup_error: None,
+            elapsed: start.elapsed(),
+        };
+    }
 
     let temp_dir = match TempDir::with_prefix(format!("cctr_{}_", suite.name.replace('/', "_"))) {
         Ok(d) => d,

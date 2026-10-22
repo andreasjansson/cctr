@@ -89,3 +89,55 @@ teardown_ran=yes
 main_ran=no
 
 
+===
+cleanup signal duplication markers
+%require
+===
+rm -f /tmp/cctr_sigdup_* /tmp/cctr_slowtd_*
+pkill -f 'sleep 300' 2>/dev/null || true
+---
+
+===
+a single timeout -s TERM still runs teardown
+%skip(needs the timeout command) if: ! command -v timeout
+===
+"$CCTR_TEST_PATH/fixture/sigterm_timeout_test.sh" "$CCTR_FIXTURE_DIR" 2>&1 | grep -E "^(setup_ran|test_started|teardown_ran|force_quit)="
+---
+setup_ran=yes
+test_started=yes
+teardown_ran=yes
+force_quit=no
+
+===
+duplicate SIGTERM delivery counts as one request
+===
+"$CCTR_TEST_PATH/fixture/dup_signal_test.sh" "$CCTR_FIXTURE_DIR" TERM 2>&1 | grep -E "^(teardown_ran|force_quit|leftover_children)="
+---
+teardown_ran=yes
+force_quit=no
+leftover_children=0
+
+===
+duplicate SIGINT delivery counts as one request
+===
+"$CCTR_TEST_PATH/fixture/dup_signal_test.sh" "$CCTR_FIXTURE_DIR" INT 2>&1 | grep -E "^(teardown_ran|force_quit|leftover_children)="
+---
+teardown_ran=yes
+force_quit=no
+leftover_children=0
+
+===
+a genuinely separate second signal still force quits
+===
+"$CCTR_TEST_PATH/fixture/force_quit_test.sh" "$CCTR_FIXTURE_DIR" 2>&1 | grep -E "^(exit_code|force_quit|teardown_completed)="
+---
+exit_code=130
+force_quit=yes
+teardown_completed=no
+
+===
+cleanup after signal tests
+===
+rm -f /tmp/cctr_sigdup_* /tmp/cctr_slowtd_*
+pkill -f 'sleep 300' 2>/dev/null || true
+---
