@@ -3,8 +3,8 @@ use cctr::discover::{discover_suites, Suite};
 use cctr::output::Output;
 use cctr::parse_file;
 use cctr::runner::{
-    is_in_teardown, is_interrupted, run_from_stdin, run_suite, set_interrupted, ProgressEvent,
-    SuiteResult,
+    is_in_teardown, kill_all_child_groups, run_from_stdin, run_suite, set_interrupted,
+    ProgressEvent, SuiteResult,
 };
 use cctr::update::update_corpus_file;
 use clap::Parser;
@@ -12,8 +12,49 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::io::Read;
 use std::sync::mpsc;
+use std::sync::Mutex;
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+
+/// A second signal only forces a quit if it arrives at least this long after
+/// the first.
+///
+/// A single shutdown event can deliver the same signal more than once: GNU
+/// `timeout` signals the process group *and* the monitored child directly, so
+/// cctr sees two SIGTERMs microseconds apart. Treating that as "the user asked
+/// twice" skips teardown, which is exactly when cleanup matters most. Nobody
+/// can react to the first message and signal again this quickly, so anything
+/// inside the window is a duplicate of the same request.
+const FORCE_QUIT_GRACE: Duration = Duration::from_millis(500);
+
+/// When the first shutdown signal was handled.
+static FIRST_SIGNAL_AT: Mutex<Option<Instant>> = Mutex::new(None);
+
+/// Decide what a newly arrived shutdown signal means, and record the first one.
+fn classify_signal(now: Instant) -> SignalAction {
+    let mut first = FIRST_SIGNAL_AT.lock().unwrap_or_else(|e| e.into_inner());
+    let action = decide_signal_action(*first, now);
+    if action == SignalAction::BeginShutdown {
+        *first = Some(now);
+    }
+    action
+}
+
+/// The duplicate-collapsing rule, kept pure so it can be tested directly.
+fn decide_signal_action(first_seen: Option<Instant>, now: Instant) -> SignalAction {
+    match first_seen {
+        None => SignalAction::BeginShutdown,
+        Some(at) if now.duration_since(at) < FORCE_QUIT_GRACE => SignalAction::Duplicate,
+        Some(_) => SignalAction::ForceQuit,
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+enum SignalAction {
+    BeginShutdown,
+    Duplicate,
+    ForceQuit,
+}
 
 fn main() -> anyhow::Result<()> {
     #[cfg(unix)]
@@ -25,22 +66,30 @@ fn main() -> anyhow::Result<()> {
 
     if let Err(e) = ctrlc::set_handler(move || {
         use std::io::Write;
-        if is_interrupted() {
-            let _ = writeln!(std::io::stderr(), "\nForce quit");
-            std::process::exit(130);
+        match classify_signal(Instant::now()) {
+            SignalAction::Duplicate => {}
+            SignalAction::ForceQuit => {
+                let _ = writeln!(std::io::stderr(), "\nForce quit");
+                // Test commands run in their own process groups, so they do not
+                // die with us. Take their whole subtree down before leaving.
+                kill_all_child_groups();
+                std::process::exit(130);
+            }
+            SignalAction::BeginShutdown => {
+                if is_in_teardown() {
+                    let _ = writeln!(
+                        std::io::stderr(),
+                        "\nAttempted to interrupt during teardown (press Ctrl-C again to force quit)"
+                    );
+                } else {
+                    let _ = writeln!(
+                        std::io::stderr(),
+                        "\nInterrupted - running teardown... (press Ctrl-C again to force quit)"
+                    );
+                }
+                set_interrupted();
+            }
         }
-        if is_in_teardown() {
-            let _ = writeln!(
-                std::io::stderr(),
-                "\nAttempted to interrupt during teardown (press Ctrl-C again to force quit)"
-            );
-        } else {
-            let _ = writeln!(
-                std::io::stderr(),
-                "\nInterrupted - running teardown... (press Ctrl-C again to force quit)"
-            );
-        }
-        set_interrupted();
     }) {
         eprintln!("Warning: Could not set signal handler: {}", e);
     }
@@ -216,4 +265,59 @@ fn list_tests(
 
     output.print_list(&suite_tests);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn first_signal_begins_shutdown() {
+        let now = Instant::now();
+        assert_eq!(decide_signal_action(None, now), SignalAction::BeginShutdown);
+    }
+
+    #[test]
+    fn duplicate_delivery_of_the_same_event_is_collapsed() {
+        // GNU timeout signals the process group and the child directly, so the
+        // second delivery arrives essentially instantly.
+        let first = Instant::now();
+        let same_event = first + Duration::from_micros(50);
+        assert_eq!(
+            decide_signal_action(Some(first), same_event),
+            SignalAction::Duplicate
+        );
+    }
+
+    #[test]
+    fn repeat_within_grace_window_is_collapsed() {
+        let first = Instant::now();
+        let inside = first + FORCE_QUIT_GRACE - Duration::from_millis(1);
+        assert_eq!(
+            decide_signal_action(Some(first), inside),
+            SignalAction::Duplicate
+        );
+    }
+
+    #[test]
+    fn separate_signal_after_grace_window_forces_quit() {
+        let first = Instant::now();
+        let later = first + FORCE_QUIT_GRACE + Duration::from_millis(1);
+        assert_eq!(
+            decide_signal_action(Some(first), later),
+            SignalAction::ForceQuit
+        );
+    }
+
+    #[test]
+    fn deliberate_second_press_forces_quit() {
+        // A person reacting to the "press Ctrl-C again" message takes far
+        // longer than the grace window.
+        let first = Instant::now();
+        let later = first + Duration::from_secs(2);
+        assert_eq!(
+            decide_signal_action(Some(first), later),
+            SignalAction::ForceQuit
+        );
+    }
 }

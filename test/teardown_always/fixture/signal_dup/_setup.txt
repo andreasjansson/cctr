@@ -1,0 +1,6 @@
+===
+mark setup and clear previous markers
+===
+rm -f /tmp/cctr_sigdup_teardown /tmp/cctr_sigdup_started
+touch /tmp/cctr_sigdup_setup
+---
