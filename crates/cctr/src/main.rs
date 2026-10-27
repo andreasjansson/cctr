@@ -191,7 +191,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     let elapsed = start_time.elapsed();
-    output.print_results(&results, elapsed, cli.update);
+    output.print_results(&results, elapsed, cli.update, cli.verbose >= 1);
 
     let total_tests: usize = results.iter().map(|r| r.total_tests()).sum();
     let had_parse_error = results
@@ -254,7 +254,7 @@ fn run_stdin_mode(cli: &Cli, output: &mut Output) -> anyhow::Result<()> {
 
     let elapsed = start_time.elapsed();
     let results = vec![result];
-    output.print_results(&results, elapsed, cli.update);
+    output.print_results(&results, elapsed, cli.update, cli.verbose >= 1);
 
     let all_passed = results.iter().all(|r| r.passed());
 

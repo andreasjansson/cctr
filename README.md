@@ -53,6 +53,7 @@ See the [test/](https://github.com/andreasjansson/cctr/tree/main/test) directory
   - [Membership with contains](#membership-with-contains)
   - [Functions](#functions)
   - [Operator precedence](#operator-precedence)
+  - [When a constraint fails](#when-a-constraint-fails)
 - [Skip directives](#skip-directives)
   - [Test-level skip](#test-level-skip)
   - [Conditional skip](#conditional-skip)
@@ -759,6 +760,39 @@ From highest to lowest:
 8. String/membership `contains`, `startswith`, `endswith`, `matches`
 9. Logical `and`
 10. Logical `or`
+
+### When a constraint fails
+
+If the output matches the expected pattern but a constraint does not hold, cctr
+reports the test's location and command, the constraint, and the values of the
+variables that constraint references:
+
+```
+✗ api/sessions: session entries have a result
+  api/sessions.txt:12
+  Command: curl -s localhost:8080/log | jq .
+
+  Constraint failed: log.entries[-2].messages[0].details.result == 8
+    key "result" not found in log.entries[-2].messages[0].details (available keys: "error", "status")
+  where
+    log = {"entries": [{"messages": [{"details": {"error": null, "status": "ok"}}]}, ...]}
+
+  (run with -v to show the actual output)
+```
+
+A constraint that evaluates to false also shows the values it compared, and a
+failing `forall` names the first element that broke it:
+
+```
+  Constraint not satisfied: resp.users[1].name == "bob"
+    resp.users[1].name = "carol"
+
+  Constraint not satisfied: s >= 0 and s <= 10 forall s in scores
+    fails for s = 12 (at scores[2])
+```
+
+Values longer than 200 characters are truncated. With `-v` they are
+pretty-printed in full, and the command's actual output is shown as well.
 
 ## Skip directives
 

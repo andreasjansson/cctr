@@ -9,44 +9,59 @@ All 30 tests passed in {{ t }}s
 ===
 json_object wrong property fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_object_wrong_property.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_object/json_object_wrong_property.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'o.name == "bob"' not satisfied
-  where o = {"age": 30, "name": "alice"}
+  Constraint not satisfied: o.name == "bob"
+    o.name = "alice"
+  where
+    o = {"age": 30, "name": "alice"}
 
 ===
 json_object missing key fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_object_missing_key.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr $CCTR_FIXTURE_DIR/json_object/json_object_missing_key.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'o.missing == "value"' failed: key not found: missing
+  Constraint failed: o.missing == "value"
+    key "missing" not found in o (available keys: "name")
+  where
+    o = {"name": "alice"}
 
 ===
 json_object forall fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_object_forall_fails.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_object/json_object_forall_fails.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'type(v) == number forall v in o' not satisfied
-  where o = {"a": 1, "b": 2, "c": "not a number"}
+  Constraint not satisfied: type(v) == number forall v in o
+    fails for v = "not a number" (at o["c"])
+  where
+    o = {"a": 1, "b": 2, "c": "not a number"}
 
 ===
 json_nested wrong value fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_nested_wrong_value.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_object/json_nested_wrong_value.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'o.users[0].name == "charlie"' not satisfied
-  where o = {"users": [{"name": "alice"}, {"name": "bob"}]}
+  Constraint not satisfied: o.users[0].name == "charlie"
+    o.users[0].name = "alice"
+  where
+    o = {"users": [{"name": "alice"}, {"name": "bob"}]}
 
 ===
 json_object property on array fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_object_property_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr $CCTR_FIXTURE_DIR/json_object/json_object_property_on_array.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'a.foo == 1' failed: type error: expected object, got array
+  Constraint failed: a.foo == 1
+    cannot evaluate a.foo: a is an array, not an object
+  where
+    a = [1, 2, 3]
 
 ===
 json_object keys on array fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_object/json_object_keys_on_array.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr $CCTR_FIXTURE_DIR/json_object/json_object_keys_on_array.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'len(keys(a)) == 0' failed: type error: expected object, got array
+  Constraint failed: len(keys(a)) == 0
+    type error: expected object, got array
+  where
+    a = [1, 2, 3]

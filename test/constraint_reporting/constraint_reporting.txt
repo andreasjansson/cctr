@@ -1,0 +1,106 @@
+%platform unix
+
+===
+evaluation error shows location, command, failing path and bindings
+===
+cctr $CCTR_FIXTURE_DIR/eval_error --no-color 2>&1 | sed -n '/^✗ eval_error\//,/^Summary/p'
+---
+✗ eval_error/nested_missing_key: nested json path is missing a key
+  {{ path }}nested_missing_key.txt:1
+  Command: printf '%s\n' '{"entries": [{"messages": [{"details": {"status": "ok", "error": null}}]}, {"messages": []}]}'
+
+  Constraint failed: log.entries[-2].messages[0].details.result == 8
+    key "result" not found in log.entries[-2].messages[0].details (available keys: "error", "status")
+  where
+    log = {"entries": [{"messages": [{"details": {"error": null, "status": "ok"}}]}, {"messages": []}]}
+
+  (run with -v to show the actual output)
+
+Summary: 0 passed, 1 failed, 0 skipped in {{ t }}s
+---
+where
+* path endswith "eval_error/"
+
+===
+unsatisfied comparison shows the value of the compared expression
+===
+cctr $CCTR_FIXTURE_DIR/not_satisfied --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
+---
+  Constraint not satisfied: resp.users[1].name == "bob"
+    resp.users[1].name = "carol"
+  where
+    resp = {"total": 2, "users": [{"name": "alice"}, {"name": "carol"}]}
+
+===
+unsatisfied forall names the first element that failed
+===
+cctr $CCTR_FIXTURE_DIR/forall --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
+---
+  Constraint not satisfied: s >= 0 and s <= 10 forall s in scores
+    fails for s = 12 (at scores[2])
+  where
+    scores = [3, 7, 12, 4]
+
+===
+only variables the constraint references are shown
+===
+cctr $CCTR_FIXTURE_DIR/referenced_only --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
+---
+  Constraint not satisfied: count == 4
+  where
+    count = 3
+
+===
+large values are truncated with a pointer to -v
+===
+cctr $CCTR_FIXTURE_DIR/large_value --no-color 2>&1 | sed -n '/^  Constraint /,/^Summary/p'
+---
+  Constraint not satisfied: len(payload.items) == 31
+    len(payload.items) = 30
+  where
+    payload = {"items": [{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}, {"id": 5}, {"id": 6}, {"id": 7}, {"id": 8}, {"id": 9}, {"id": 10}, {"id": 11}, {"id": 12}, {"id": 13}, {"id": 14}, {"id": 15}, {"id": … (+161 chars)
+
+  (run with -v to show full values and the actual output)
+
+Summary: 0 passed, 1 failed, 0 skipped in {{ t }}s
+
+===
+verbose mode pretty-prints large values in full
+===
+cctr $CCTR_FIXTURE_DIR/large_value --no-color -v 2>&1 | sed -n '/^  where/,/^    }/p' | head -9
+---
+  where
+    payload = {
+      "items": [
+        {
+          "id": 0
+        },
+        {
+          "id": 1
+        },
+
+===
+verbose mode shows the actual output
+===
+cctr $CCTR_FIXTURE_DIR/large_value --no-color -v 2>&1 | grep -A1 '^  Actual output:'
+---
+  Actual output:
+    {"items": [{"id": 0},{"id": 1},{"id": 2},{"id": 3},{"id": 4},{"id": 5},{"id": 6},{"id": 7},{"id": 8},{"id": 9},{"id": 10},{"id": 11},{"id": 12},{"id": 13},{"id": 14},{"id": 15},{"id": 16},{"id": 17},{"id": 18},{"id": 19},{"id": 20},{"id": 21},{"id": 22},{"id": 23},{"id": 24},{"id": 25},{"id": 26},{"id": 27},{"id": 28},{"id": 29}]}
+
+===
+other match errors also show location and command
+===
+cctr $CCTR_FIXTURE_DIR/match_error --no-color 2>&1 | sed -n '/^✗ match_error\//,/^Summary/p'
+---
+✗ match_error/invalid_json: output looks like an object but is not json
+  {{ path }}invalid_json.txt:1
+  Command: echo '{not: json}'
+
+  Error: failed to parse JSON for variable 'obj': key must be a string at line 1 column 2
+
+  (run with -v to show the actual output)
+
+Summary: 0 passed, 1 failed, 0 skipped in {{ t }}s
+---
+where
+* path endswith "match_error/"

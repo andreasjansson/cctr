@@ -1,0 +1,9 @@
+===
+large captured value
+===
+echo "{\"items\": [$(seq 0 29 | sed 's/.*/{"id": &}/' | paste -sd, -)]}"
+---
+{{ payload: json object }}
+---
+where
+* len(payload.items) == 31

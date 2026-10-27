@@ -1,0 +1,6 @@
+===
+output looks like an object but is not json
+===
+echo '{not: json}'
+---
+{{ obj: json object }}

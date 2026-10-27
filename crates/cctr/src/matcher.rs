@@ -1,68 +1,165 @@
 //! Pattern matching for test output with variable extraction and constraints.
 
 use crate::{VarType, VariableDecl};
-use cctr_expr::{eval_bool, Value};
+use cctr_expr::{evaluate, free_variables, parse, Expr, Value};
 use regex::Regex;
 use std::collections::HashMap;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum MatchError {
     #[error("failed to build pattern regex: {0}")]
     RegexBuild(#[from] regex::Error),
     #[error("duplicate variable '{{{{ {0} }}}}' in pattern - each variable can only appear once")]
     DuplicateVariable(String),
-    #[error("constraint '{constraint}' failed: {error}")]
-    ConstraintFailed { constraint: String, error: String },
-    #[error("{}", format_constraint_error(.constraint, .bindings))]
-    ConstraintNotSatisfied {
-        constraint: String,
-        bindings: Vec<(String, String)>,
-    },
+    #[error("{0}")]
+    Constraint(Box<ConstraintFailure>),
     #[error("failed to parse JSON for variable '{name}': {error}")]
     JsonParse { name: String, error: String },
 }
 
-fn format_constraint_error(constraint: &str, bindings: &[(String, String)]) -> String {
-    let mut msg = format!("constraint '{}' not satisfied", constraint);
-    if !bindings.is_empty() {
-        msg.push_str("\n  where ");
-        let binding_strs: Vec<String> = bindings
-            .iter()
-            .map(|(name, value)| format!("{} = {}", name, value))
-            .collect();
-        msg.push_str(&binding_strs.join(", "));
-    }
-    msg
+/// A `where` constraint that did not hold, with the context needed to see why.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstraintFailure {
+    pub constraint: String,
+    /// `None` when the constraint evaluated to false; the error message when
+    /// evaluating it failed outright.
+    pub error: Option<String>,
+    /// Intermediate values that explain a constraint that evaluated to false.
+    pub details: Vec<Detail>,
+    /// Values of the variables the constraint references, sorted by name.
+    pub bindings: Vec<(String, Value)>,
 }
 
-fn format_value(value: &Value) -> String {
-    match value {
-        Value::Number(n) => {
-            if n.fract() == 0.0 && n.abs() < 1e15 {
-                format!("{}", *n as i64)
-            } else {
-                format!("{}", n)
-            }
+#[derive(Debug, Clone, PartialEq)]
+pub enum Detail {
+    /// A non-trivial operand of a failing comparison and what it evaluated to.
+    Operand { expr: String, value: Value },
+    /// The first element for which a `forall` predicate was false.
+    Counterexample {
+        var: String,
+        value: Value,
+        location: String,
+    },
+}
+
+impl std::fmt::Display for ConstraintFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.error {
+            None => write!(f, "constraint '{}' not satisfied", self.constraint),
+            Some(error) => write!(f, "constraint '{}' failed: {}", self.constraint, error),
         }
-        Value::String(s) => format!("{:?}", s),
-        Value::Bool(b) => format!("{}", b),
-        Value::Null => "null".to_string(),
-        Value::Array(arr) => {
-            let items: Vec<String> = arr.iter().map(format_value).collect();
-            format!("[{}]", items.join(", "))
-        }
-        Value::Object(obj) => {
-            let mut pairs: Vec<(&String, &Value)> = obj.iter().collect();
-            pairs.sort_by_key(|(k, _)| *k);
-            let items: Vec<String> = pairs
-                .iter()
-                .map(|(k, v)| format!("{:?}: {}", k, format_value(v)))
-                .collect();
-            format!("{{{}}}", items.join(", "))
-        }
-        Value::Type(t) => t.clone(),
     }
+}
+
+/// Evaluate one constraint, returning why it failed if it did not hold.
+fn check_constraint(constraint: &str, vars: &HashMap<String, Value>) -> Option<ConstraintFailure> {
+    let expr = match parse(constraint) {
+        Ok(expr) => expr,
+        Err(e) => {
+            return Some(ConstraintFailure {
+                constraint: constraint.to_string(),
+                error: Some(e.to_string()),
+                details: Vec::new(),
+                bindings: Vec::new(),
+            })
+        }
+    };
+
+    let error = match evaluate(&expr, vars).and_then(|v| v.as_bool()) {
+        Ok(true) => return None,
+        Ok(false) => None,
+        Err(e) => Some(e.to_string()),
+    };
+
+    let details = if error.is_none() {
+        explain(&expr, vars)
+    } else {
+        Vec::new()
+    };
+
+    let bindings = free_variables(&expr)
+        .into_iter()
+        .filter_map(|name| vars.get(&name).map(|v| (name, v.clone())))
+        .collect();
+
+    Some(ConstraintFailure {
+        constraint: constraint.to_string(),
+        error,
+        details,
+        bindings,
+    })
+}
+
+/// Intermediate values that show why a constraint evaluated to false.
+///
+/// For a comparison, the value of each operand that is neither a literal nor a
+/// bare variable (bare variables already appear among the bindings). For a
+/// `forall`, the first element the predicate rejected.
+fn explain(expr: &Expr, vars: &HashMap<String, Value>) -> Vec<Detail> {
+    match expr {
+        Expr::BinaryOp { op, left, right } if op.is_comparison() => [left, right]
+            .into_iter()
+            .filter(|side| !side.is_literal() && !matches!(side.as_ref(), Expr::Var(_)))
+            .filter_map(|side| {
+                evaluate(side, vars).ok().map(|value| Detail::Operand {
+                    expr: side.to_string(),
+                    value,
+                })
+            })
+            .collect(),
+        Expr::ForAll {
+            predicate,
+            var,
+            iterable,
+        } => counterexample(predicate, var, iterable, vars)
+            .into_iter()
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn counterexample(
+    predicate: &Expr,
+    var: &str,
+    iterable: &Expr,
+    vars: &HashMap<String, Value>,
+) -> Option<Detail> {
+    let base = match iterable {
+        Expr::BinaryOp { .. } | Expr::UnaryOp { .. } | Expr::ForAll { .. } => {
+            format!("({})", iterable)
+        }
+        _ => iterable.to_string(),
+    };
+    let items: Vec<(String, Value)> = match evaluate(iterable, vars).ok()? {
+        Value::Array(items) => items
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (format!("{}[{}]", base, i), v))
+            .collect(),
+        Value::Object(obj) => {
+            let mut entries: Vec<_> = obj.into_iter().collect();
+            entries.sort_by(|a, b| a.0.cmp(&b.0));
+            entries
+                .into_iter()
+                .map(|(k, v)| (format!("{}[{:?}]", base, k), v))
+                .collect()
+        }
+        _ => return None,
+    };
+
+    let mut local = vars.clone();
+    for (location, value) in items {
+        local.insert(var.to_string(), value.clone());
+        if let Ok(Value::Bool(false)) = evaluate(predicate, &local) {
+            return Some(Detail::Counterexample {
+                var: var.to_string(),
+                value,
+                location,
+            });
+        }
+    }
+    None
 }
 
 /// Duck-type a captured string value into the appropriate Value type.
@@ -171,23 +268,9 @@ impl<'a> Matcher<'a> {
         let mut all_values = prior_vars.clone();
         all_values.extend(captured.clone());
 
-        let bindings = self.format_all_bindings(&all_values);
-
         for constraint in self.constraints {
-            match eval_bool(constraint, &all_values) {
-                Ok(true) => {}
-                Ok(false) => {
-                    return Err(MatchError::ConstraintNotSatisfied {
-                        constraint: constraint.clone(),
-                        bindings: bindings.clone(),
-                    });
-                }
-                Err(e) => {
-                    return Err(MatchError::ConstraintFailed {
-                        constraint: constraint.clone(),
-                        error: e.to_string(),
-                    });
-                }
+            if let Some(failure) = check_constraint(constraint, &all_values) {
+                return Err(MatchError::Constraint(Box::new(failure)));
             }
         }
 
@@ -201,15 +284,6 @@ impl<'a> Matcher<'a> {
     fn strip_type_annotations(&self, pattern: &str) -> String {
         let re = Regex::new(r"\{\{\s*(\w+)\s*:\s*[^}]+\}\}").unwrap();
         re.replace_all(pattern, "{{ $1 }}").to_string()
-    }
-
-    fn format_all_bindings(&self, values: &HashMap<String, Value>) -> Vec<(String, String)> {
-        let mut bindings: Vec<_> = values
-            .iter()
-            .map(|(name, v)| (name.clone(), format_value(v)))
-            .collect();
-        bindings.sort_by(|a, b| a.0.cmp(&b.0));
-        bindings
     }
 
     fn build_regex(&self, pattern: &str) -> Result<Regex, MatchError> {
@@ -405,10 +479,155 @@ mod tests {
         let matcher = Matcher::new(&vars, &constraints, &[]);
 
         let result = matcher.matches("time: {{ n }}s", "time: 0.5s", &no_prior());
-        assert!(matches!(
-            result,
-            Err(MatchError::ConstraintNotSatisfied { .. })
-        ));
+        let Err(MatchError::Constraint(failure)) = result else {
+            panic!("expected a constraint failure");
+        };
+        assert_eq!(failure.constraint, "n < 0");
+        assert_eq!(failure.error, None);
+        assert_eq!(
+            failure.bindings,
+            vec![("n".to_string(), Value::Number(0.5))]
+        );
+    }
+
+    fn failure_for(constraint: &str, vars: &[(&str, Value)]) -> ConstraintFailure {
+        let vars: HashMap<String, Value> = vars
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect();
+        check_constraint(constraint, &vars).expect("constraint should fail")
+    }
+
+    fn json(text: &str) -> Value {
+        json_to_value(&serde_json::from_str(text).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn test_passing_constraint_is_not_a_failure() {
+        let vars = HashMap::from([("n".to_string(), Value::Number(1.0))]);
+        assert_eq!(check_constraint("n == 1", &vars), None);
+    }
+
+    #[test]
+    fn test_evaluation_error_carries_bindings() {
+        // Previously only false constraints reported bindings; an evaluation
+        // error reported none, which is exactly when you most need them.
+        let entries = json(r#"[{"messages": [{"details": {"status": "ok"}}]}, {"x": 1}]"#);
+        let failure = failure_for(
+            "entries[-2].messages[0].details.result == 8",
+            &[("entries", entries.clone()), ("unrelated", Value::Null)],
+        );
+        assert_eq!(
+            failure.error.as_deref(),
+            Some(
+                r#"key "result" not found in entries[-2].messages[0].details (available keys: "status")"#
+            )
+        );
+        assert_eq!(failure.bindings, vec![("entries".to_string(), entries)]);
+        assert!(failure.details.is_empty());
+    }
+
+    #[test]
+    fn test_bindings_are_only_the_referenced_variables() {
+        let failure = failure_for(
+            "t < 1",
+            &[("t", Value::Number(2.0)), ("n", Value::Number(42.0))],
+        );
+        assert_eq!(
+            failure.bindings,
+            vec![("t".to_string(), Value::Number(2.0))]
+        );
+    }
+
+    #[test]
+    fn test_forall_bound_variable_is_not_a_binding() {
+        let failure = failure_for(
+            "x < limit forall x in items",
+            &[
+                ("items", json("[1, 2, 10]")),
+                ("limit", Value::Number(5.0)),
+                ("x", Value::Number(-1.0)),
+            ],
+        );
+        let names: Vec<&str> = failure.bindings.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names, vec!["items", "limit"]);
+    }
+
+    #[test]
+    fn test_comparison_reports_non_trivial_operands() {
+        let failure = failure_for(
+            r#"o.users[0].name == "charlie""#,
+            &[("o", json(r#"{"users": [{"name": "alice"}]}"#))],
+        );
+        assert_eq!(
+            failure.details,
+            vec![Detail::Operand {
+                expr: "o.users[0].name".to_string(),
+                value: Value::String("alice".to_string()),
+            }]
+        );
+    }
+
+    #[test]
+    fn test_comparison_reports_both_operands_when_neither_is_trivial() {
+        let failure = failure_for(
+            "len(a) == len(b)",
+            &[("a", json("[1, 2]")), ("b", json("[1]"))],
+        );
+        assert_eq!(
+            failure.details,
+            vec![
+                Detail::Operand {
+                    expr: "len(a)".to_string(),
+                    value: Value::Number(2.0),
+                },
+                Detail::Operand {
+                    expr: "len(b)".to_string(),
+                    value: Value::Number(1.0),
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_bare_variables_and_literals_are_not_repeated_as_details() {
+        let failure = failure_for("n == 999", &[("n", Value::Number(7.0))]);
+        assert!(failure.details.is_empty());
+    }
+
+    #[test]
+    fn test_forall_reports_first_counterexample() {
+        let failure = failure_for("x < 5 forall x in a", &[("a", json("[1, 2, 10, 20]"))]);
+        assert_eq!(
+            failure.details,
+            vec![Detail::Counterexample {
+                var: "x".to_string(),
+                value: Value::Number(10.0),
+                location: "a[2]".to_string(),
+            }]
+        );
+    }
+
+    #[test]
+    fn test_forall_over_object_reports_key_deterministically() {
+        let failure = failure_for(
+            "type(v) == number forall v in o",
+            &[("o", json(r#"{"c": "x", "a": 1, "b": "y"}"#))],
+        );
+        assert_eq!(
+            failure.details,
+            vec![Detail::Counterexample {
+                var: "v".to_string(),
+                value: Value::String("y".to_string()),
+                location: r#"o["b"]"#.to_string(),
+            }]
+        );
+    }
+
+    #[test]
+    fn test_unparseable_constraint_is_a_failure_with_error() {
+        let failure = failure_for("n >", &[("n", Value::Number(1.0))]);
+        assert!(failure.error.is_some());
     }
 
     #[test]

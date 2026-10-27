@@ -5,6 +5,7 @@ pub mod matcher;
 pub mod output;
 pub mod runner;
 pub mod update;
+pub mod value_format;
 
 pub use cctr_corpus::{
     parse_content, parse_file, CorpusFile, ParseError, SkipDirective, TestCase, VarType,

@@ -29,13 +29,19 @@ where
 ===
 duck typed number as string fails with type error
 ===
-cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep "startswith.*expected string.*got number"
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep -A3 'Constraint failed: x startswith "4"'
 ---
-  Error: constraint 'x startswith "4"' failed: type error: expected string, got number
+  Constraint failed: x startswith "4"
+    type error: expected string, got number
+  where
+    x = 42
 
 ===
 duck typed array property access fails
 ===
-cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep "x.foo.*expected object.*got array"
+cctr $CCTR_FIXTURE_DIR/tests/duck_typing_failures.txt --no-color 2>&1 | grep -A3 "Constraint failed: x.foo == 1"
 ---
-  Error: constraint 'x.foo == 1' failed: type error: expected object, got array
+  Constraint failed: x.foo == 1
+    cannot evaluate x.foo: x is an array, not an object
+  where
+    x = [1, 2, 3]

@@ -111,6 +111,7 @@ If you need to test shell behavior (echo, pipes, loops), put those in a fixture 
 |-----------|---------|
 | `basic/` | Basic cctr functionality, output format |
 | `cctr/` | cctr CLI behavior (run, list, failures, multiline commands) |
+| `constraint_reporting/` | How failing `where` constraints are reported |
 | `env_vars/` | Environment variable expansion |
 | `exit_only/` | Exit-code-only tests (no expected output) |
 | `expressions/` | Constraint expression evaluation |

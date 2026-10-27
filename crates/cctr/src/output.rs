@@ -1,4 +1,6 @@
+use crate::matcher::{ConstraintFailure, Detail, MatchError};
 use crate::runner::{ProgressEvent, SuiteResult, TestResult};
+use crate::value_format;
 use similar::{ChangeTag, TextDiff};
 use std::io::Write;
 use std::time::Duration;
@@ -174,7 +176,13 @@ impl Output {
         writeln!(self.stdout).unwrap();
     }
 
-    pub fn print_results(&mut self, results: &[SuiteResult], elapsed: Duration, update_mode: bool) {
+    pub fn print_results(
+        &mut self,
+        results: &[SuiteResult],
+        elapsed: Duration,
+        update_mode: bool,
+        verbose: bool,
+    ) {
         let mut total_passed = 0;
         let mut total_failed = 0;
         let mut total_skipped = 0;
@@ -329,7 +337,7 @@ impl Output {
                 self.reset();
 
                 for result in &updatable {
-                    self.print_failure_detail(result, update_mode);
+                    self.print_failure_detail(result, update_mode, verbose);
                 }
             }
 
@@ -345,7 +353,7 @@ impl Output {
                 self.reset();
 
                 for result in &manual {
-                    self.print_failure_detail(result, false);
+                    self.print_failure_detail(result, false, verbose);
                 }
             }
 
@@ -398,7 +406,7 @@ impl Output {
         }
     }
 
-    fn print_failure_detail(&mut self, result: &TestResult, as_update: bool) {
+    fn print_failure_detail(&mut self, result: &TestResult, as_update: bool, verbose: bool) {
         writeln!(self.stdout).unwrap();
         let file_stem = result
             .test
@@ -428,25 +436,113 @@ impl Output {
             self.reset();
         }
 
-        if let Some(error) = &result.error {
-            writeln!(self.stdout, "  Error: {}", error).unwrap();
-        } else if let Some(actual) = &result.actual_output {
-            let display_path = std::env::current_dir()
-                .ok()
-                .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
-                .map(|p| p.to_path_buf())
-                .unwrap_or_else(|| result.test.file_path.clone());
+        let Some(actual) = &result.actual_output else {
+            return;
+        };
+        self.print_location(result);
+
+        match &result.error {
+            None => self.print_diff(&result.expected_output, actual),
+            Some(error) => {
+                let truncated = match error {
+                    MatchError::Constraint(failure) => {
+                        self.print_constraint_failure(failure, verbose)
+                    }
+                    other => {
+                        writeln!(self.stdout, "  Error: {}", other).unwrap();
+                        false
+                    }
+                };
+                self.print_actual_output(actual, verbose, truncated);
+            }
+        }
+    }
+
+    fn print_location(&mut self, result: &TestResult) {
+        let display_path = std::env::current_dir()
+            .ok()
+            .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| result.test.file_path.clone());
+        writeln!(
+            self.stdout,
+            "  {}:{}",
+            display_path.display(),
+            result.test.start_line
+        )
+        .unwrap();
+        writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
+        writeln!(self.stdout).unwrap();
+    }
+
+    /// Print why a constraint failed. Returns whether any value was truncated.
+    fn print_constraint_failure(&mut self, failure: &ConstraintFailure, verbose: bool) -> bool {
+        let mut truncated = false;
+
+        self.set_color(Color::Red);
+        match &failure.error {
+            None => write!(self.stdout, "  Constraint not satisfied:").unwrap(),
+            Some(_) => write!(self.stdout, "  Constraint failed:").unwrap(),
+        }
+        self.reset();
+        writeln!(self.stdout, " {}", failure.constraint).unwrap();
+
+        if let Some(error) = &failure.error {
+            writeln!(self.stdout, "    {}", error).unwrap();
+        }
+
+        for detail in &failure.details {
+            let (label, value, suffix) = match detail {
+                Detail::Operand { expr, value } => (expr.clone(), value, String::new()),
+                Detail::Counterexample {
+                    var,
+                    value,
+                    location,
+                } => (
+                    format!("fails for {}", var),
+                    value,
+                    format!(" (at {})", location),
+                ),
+            };
+            let (text, cut) = value_format::for_report(value, 4, verbose);
+            truncated |= cut;
+            writeln!(self.stdout, "    {} = {}{}", label, text, suffix).unwrap();
+        }
+
+        if !failure.bindings.is_empty() {
+            writeln!(self.stdout, "  where").unwrap();
+            for (name, value) in &failure.bindings {
+                let (text, cut) = value_format::for_report(value, 4, verbose);
+                truncated |= cut;
+                writeln!(self.stdout, "    {} = {}", name, text).unwrap();
+            }
+        }
+
+        truncated
+    }
+
+    /// The output matched the expected pattern, so a diff would be empty. It
+    /// can still be long, so it is only shown in full with `-v`.
+    fn print_actual_output(&mut self, actual: &str, verbose: bool, truncated: bool) {
+        writeln!(self.stdout).unwrap();
+        if verbose {
+            writeln!(self.stdout, "  Actual output:").unwrap();
+            for line in actual.lines() {
+                writeln!(self.stdout, "    {}", line).unwrap();
+            }
+            return;
+        }
+        self.set_dim();
+        if truncated {
             writeln!(
                 self.stdout,
-                "  {}:{}",
-                display_path.display(),
-                result.test.start_line
+                "  (run with -v to show full values and the actual output)"
             )
             .unwrap();
-            writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
-            writeln!(self.stdout).unwrap();
-            self.print_diff(&result.expected_output, actual);
+        } else {
+            writeln!(self.stdout, "  (run with -v to show the actual output)").unwrap();
         }
+        self.reset();
     }
 
     pub fn print_diff(&mut self, expected: &str, actual: &str) {

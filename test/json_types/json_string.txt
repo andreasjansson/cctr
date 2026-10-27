@@ -9,7 +9,8 @@ All 12 tests passed in {{ t }}s
 ===
 json_string wrong value fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_string/json_string_wrong_value.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_string/json_string_wrong_value.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 's == "world"' not satisfied
-  where s = "hello"
+  Constraint not satisfied: s == "world"
+  where
+    s = "hello"

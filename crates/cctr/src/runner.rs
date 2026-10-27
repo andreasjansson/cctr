@@ -1,5 +1,5 @@
 use crate::discover::Suite;
-use crate::matcher::Matcher;
+use crate::matcher::{MatchError, Matcher};
 use crate::{parse_content, parse_file, TestCase};
 use cctr_expr::Value;
 use regex::Regex;
@@ -126,7 +126,9 @@ pub struct TestResult {
     pub skip_reason: Option<String>,
     pub actual_output: Option<String>,
     pub expected_output: String,
-    pub error: Option<String>,
+    /// Set when matching raised an error rather than simply not matching,
+    /// most often a `where` constraint that did not hold.
+    pub error: Option<MatchError>,
     pub warning: Option<String>,
     pub elapsed: Duration,
     pub suite: String,
@@ -570,12 +572,7 @@ fn run_test(
                         (false, None, test.expected_output.clone(), HashMap::new())
                     }
                 }
-                Err(e) => (
-                    false,
-                    Some(e.to_string()),
-                    test.expected_output.clone(),
-                    HashMap::new(),
-                ),
+                Err(e) => (false, Some(e), test.expected_output.clone(), HashMap::new()),
             }
         } else {
             // No variables but has constraints referencing prior vars
@@ -589,7 +586,7 @@ fn run_test(
             if output_matches {
                 match matcher.matches(&test.expected_output, &actual_output, prior_vars) {
                     Ok(_) => (true, None, expected.clone(), HashMap::new()),
-                    Err(e) => (false, Some(e.to_string()), expected.clone(), HashMap::new()),
+                    Err(e) => (false, Some(e), expected.clone(), HashMap::new()),
                 }
             } else {
                 (false, None, expected.clone(), HashMap::new())
