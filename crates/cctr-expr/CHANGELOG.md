@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0](https://github.com/andreasjansson/cctr/releases/tag/v0.32.0) - 2026-10-28
+
 ### Added
 
 - `Display` for `Expr`, rendering it back to constraint syntax.
