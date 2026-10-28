@@ -1,0 +1,20 @@
+===
+alpha
+===
+printf "a1\na2\na3\n"
+---
+WRONG_A
+
+===
+beta
+===
+echo beta
+---
+WRONG_B
+
+===
+gamma
+===
+echo gamma
+---
+WRONG_C

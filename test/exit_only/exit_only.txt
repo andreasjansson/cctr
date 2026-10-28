@@ -14,7 +14,7 @@ starting tests/exit: exit nonzero fails
 Failures:
 
 ✗ tests/exit: exit nonzero fails
-  tests/exit.txt:6
+  tests/exit.txt:7
   Command: false
 
 
@@ -38,7 +38,7 @@ cctr $CCTR_FIXTURE_DIR/tests --no-color 2>&1
 Failures:
 
 ✗ tests/exit: exit nonzero fails
-  tests/exit.txt:6
+  tests/exit.txt:7
   Command: false
 
 

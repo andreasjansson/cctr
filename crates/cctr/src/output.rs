@@ -180,6 +180,7 @@ impl Output {
         let mut total_skipped = 0;
         let mut failed_tests: Vec<&TestResult> = Vec::new();
         let mut parse_errors: Vec<(&std::path::Path, &str)> = Vec::new();
+        let mut manual_count = 0usize;
 
         let mut sorted_results: Vec<_> = results.iter().collect();
         sorted_results.sort_by(|a, b| a.suite.name.cmp(&b.suite.name));
@@ -304,75 +305,62 @@ impl Output {
         }
 
         if !failed_tests.is_empty() {
-            writeln!(self.stdout).unwrap();
-            if update_mode {
-                self.set_color(Color::Cyan);
-                self.set_bold();
-                writeln!(self.stdout, "Updated:").unwrap();
+            // In update mode, tests holding a pattern cannot be rewritten
+            // automatically; report them as failures rather than as updates.
+            let (updatable, manual): (Vec<_>, Vec<_>) = if update_mode {
+                failed_tests
+                    .iter()
+                    .partition(|r| crate::update::is_updatable(&r.test))
             } else {
-                self.set_color(Color::Red);
-                self.set_bold();
-                writeln!(self.stdout, "Failures:").unwrap();
-            }
-            self.reset();
+                (failed_tests.clone(), Vec::new())
+            };
 
-            for result in failed_tests {
+            if !updatable.is_empty() {
                 writeln!(self.stdout).unwrap();
-                let file_stem = result
-                    .test
-                    .file_path
-                    .file_stem()
-                    .map(|s| s.to_string_lossy())
-                    .unwrap_or_default();
-
                 if update_mode {
                     self.set_color(Color::Cyan);
-                    write!(self.stdout, "↺").unwrap();
+                    self.set_bold();
+                    writeln!(self.stdout, "Updated:").unwrap();
                 } else {
                     self.set_color(Color::Red);
-                    write!(self.stdout, "✗").unwrap();
+                    self.set_bold();
+                    writeln!(self.stdout, "Failures:").unwrap();
                 }
                 self.reset();
-                writeln!(
-                    self.stdout,
-                    " {}/{}: {}",
-                    result.suite, file_stem, result.test.name
-                )
-                .unwrap();
 
-                // Print warning if present
-                if let Some(warning) = &result.warning {
-                    self.set_color(Color::Yellow);
-                    writeln!(self.stdout, "  ⚠ Warning: {}", warning).unwrap();
-                    self.reset();
-                }
-
-                if let Some(error) = &result.error {
-                    writeln!(self.stdout, "  Error: {}", error).unwrap();
-                } else if let Some(actual) = &result.actual_output {
-                    let display_path = std::env::current_dir()
-                        .ok()
-                        .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
-                        .map(|p| p.to_path_buf())
-                        .unwrap_or_else(|| result.test.file_path.clone());
-                    writeln!(
-                        self.stdout,
-                        "  {}:{}",
-                        display_path.display(),
-                        result.test.start_line
-                    )
-                    .unwrap();
-                    writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
-                    writeln!(self.stdout).unwrap();
-                    self.print_diff(&result.expected_output, actual);
+                for result in &updatable {
+                    self.print_failure_detail(result, update_mode);
                 }
             }
+
+            if !manual.is_empty() {
+                writeln!(self.stdout).unwrap();
+                self.set_color(Color::Red);
+                self.set_bold();
+                writeln!(
+                    self.stdout,
+                    "Not auto-updatable (pattern tests - update manually):"
+                )
+                .unwrap();
+                self.reset();
+
+                for result in &manual {
+                    self.print_failure_detail(result, false);
+                }
+            }
+
+            manual_count = manual.len();
         }
 
         writeln!(self.stdout).unwrap();
         let elapsed_str = format!(" in {:.2}s", elapsed.as_secs_f64());
 
-        if total_failed == 0 && total_skipped == 0 {
+        if total_passed == 0 && total_failed == 0 && total_skipped == 0 {
+            self.set_bold();
+            write!(self.stdout, "No tests ran").unwrap();
+            self.reset();
+            writeln!(self.stdout, "{}", elapsed_str).unwrap();
+        } else if total_failed == 0 && total_skipped == 0 {
             self.set_color(Color::Green);
             self.set_bold();
             write!(self.stdout, "All {} tests passed", total_passed).unwrap();
@@ -383,12 +371,22 @@ impl Output {
             write!(self.stdout, "Summary:").unwrap();
             self.reset();
             if update_mode {
-                writeln!(
-                    self.stdout,
-                    " {} left unchanged, {} updated, {} skipped{}",
-                    total_passed, total_failed, total_skipped, elapsed_str
-                )
-                .unwrap();
+                let updated = total_failed - manual_count;
+                if manual_count > 0 {
+                    writeln!(
+                        self.stdout,
+                        " {} left unchanged, {} updated, {} need manual update, {} skipped{}",
+                        total_passed, updated, manual_count, total_skipped, elapsed_str
+                    )
+                    .unwrap();
+                } else {
+                    writeln!(
+                        self.stdout,
+                        " {} left unchanged, {} updated, {} skipped{}",
+                        total_passed, updated, total_skipped, elapsed_str
+                    )
+                    .unwrap();
+                }
             } else {
                 writeln!(
                     self.stdout,
@@ -397,6 +395,57 @@ impl Output {
                 )
                 .unwrap();
             }
+        }
+    }
+
+    fn print_failure_detail(&mut self, result: &TestResult, as_update: bool) {
+        writeln!(self.stdout).unwrap();
+        let file_stem = result
+            .test
+            .file_path
+            .file_stem()
+            .map(|s| s.to_string_lossy())
+            .unwrap_or_default();
+
+        if as_update {
+            self.set_color(Color::Cyan);
+            write!(self.stdout, "↺").unwrap();
+        } else {
+            self.set_color(Color::Red);
+            write!(self.stdout, "✗").unwrap();
+        }
+        self.reset();
+        writeln!(
+            self.stdout,
+            " {}/{}: {}",
+            result.suite, file_stem, result.test.name
+        )
+        .unwrap();
+
+        if let Some(warning) = &result.warning {
+            self.set_color(Color::Yellow);
+            writeln!(self.stdout, "  ⚠ Warning: {}", warning).unwrap();
+            self.reset();
+        }
+
+        if let Some(error) = &result.error {
+            writeln!(self.stdout, "  Error: {}", error).unwrap();
+        } else if let Some(actual) = &result.actual_output {
+            let display_path = std::env::current_dir()
+                .ok()
+                .and_then(|cwd| result.test.file_path.strip_prefix(&cwd).ok())
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| result.test.file_path.clone());
+            writeln!(
+                self.stdout,
+                "  {}:{}",
+                display_path.display(),
+                result.test.start_line
+            )
+            .unwrap();
+            writeln!(self.stdout, "  Command: {}", result.test.command).unwrap();
+            writeln!(self.stdout).unwrap();
+            self.print_diff(&result.expected_output, actual);
         }
     }
 

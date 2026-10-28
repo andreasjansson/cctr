@@ -104,6 +104,12 @@ pub struct TestCase {
     pub file_path: PathBuf,
     pub start_line: usize,
     pub end_line: usize,
+    /// 1-based line where the expected-output block begins (the line after
+    /// the `---` separator). Used by update mode to rewrite exactly this span.
+    pub expected_start_line: usize,
+    /// Number of lines the expected content occupies, excluding trailing
+    /// blank lines. Zero for exit-only tests.
+    pub expected_line_count: usize,
     pub variables: Vec<VariableDecl>,
     pub constraints: Vec<String>,
     pub skip: Option<SkipDirective>,
@@ -153,7 +159,7 @@ pub fn parse_content(content: &str, path: &Path) -> Result<CorpusFile, ParseErro
             Ok(file)
         }
         Err(_) => Err(ParseError::Parse {
-            line: state.current_line,
+            line: cursor_line(state.original, state.input),
             message: state
                 .error_message
                 .unwrap_or_else(|| "failed to parse corpus file".to_string()),
@@ -209,23 +215,29 @@ fn validate_shell_platform(shell: Shell, platforms: &[Platform]) -> Result<(), P
 // ============ Parse State ============
 
 struct ParseState<'a> {
+    original: &'a str,
     input: &'a str,
     path: &'a Path,
-    current_line: usize,
-    delimiter_len: usize,
     error_message: Option<String>,
 }
 
 impl<'a> ParseState<'a> {
     fn new(input: &'a str, path: &'a Path) -> Self {
         Self {
+            original: input,
             input,
             path,
-            current_line: 1,
-            delimiter_len: 3,
             error_message: None,
         }
     }
+}
+
+/// 1-based line number of the parse cursor, derived from how much of the
+/// original input has been consumed. Cannot drift the way a hand-incremented
+/// counter does.
+fn cursor_line(original: &str, remaining: &str) -> usize {
+    let consumed = original.len() - remaining.len();
+    1 + original[..consumed].bytes().filter(|b| *b == b'\n').count()
 }
 
 // ============ Type Annotation Parsing ============
@@ -385,6 +397,26 @@ fn skip_blank_lines(input: &mut &str) -> ModalResult<()> {
         .parse_next(input)
 }
 
+/// Skip blank lines and `#` comment lines in the file header.
+///
+/// Comments are only recognised before the first test case. Past that point
+/// every line is either a command or expected output, where a `#` is
+/// legitimate content and must be preserved.
+fn skip_header_comments(input: &mut &str) -> ModalResult<()> {
+    loop {
+        skip_blank_lines.parse_next(input)?;
+        let is_comment = input
+            .lines()
+            .next()
+            .is_some_and(|l| l.trim_start().starts_with('#'));
+        if !is_comment {
+            return Ok(());
+        }
+        let _ = line_content.parse_next(input)?;
+        opt_newline.parse_next(input)?;
+    }
+}
+
 fn is_any_separator_line(line: &str) -> bool {
     let trimmed = line.trim();
     (trimmed.len() >= 3 && trimmed.chars().all(|c| c == '='))
@@ -393,11 +425,61 @@ fn is_any_separator_line(line: &str) -> bool {
 
 // ============ Skip Directive Parser ============
 
+/// Byte index of the `)` that closes the `(` at the start of `s`.
+///
+/// Tracks nesting so that a reason may itself contain parentheses. Returns
+/// `None` if the parenthesis is never closed on this line.
+fn balanced_paren_end(s: &str) -> Option<usize> {
+    if !s.starts_with('(') {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            '\n' | '\r' => return None,
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Describe what is wrong with a `%skip` directive line, if anything.
+///
+/// Callers report this directly. Without it a malformed reason leaves
+/// trailing text that fails much further down the file, which makes a
+/// one-line mistake look like the whole file is broken.
+fn check_skip_line(line: &str) -> Option<String> {
+    let rest = line.trim_start().strip_prefix("%skip")?;
+    if !rest.starts_with('(') {
+        // Bare `%skip`, or `%skip if: ...`
+        return None;
+    }
+    let Some(end) = balanced_paren_end(rest) else {
+        return Some("unterminated %skip(...) - no matching ')' on this line".to_string());
+    };
+    let after = rest[end + 1..].trim();
+    if !after.is_empty() && !after.starts_with("if:") {
+        return Some(format!(
+            "unexpected text after %skip(...): {:?} - expected end of line or 'if:'",
+            after
+        ));
+    }
+    None
+}
+
 fn skip_message(input: &mut &str) -> ModalResult<String> {
-    '('.parse_next(input)?;
-    let msg: &str = take_till(0.., ')').parse_next(input)?;
-    ')'.parse_next(input)?;
-    Ok(msg.to_string())
+    let end = balanced_paren_end(input)
+        .ok_or_else(|| winnow::error::ErrMode::Backtrack(ContextError::new()))?;
+    let msg = input[1..end].to_string();
+    *input = &input[end + 1..];
+    Ok(msg)
 }
 
 fn skip_condition(input: &mut &str) -> ModalResult<String> {
@@ -553,19 +635,17 @@ fn where_section(input: &mut &str, delimiter_len: usize) -> ModalResult<Vec<Stri
 // ============ Main Parsers ============
 
 fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<ContextError>> {
+    let original = state.original;
     let input = &mut state.input;
 
     skip_blank_lines.parse_next(input)?;
 
-    let start_line = state.current_line;
+    let start_line = cursor_line(original, input);
 
     let delimiter_len = header_sep.parse_next(input)?;
-    state.delimiter_len = delimiter_len;
     opt_newline.parse_next(input)?;
-    state.current_line += 1;
 
     let name = description_line.parse_next(input)?;
-    state.current_line += 1;
 
     // Parse test-level directives (%skip and %require allowed at test level)
     let mut skip = None;
@@ -574,14 +654,16 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     loop {
         let _ = take_while(0.., ' ').parse_next(input)?;
         if input.starts_with("%skip") && skip.is_none() {
+            if let Some(msg) = input.lines().next().and_then(check_skip_line) {
+                state.error_message = Some(msg);
+                return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+            }
             skip = Some(skip_directive.parse_next(input)?);
-            state.current_line += 1;
         } else if input.starts_with("%require") {
             "%require".parse_next(input)?;
             let _ = take_while(0.., ' ').parse_next(input)?;
             let _ = opt('\n').parse_next(input)?;
             require = true;
-            state.current_line += 1;
         } else {
             break;
         }
@@ -610,32 +692,34 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
     }
     header_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
-    state.current_line += 1;
 
-    let command_start = state.current_line;
     let command = read_block_until_separator(input, delimiter_len);
-    state.current_line = command_start + command.lines().count().max(1);
 
     dash_sep_exact(input, delimiter_len)?;
     opt_newline.parse_next(input)?;
-    state.current_line += 1;
 
-    let expected_start = state.current_line;
+    let expected_start = cursor_line(original, input);
     let expected_output = read_block_until_separator(input, delimiter_len);
     let expected_lines = expected_output.lines().count();
-    state.current_line =
-        expected_start + expected_lines.max(if expected_output.is_empty() { 0 } else { 1 });
 
     let constraints = opt(|i: &mut &str| where_section(i, delimiter_len))
         .parse_next(input)?
         .unwrap_or_default();
-    if !constraints.is_empty() {
-        state.current_line += 2 + constraints.len();
+
+    // A separator with no `where` clause after it explicitly closes the
+    // expected block. Consume it so it is not mistaken for unparsed content.
+    if constraints.is_empty() {
+        let _ = opt(|i: &mut &str| -> ModalResult<()> {
+            dash_sep_exact(i, delimiter_len)?;
+            opt_newline.parse_next(i)?;
+            Ok(())
+        })
+        .parse_next(input)?;
     }
 
-    skip_blank_lines.parse_next(input)?;
+    let end_line = cursor_line(original, input);
 
-    let end_line = state.current_line;
+    skip_blank_lines.parse_next(input)?;
 
     let variables = extract_variables_from_expected(&expected_output)
         .map_err(|_| winnow::error::ErrMode::Backtrack(ContextError::new()))?;
@@ -647,6 +731,8 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
         file_path: state.path.to_path_buf(),
         start_line,
         end_line,
+        expected_start_line: expected_start,
+        expected_line_count: expected_lines,
         variables,
         constraints,
         skip,
@@ -657,7 +743,7 @@ fn test_case(state: &mut ParseState) -> Result<TestCase, winnow::error::ErrMode<
 fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrMode<ContextError>> {
     let input = &mut state.input;
 
-    skip_blank_lines.parse_next(input)?;
+    skip_header_comments.parse_next(input)?;
 
     // Parse file-level directives (skip, shell, platform can appear in any order)
     let mut file_skip = None;
@@ -667,17 +753,18 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
     loop {
         let _ = take_while(0.., ' ').parse_next(input)?;
         if input.starts_with("%skip") && file_skip.is_none() {
+            if let Some(msg) = input.lines().next().and_then(check_skip_line) {
+                state.error_message = Some(msg);
+                return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
+            }
             file_skip = Some(skip_directive.parse_next(input)?);
-            state.current_line += 1;
-            skip_blank_lines.parse_next(input)?;
+            skip_header_comments.parse_next(input)?;
         } else if input.starts_with("%shell") && file_shell.is_none() {
             file_shell = Some(shell_directive.parse_next(input)?);
-            state.current_line += 1;
-            skip_blank_lines.parse_next(input)?;
+            skip_header_comments.parse_next(input)?;
         } else if input.starts_with("%platform") && file_platform.is_empty() {
             file_platform = platform_directive.parse_next(input)?;
-            state.current_line += 1;
-            skip_blank_lines.parse_next(input)?;
+            skip_header_comments.parse_next(input)?;
         } else {
             break;
         }
@@ -697,6 +784,17 @@ fn corpus_file(state: &mut ParseState) -> Result<CorpusFile, winnow::error::ErrM
 
         let tc = test_case(state)?;
         tests.push(tc);
+    }
+
+    // Anything left over means we stopped at something we could not parse.
+    // Reporting success here would silently hide entire test files.
+    if !state.input.trim().is_empty() {
+        let offending = state.input.trim_start().lines().next().unwrap_or("");
+        state.error_message = Some(format!(
+            "expected a test case header ('===') but found: {}",
+            offending.trim()
+        ));
+        return Err(winnow::error::ErrMode::Backtrack(ContextError::new()));
     }
 
     Ok(CorpusFile {
@@ -1591,5 +1689,363 @@ hello
         let file = parse_test(content);
         assert_eq!(file.tests.len(), 1);
         assert!(!file.tests[0].require);
+    }
+
+    #[test]
+    fn test_header_comments_are_skipped() {
+        let content = r#"# Corpus: greeting behaviour
+# Every case drives ./tool
+
+===
+first
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].name, "first");
+    }
+
+    #[test]
+    fn test_header_comments_mixed_with_directives() {
+        let content = r#"# leading prose
+%platform unix
+# a note about the shell
+%shell bash
+
+===
+first
+===
+echo hello
+---
+hello
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.file_platform, vec![Platform::Unix]);
+        assert_eq!(file.file_shell, Some(Shell::Bash));
+        assert_eq!(file.tests.len(), 1);
+    }
+
+    #[test]
+    fn test_hash_in_command_and_expected_is_content() {
+        let content = "===\nhashes\n===\nprintf \"x\"\n---\n# one\n## two\n";
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        assert_eq!(file.tests[0].expected_output, "# one\n## two");
+    }
+
+    #[test]
+    fn test_unparseable_content_is_an_error() {
+        // Prose before the first test case is neither a comment nor a
+        // directive, so it must be reported rather than silently dropped.
+        let content = r#"This file explains the cases below.
+
+===
+first
+===
+echo hello
+---
+hello
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err(), "expected a parse error");
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("expected a test case header"),
+            "unexpected error: {}",
+            err
+        );
+        assert!(err.contains("line 1"), "unexpected error: {}", err);
+    }
+
+    #[test]
+    fn test_stray_content_after_terminated_block_is_an_error() {
+        let content = r#"===
+first
+===
+echo hello
+---
+hello
+---
+stray line
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err(), "expected a parse error");
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("expected a test case header"),
+            "unexpected error: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_leading_comment_then_tests_yields_tests_not_zero() {
+        // Regression: a leading comment made the whole file parse as zero
+        // tests and report success.
+        let content = "# a comment\n\n===\nfirst\n===\necho hello\n---\nhello\n";
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+    }
+
+    #[test]
+    fn test_bare_separator_terminates_expected_block() {
+        // A `---` with no `where` clause explicitly ends the expected block,
+        // and the following test must still be parsed.
+        let content = r#"===
+first
+===
+echo hello
+---
+hello
+---
+===
+second
+===
+echo world
+---
+world
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 2);
+        assert_eq!(file.tests[0].expected_output, "hello");
+        assert_eq!(file.tests[1].name, "second");
+        assert_eq!(file.tests[1].expected_output, "world");
+    }
+
+    #[test]
+    fn test_expected_line_range_single_line() {
+        let content = "===\nfirst\n===\necho hello\n---\nhello\n";
+        let file = parse_test(content);
+        assert_eq!(file.tests[0].expected_start_line, 6);
+        assert_eq!(file.tests[0].expected_line_count, 1);
+    }
+
+    #[test]
+    fn test_expected_line_range_multiline() {
+        let content = "===\nfirst\n===\ncmd\n---\na\nb\nc\n";
+        let file = parse_test(content);
+        assert_eq!(file.tests[0].expected_start_line, 6);
+        assert_eq!(file.tests[0].expected_line_count, 3);
+    }
+
+    #[test]
+    fn test_expected_line_range_exit_only() {
+        let content = "===\nfirst\n===\ntrue\n---\n";
+        let file = parse_test(content);
+        assert_eq!(file.tests[0].expected_start_line, 6);
+        assert_eq!(file.tests[0].expected_line_count, 0);
+    }
+
+    #[test]
+    fn test_line_numbers_do_not_drift_across_blank_separators() {
+        // Each case is 6 lines plus a blank separator, so the headers sit on
+        // lines 1, 8 and 15. A hand-incremented counter drifts here.
+        let content = "\
+===
+one
+===
+cmd
+---
+a
+
+===
+two
+===
+cmd
+---
+b
+
+===
+three
+===
+cmd
+---
+c
+";
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 3);
+        assert_eq!(file.tests[0].start_line, 1);
+        assert_eq!(file.tests[1].start_line, 8);
+        assert_eq!(file.tests[2].start_line, 15);
+        assert_eq!(file.tests[0].expected_start_line, 6);
+        assert_eq!(file.tests[1].expected_start_line, 13);
+        assert_eq!(file.tests[2].expected_start_line, 20);
+    }
+
+    #[test]
+    fn test_skip_message_with_nested_parens() {
+        let content = r#"===
+first
+%skip(gets Terra (4.00) instead of Luna)
+===
+echo hi
+---
+hi
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 1);
+        let skip = file.tests[0].skip.as_ref().unwrap();
+        assert_eq!(
+            skip.message.as_deref(),
+            Some("gets Terra (4.00) instead of Luna")
+        );
+        assert!(skip.condition.is_none());
+    }
+
+    #[test]
+    fn test_skip_message_with_multiple_nested_parens() {
+        let content = r#"===
+first
+%skip(a (b (c)) d (e))
+===
+echo hi
+---
+hi
+"#;
+        let file = parse_test(content);
+        let skip = file.tests[0].skip.as_ref().unwrap();
+        assert_eq!(skip.message.as_deref(), Some("a (b (c)) d (e)"));
+    }
+
+    #[test]
+    fn test_skip_nested_parens_with_condition() {
+        let content = r#"===
+first
+%skip(gets Terra (4.00) instead of Luna) if: true
+===
+echo hi
+---
+hi
+"#;
+        let file = parse_test(content);
+        let skip = file.tests[0].skip.as_ref().unwrap();
+        assert_eq!(
+            skip.message.as_deref(),
+            Some("gets Terra (4.00) instead of Luna")
+        );
+        assert_eq!(skip.condition.as_deref(), Some("true"));
+    }
+
+    #[test]
+    fn test_skip_condition_containing_parens_is_not_the_message() {
+        // Scanning to the last ')' on the line would swallow the condition.
+        let content = r#"===
+first
+%skip(reason here) if: test -n "$(echo yes)"
+===
+echo hi
+---
+hi
+"#;
+        let file = parse_test(content);
+        let skip = file.tests[0].skip.as_ref().unwrap();
+        assert_eq!(skip.message.as_deref(), Some("reason here"));
+        assert_eq!(skip.condition.as_deref(), Some(r#"test -n "$(echo yes)""#));
+    }
+
+    #[test]
+    fn test_file_level_skip_with_nested_parens() {
+        let content = r#"%skip(gets Terra (4.00) instead of Luna)
+
+===
+first
+===
+echo hi
+---
+hi
+"#;
+        let file = parse_test(content);
+        assert_eq!(
+            file.file_skip.as_ref().unwrap().message.as_deref(),
+            Some("gets Terra (4.00) instead of Luna")
+        );
+        assert_eq!(file.tests.len(), 1);
+    }
+
+    #[test]
+    fn test_unterminated_skip_message_is_an_error() {
+        // Previously parsed silently as a bare %skip, losing the reason.
+        let content = r#"===
+first
+%skip(never closed
+===
+echo hi
+---
+hi
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err(), "expected a parse error");
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("unterminated %skip"),
+            "unexpected error: {}",
+            err
+        );
+        assert!(err.contains("line 3"), "unexpected error: {}", err);
+    }
+
+    #[test]
+    fn test_trailing_text_after_skip_message_is_an_error() {
+        let content = r#"===
+first
+%skip(reason) then junk)
+===
+echo hi
+---
+hi
+"#;
+        let result = parse_content(content, Path::new("<test>"));
+        assert!(result.is_err(), "expected a parse error");
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("unexpected text after %skip"),
+            "unexpected error: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_skip_reason_with_parens_does_not_drop_other_cases() {
+        // A bad reason on one case must not take out the rest of the file.
+        let content = r#"===
+first
+%skip(gets Terra (4.00) instead of Luna)
+===
+echo one
+---
+one
+
+===
+second
+===
+echo two
+---
+two
+
+===
+third
+===
+echo three
+---
+three
+"#;
+        let file = parse_test(content);
+        assert_eq!(file.tests.len(), 3);
+        assert_eq!(file.tests[1].name, "second");
+        assert_eq!(file.tests[2].name, "third");
+    }
+
+    #[test]
+    fn test_balanced_paren_end() {
+        assert_eq!(balanced_paren_end("(abc)"), Some(4));
+        assert_eq!(balanced_paren_end("(a(b)c)"), Some(6));
+        assert_eq!(balanced_paren_end("(a) rest"), Some(2));
+        assert_eq!(balanced_paren_end("(unclosed"), None);
+        assert_eq!(balanced_paren_end("(a(b)"), None);
+        assert_eq!(balanced_paren_end("no paren"), None);
+        assert_eq!(balanced_paren_end("(a\nb)"), None);
     }
 }

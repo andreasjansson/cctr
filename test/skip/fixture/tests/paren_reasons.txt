@@ -1,0 +1,38 @@
+===
+skip reason containing a parenthetical
+%skip(gets Terra (4.00) instead of Luna)
+===
+echo "this should not run"
+---
+this should not run
+
+===
+skip reason with several nested groups
+%skip(a (b (c)) d (e))
+===
+echo "this should not run either"
+---
+this should not run either
+
+===
+nested parens in reason plus an if condition
+%skip(gets Terra (4.00) instead of Luna) if: true
+===
+echo "also should not run"
+---
+also should not run
+
+===
+condition containing a command substitution
+%skip(reason here) if: test -n "$(echo yes)"
+===
+echo "should not run"
+---
+should not run
+
+===
+cases after a parenthesised reason still run
+===
+echo "this runs"
+---
+this runs

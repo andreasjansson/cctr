@@ -1,0 +1,8 @@
+===
+first
+===
+echo hello
+---
+hello
+---
+stray line that is not a test header

@@ -1,0 +1,21 @@
+%platform unix
+
+===
+header comments are supported and all cases run
+===
+cctr $CCTR_FIXTURE_DIR/tests/comments.txt --no-color 2>&1 | tail -1
+---
+All {{ n: number }} tests passed in {{ t }}s
+---
+where
+* n == 4
+
+===
+comment-only file reports no tests and exits non-zero
+===
+printf '# just a comment\n' > only_comment.txt
+cctr only_comment.txt --no-color > out.txt 2>&1 || echo "exit=$?"
+grep -c 'No tests found' out.txt
+---
+exit=1
+1

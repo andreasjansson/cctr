@@ -1,0 +1,10 @@
+This file has a prose header that is not a comment and not a directive.
+It must be reported as a parse error rather than silently yielding zero
+tests, which is what used to happen.
+
+===
+this case must never run
+===
+echo hello
+---
+hello
