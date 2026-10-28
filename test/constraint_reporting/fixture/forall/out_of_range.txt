@@ -1,0 +1,9 @@
+===
+one score is out of range
+===
+echo '[3, 7, 12, 4]'
+---
+{{ scores: json array }}
+---
+where
+* s >= 0 and s <= 10 forall s in scores

@@ -1,0 +1,16 @@
+===
+capture a large value that later constraints do not use
+===
+echo "{\"rows\": [$(seq 0 499 | paste -sd, -)]}"
+---
+{{ big: json object }}
+
+===
+only the referenced variable is shown
+===
+echo 'count: 3'
+---
+count: {{ count: number }}
+---
+where
+* count == 4

@@ -162,6 +162,204 @@ pub enum UnaryOp {
     Neg,
 }
 
+impl BinaryOp {
+    fn symbol(self) -> &'static str {
+        match self {
+            BinaryOp::Add => "+",
+            BinaryOp::Sub => "-",
+            BinaryOp::Mul => "*",
+            BinaryOp::Div => "/",
+            BinaryOp::Mod => "%",
+            BinaryOp::Pow => "^",
+            BinaryOp::Eq => "==",
+            BinaryOp::Ne => "!=",
+            BinaryOp::Lt => "<",
+            BinaryOp::Le => "<=",
+            BinaryOp::Gt => ">",
+            BinaryOp::Ge => ">=",
+            BinaryOp::And => "and",
+            BinaryOp::Or => "or",
+            BinaryOp::Contains => "contains",
+            BinaryOp::NotContains => "not contains",
+            BinaryOp::StartsWith => "startswith",
+            BinaryOp::NotStartsWith => "not startswith",
+            BinaryOp::EndsWith => "endswith",
+            BinaryOp::NotEndsWith => "not endswith",
+            BinaryOp::Matches => "matches",
+            BinaryOp::NotMatches => "not matches",
+        }
+    }
+
+    fn precedence(self) -> u8 {
+        match self {
+            BinaryOp::Or => 1,
+            BinaryOp::And => 2,
+            BinaryOp::Add | BinaryOp::Sub => 5,
+            BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => 6,
+            BinaryOp::Pow => 7,
+            _ => 4,
+        }
+    }
+
+    /// Whether this operator compares its operands, as opposed to combining them.
+    pub fn is_comparison(self) -> bool {
+        self.precedence() == 4
+    }
+}
+
+const PREC_FORALL: u8 = 0;
+const PREC_NOT: u8 = 3;
+const PREC_NEG: u8 = 8;
+const PREC_ATOM: u8 = 9;
+
+impl Expr {
+    fn precedence(&self) -> u8 {
+        match self {
+            Expr::ForAll { .. } => PREC_FORALL,
+            Expr::BinaryOp { op, .. } => op.precedence(),
+            Expr::UnaryOp {
+                op: UnaryOp::Not, ..
+            } => PREC_NOT,
+            Expr::UnaryOp {
+                op: UnaryOp::Neg, ..
+            } => PREC_NEG,
+            _ => PREC_ATOM,
+        }
+    }
+
+    /// Whether this expression is a constant written out in full, so that
+    /// showing its value would only repeat what the constraint already says.
+    pub fn is_literal(&self) -> bool {
+        match self {
+            Expr::Number(_)
+            | Expr::String(_)
+            | Expr::Bool(_)
+            | Expr::Null
+            | Expr::TypeLiteral(_) => true,
+            Expr::Array(items) => items.iter().all(Expr::is_literal),
+            Expr::Object(entries) => entries.iter().all(|(_, v)| v.is_literal()),
+            _ => false,
+        }
+    }
+}
+
+fn write_quoted(f: &mut std::fmt::Formatter<'_>, s: &str) -> std::fmt::Result {
+    write!(f, "\"")?;
+    for c in s.chars() {
+        match c {
+            '"' => write!(f, "\\\"")?,
+            '\\' => write!(f, "\\\\")?,
+            '\n' => write!(f, "\\n")?,
+            '\t' => write!(f, "\\t")?,
+            '\r' => write!(f, "\\r")?,
+            _ => write!(f, "{}", c)?,
+        }
+    }
+    write!(f, "\"")
+}
+
+/// Write `child`, parenthesised if it binds more loosely than `min_prec`.
+fn write_operand(f: &mut std::fmt::Formatter<'_>, child: &Expr, min_prec: u8) -> std::fmt::Result {
+    if child.precedence() < min_prec {
+        write!(f, "({})", child)
+    } else {
+        write!(f, "{}", child)
+    }
+}
+
+impl std::fmt::Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::Number(n) => {
+                if n.fract() == 0.0 && n.abs() < 1e15 {
+                    write!(f, "{}", *n as i64)
+                } else {
+                    write!(f, "{}", n)
+                }
+            }
+            Expr::String(s) => write_quoted(f, s),
+            Expr::Bool(b) => write!(f, "{}", b),
+            Expr::Null => write!(f, "null"),
+            Expr::Var(name) | Expr::TypeLiteral(name) => write!(f, "{}", name),
+            Expr::Array(items) => {
+                write!(f, "[")?;
+                for (i, item) in items.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", item)?;
+                }
+                write!(f, "]")
+            }
+            Expr::Object(entries) => {
+                write!(f, "{{")?;
+                for (i, (key, value)) in entries.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write_quoted(f, key)?;
+                    write!(f, ": {}", value)?;
+                }
+                write!(f, "}}")
+            }
+            Expr::UnaryOp { op, expr } => match op {
+                UnaryOp::Not => {
+                    write!(f, "not ")?;
+                    write_operand(f, expr, PREC_NOT)
+                }
+                UnaryOp::Neg => {
+                    write!(f, "-")?;
+                    write_operand(f, expr, PREC_NEG)
+                }
+            },
+            Expr::BinaryOp { op, left, right } => {
+                let prec = op.precedence();
+                // `^` is right-associative; everything else is left-associative.
+                let (left_min, right_min) = if *op == BinaryOp::Pow {
+                    (prec + 1, prec)
+                } else {
+                    (prec, prec + 1)
+                };
+                write_operand(f, left, left_min)?;
+                write!(f, " {} ", op.symbol())?;
+                match (op, right.as_ref()) {
+                    (BinaryOp::Matches | BinaryOp::NotMatches, Expr::String(re)) => {
+                        write!(f, "/{}/", re)
+                    }
+                    _ => write_operand(f, right, right_min),
+                }
+            }
+            Expr::FuncCall { name, args } => {
+                write!(f, "{}(", name)?;
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", arg)?;
+                }
+                write!(f, ")")
+            }
+            Expr::Index { expr, index } => {
+                write_operand(f, expr, PREC_ATOM)?;
+                write!(f, "[{}]", index)
+            }
+            Expr::Property { expr, name } => {
+                write_operand(f, expr, PREC_ATOM)?;
+                write!(f, ".{}", name)
+            }
+            Expr::ForAll {
+                predicate,
+                var,
+                iterable,
+            } => {
+                write_operand(f, predicate, PREC_FORALL + 1)?;
+                write!(f, " forall {} in ", var)?;
+                write_operand(f, iterable, PREC_FORALL + 1)
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOp {
     Add,
@@ -211,10 +409,50 @@ pub enum EvalError {
         expected: usize,
         got: usize,
     },
-    #[error("index out of bounds: {index} (len: {len})")]
-    IndexOutOfBounds { index: i64, len: usize },
-    #[error("key not found: {0}")]
-    KeyNotFound(String),
+    #[error("index {index} out of bounds for {path} (length {len})")]
+    IndexOutOfBounds {
+        path: String,
+        index: i64,
+        len: usize,
+    },
+    #[error("key {key:?} not found in {path} ({})", describe_keys(.path, .available))]
+    KeyNotFound {
+        path: String,
+        key: String,
+        available: Vec<String>,
+    },
+    #[error("cannot evaluate {access}: {base} is {}, not {expected}", describe_type(.got))]
+    InvalidAccess {
+        access: String,
+        base: String,
+        got: &'static str,
+        expected: &'static str,
+    },
+}
+
+const MAX_LISTED_KEYS: usize = 20;
+
+fn describe_keys(path: &str, available: &[String]) -> String {
+    if available.is_empty() {
+        return format!("{} is an empty object", path);
+    }
+    let mut listed: Vec<String> = available
+        .iter()
+        .take(MAX_LISTED_KEYS)
+        .map(|k| format!("{:?}", k))
+        .collect();
+    if available.len() > MAX_LISTED_KEYS {
+        listed.push(format!("… {} more", available.len() - MAX_LISTED_KEYS));
+    }
+    format!("available keys: {}", listed.join(", "))
+}
+
+fn describe_type(type_name: &str) -> String {
+    match type_name {
+        "null" => "null".to_string(),
+        "array" | "object" => format!("an {}", type_name),
+        _ => format!("a {}", type_name),
+    }
 }
 
 // ============ Parser ============
@@ -722,6 +960,84 @@ pub fn parse(input: &str) -> Result<Expr, EvalError> {
 
 // ============ Evaluator ============
 
+/// Map a possibly negative index onto `0..len`. `-1` is the last element.
+fn resolve_index(i: f64, len: usize) -> Option<usize> {
+    let pos = if i < 0.0 {
+        len.checked_sub((-i) as usize)?
+    } else {
+        i as usize
+    };
+    (pos < len).then_some(pos)
+}
+
+fn key_not_found(base_expr: &Expr, key: &str, obj: &HashMap<String, Value>) -> EvalError {
+    let mut available: Vec<String> = obj.keys().cloned().collect();
+    available.sort();
+    EvalError::KeyNotFound {
+        path: base_expr.to_string(),
+        key: key.to_string(),
+        available,
+    }
+}
+
+/// Variables an expression reads from its environment, sorted and deduplicated.
+///
+/// Variables bound by `forall` are excluded inside the predicate they bind.
+pub fn free_variables(expr: &Expr) -> Vec<String> {
+    let mut found = Vec::new();
+    collect_free_variables(expr, &mut Vec::new(), &mut found);
+    found.sort();
+    found.dedup();
+    found
+}
+
+fn collect_free_variables(expr: &Expr, bound: &mut Vec<String>, found: &mut Vec<String>) {
+    match expr {
+        Expr::Number(_) | Expr::String(_) | Expr::Bool(_) | Expr::Null | Expr::TypeLiteral(_) => {}
+        Expr::Var(name) => {
+            if !bound.contains(name) {
+                found.push(name.clone());
+            }
+        }
+        Expr::Array(items) => {
+            for item in items {
+                collect_free_variables(item, bound, found);
+            }
+        }
+        Expr::Object(entries) => {
+            for (_, value) in entries {
+                collect_free_variables(value, bound, found);
+            }
+        }
+        Expr::UnaryOp { expr, .. } | Expr::Property { expr, .. } => {
+            collect_free_variables(expr, bound, found)
+        }
+        Expr::BinaryOp { left, right, .. } => {
+            collect_free_variables(left, bound, found);
+            collect_free_variables(right, bound, found);
+        }
+        Expr::FuncCall { args, .. } => {
+            for arg in args {
+                collect_free_variables(arg, bound, found);
+            }
+        }
+        Expr::Index { expr, index } => {
+            collect_free_variables(expr, bound, found);
+            collect_free_variables(index, bound, found);
+        }
+        Expr::ForAll {
+            predicate,
+            var,
+            iterable,
+        } => {
+            collect_free_variables(iterable, bound, found);
+            bound.push(var.clone());
+            collect_free_variables(predicate, bound, found);
+            bound.pop();
+        }
+    }
+}
+
 pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, EvalError> {
     match expr {
         Expr::Number(n) => Ok(Value::Number(*n)),
@@ -753,73 +1069,61 @@ pub fn evaluate(expr: &Expr, vars: &HashMap<String, Value>) -> Result<Value, Eva
         }
         Expr::BinaryOp { op, left, right } => eval_binary_op(*op, left, right, vars),
         Expr::FuncCall { name, args } => eval_func_call(name, args, vars),
-        Expr::Index { expr, index } => {
-            let base = evaluate(expr, vars)?;
+        Expr::Index {
+            expr: base_expr,
+            index,
+        } => {
+            let base = evaluate(base_expr, vars)?;
             let idx = evaluate(index, vars)?;
+            let out_of_bounds = |i: f64, len: usize| EvalError::IndexOutOfBounds {
+                path: base_expr.to_string(),
+                index: i as i64,
+                len,
+            };
             match &base {
                 Value::Array(arr) => {
                     let i = idx.as_number()?;
-                    let actual_index = if i < 0.0 {
-                        // Negative indexing: -1 is last element, -2 is second to last, etc.
-                        let neg_idx = (-i) as usize;
-                        if neg_idx > arr.len() {
-                            return Err(EvalError::IndexOutOfBounds {
-                                index: i as i64,
-                                len: arr.len(),
-                            });
-                        }
-                        arr.len() - neg_idx
-                    } else {
-                        i as usize
-                    };
-                    arr.get(actual_index)
-                        .cloned()
-                        .ok_or(EvalError::IndexOutOfBounds {
-                            index: i as i64,
-                            len: arr.len(),
-                        })
+                    resolve_index(i, arr.len())
+                        .map(|pos| arr[pos].clone())
+                        .ok_or_else(|| out_of_bounds(i, arr.len()))
                 }
                 Value::String(s) => {
                     let i = idx.as_number()?;
                     let chars: Vec<char> = s.chars().collect();
-                    let actual_index = if i < 0.0 {
-                        let neg_idx = (-i) as usize;
-                        if neg_idx > chars.len() {
-                            return Err(EvalError::IndexOutOfBounds {
-                                index: i as i64,
-                                len: chars.len(),
-                            });
-                        }
-                        chars.len() - neg_idx
-                    } else {
-                        i as usize
-                    };
-                    chars
-                        .get(actual_index)
-                        .map(|c| Value::String(c.to_string()))
-                        .ok_or(EvalError::IndexOutOfBounds {
-                            index: i as i64,
-                            len: chars.len(),
-                        })
+                    resolve_index(i, chars.len())
+                        .map(|pos| Value::String(chars[pos].to_string()))
+                        .ok_or_else(|| out_of_bounds(i, chars.len()))
                 }
                 Value::Object(obj) => {
                     let key = idx.as_string()?;
                     obj.get(key)
                         .cloned()
-                        .ok_or_else(|| EvalError::KeyNotFound(key.to_string()))
+                        .ok_or_else(|| key_not_found(base_expr, key, obj))
                 }
-                _ => Err(EvalError::TypeError {
-                    expected: "array, string, or object",
+                _ => Err(EvalError::InvalidAccess {
+                    access: expr.to_string(),
+                    base: base_expr.to_string(),
                     got: base.type_name(),
+                    expected: "an array, string, or object",
                 }),
             }
         }
-        Expr::Property { expr, name } => {
-            let base = evaluate(expr, vars)?;
-            let obj = base.as_object()?;
+        Expr::Property {
+            expr: base_expr,
+            name,
+        } => {
+            let base = evaluate(base_expr, vars)?;
+            let Value::Object(obj) = &base else {
+                return Err(EvalError::InvalidAccess {
+                    access: expr.to_string(),
+                    base: base_expr.to_string(),
+                    got: base.type_name(),
+                    expected: "an object",
+                });
+            };
             obj.get(name)
                 .cloned()
-                .ok_or_else(|| EvalError::KeyNotFound(name.clone()))
+                .ok_or_else(|| key_not_found(base_expr, name, obj))
         }
         Expr::ForAll {
             predicate,
@@ -1512,5 +1816,185 @@ mod tests {
         assert!(eval_bool(r#"strip(t) == "world""#, &v).unwrap());
         assert!(eval_bool(r#"strip(clean) == "no whitespace""#, &v).unwrap());
         assert!(eval_bool(r#"strip("  test  ") == "test""#, &v).unwrap());
+    }
+
+    fn eval_err(expr: &str, v: &HashMap<String, Value>) -> String {
+        evaluate(&parse(expr).unwrap(), v).unwrap_err().to_string()
+    }
+
+    fn nested_entries() -> HashMap<String, Value> {
+        let details = Value::Object(HashMap::from([
+            ("status".to_string(), Value::String("ok".to_string())),
+            ("error".to_string(), Value::Null),
+        ]));
+        let message = Value::Object(HashMap::from([("details".to_string(), details)]));
+        let entry = Value::Object(HashMap::from([(
+            "messages".to_string(),
+            Value::Array(vec![message]),
+        )]));
+        vars(&[(
+            "entries",
+            Value::Array(vec![entry.clone(), entry.clone(), entry]),
+        )])
+    }
+
+    #[test]
+    fn test_key_not_found_names_path_and_available_keys() {
+        assert_eq!(
+            eval_err(
+                "entries[-2].messages[0].details.result == 8",
+                &nested_entries()
+            ),
+            r#"key "result" not found in entries[-2].messages[0].details (available keys: "error", "status")"#
+        );
+    }
+
+    #[test]
+    fn test_key_not_found_via_bracket_notation() {
+        assert_eq!(
+            eval_err(r#"entries[0]["nope"]"#, &nested_entries()),
+            r#"key "nope" not found in entries[0] (available keys: "messages")"#
+        );
+    }
+
+    #[test]
+    fn test_key_not_found_in_empty_object() {
+        let v = vars(&[("o", Value::Object(HashMap::new()))]);
+        assert_eq!(
+            eval_err("o.a", &v),
+            r#"key "a" not found in o (o is an empty object)"#
+        );
+    }
+
+    #[test]
+    fn test_key_not_found_truncates_long_key_lists() {
+        let obj: HashMap<String, Value> = (0..25)
+            .map(|i| (format!("k{:02}", i), Value::Number(i as f64)))
+            .collect();
+        let v = vars(&[("o", Value::Object(obj))]);
+        let err = eval_err("o.missing", &v);
+        assert!(err.contains(r#""k19""#), "{}", err);
+        assert!(!err.contains(r#""k20""#), "{}", err);
+        assert!(err.ends_with("… 5 more)"), "{}", err);
+    }
+
+    #[test]
+    fn test_index_out_of_bounds_names_path() {
+        assert_eq!(
+            eval_err("entries[5].messages", &nested_entries()),
+            "index 5 out of bounds for entries (length 3)"
+        );
+        assert_eq!(
+            eval_err("entries[-4]", &nested_entries()),
+            "index -4 out of bounds for entries (length 3)"
+        );
+        assert_eq!(
+            eval_err("entries[0].messages[1]", &nested_entries()),
+            "index 1 out of bounds for entries[0].messages (length 1)"
+        );
+    }
+
+    #[test]
+    fn test_negative_index_boundaries() {
+        let v = vars(&[(
+            "a",
+            Value::Array(vec![Value::Number(1.0), Value::Number(2.0)]),
+        )]);
+        assert!(eval_bool("a[-1] == 2", &v).unwrap());
+        assert!(eval_bool("a[-2] == 1", &v).unwrap());
+        assert!(eval_bool(r#""ab"[-1] == "b""#, &v).unwrap());
+        assert!(eval_err("a[-3]", &v).contains("out of bounds"));
+        assert!(eval_err("a[2]", &v).contains("out of bounds"));
+    }
+
+    #[test]
+    fn test_property_on_non_object_names_path_and_type() {
+        assert_eq!(
+            eval_err("entries.messages", &nested_entries()),
+            "cannot evaluate entries.messages: entries is an array, not an object"
+        );
+        assert_eq!(
+            eval_err("entries[0].messages[0].details.error.code", &nested_entries()),
+            "cannot evaluate entries[0].messages[0].details.error.code: entries[0].messages[0].details.error is null, not an object"
+        );
+    }
+
+    #[test]
+    fn test_index_on_scalar_names_path_and_type() {
+        let v = vars(&[("n", Value::Number(1.0))]);
+        assert_eq!(
+            eval_err("n[0]", &v),
+            "cannot evaluate n[0]: n is a number, not an array, string, or object"
+        );
+    }
+
+    #[test]
+    fn test_display_round_trips_canonical_forms() {
+        for src in [
+            "x",
+            "42",
+            "-3.5",
+            r#""a \"quoted\" string""#,
+            "[1, 2, 3]",
+            r#"{"a": 1, "b": [true, null]}"#,
+            "a.b.c",
+            r#"a[0]["key"].b"#,
+            "entries[-2].messages[0].details.result == 8",
+            "len(keys(o)) == 3",
+            "x > 0 and x < 10",
+            "a or b and c",
+            "(a or b) and c",
+            "not x == 1",
+            "(a + b) * c",
+            "a - (b - c)",
+            "2 ^ 3 ^ 2",
+            "(2 ^ 3) ^ 2",
+            "-x",
+            "name not startswith \"tmp\"",
+            "s matches /^[a-z]+\\d$/",
+            "s not matches /x/",
+            "type(v) == number forall v in o",
+            "x < 5 forall x in a",
+        ] {
+            assert_eq!(
+                parse(src).unwrap().to_string(),
+                src,
+                "round trip of {}",
+                src
+            );
+        }
+    }
+
+    #[test]
+    fn test_display_reparses_to_same_ast() {
+        for src in [
+            "((x))",
+            "a+b*c",
+            "not(a and b)",
+            "len( arr )>=2",
+            "x.foo[ 0 ].bar",
+        ] {
+            let ast = parse(src).unwrap();
+            assert_eq!(parse(&ast.to_string()).unwrap(), ast, "reparse of {}", src);
+        }
+    }
+
+    #[test]
+    fn test_free_variables() {
+        let fv = |s: &str| free_variables(&parse(s).unwrap());
+        assert_eq!(fv("a.b[c] == d"), vec!["a", "c", "d"]);
+        assert_eq!(fv("x > 0 forall x in items"), vec!["items"]);
+        assert_eq!(fv("x > limit forall x in items"), vec!["items", "limit"]);
+        assert_eq!(fv("len(a) == len(a)"), vec!["a"]);
+        assert_eq!(fv(r#"env("HOME") startswith "/""#), Vec::<String>::new());
+        assert_eq!(fv("[a, {\"k\": b}] == c"), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_is_literal() {
+        assert!(parse("[1, \"a\", {\"k\": null}]").unwrap().is_literal());
+        assert!(parse("number").unwrap().is_literal());
+        assert!(!parse("[1, x]").unwrap().is_literal());
+        assert!(!parse("len(a)").unwrap().is_literal());
     }
 }

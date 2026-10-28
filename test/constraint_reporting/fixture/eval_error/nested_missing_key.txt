@@ -1,0 +1,9 @@
+===
+nested json path is missing a key
+===
+printf '%s\n' '{"entries": [{"messages": [{"details": {"status": "ok", "error": null}}]}, {"messages": []}]}'
+---
+{{ log: json object }}
+---
+where
+* log.entries[-2].messages[0].details.result == 8

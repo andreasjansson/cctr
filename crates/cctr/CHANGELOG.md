@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Constraint failures now report the test's location and command, the values
+  of the variables the constraint references, the value of each compared
+  expression, and the first failing element of a `forall`. Evaluation errors
+  report bindings too, which previously only unsatisfied constraints did.
+- `-v` pretty-prints large values in full and shows the actual output for
+  failures where the output matched but the test still failed.
+
 - Adjustable delimiter length: use more `=` or `-` characters (e.g., `====`/`----`) when your content contains the standard 3-character delimiters
 
 ## [0.1.0](https://github.com/andreasjansson/cctr/releases/tag/v0.1.0) - 2026-01-07

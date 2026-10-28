@@ -1,0 +1,10 @@
+===
+second user has the wrong name
+===
+printf '%s\n' '{"users": [{"name": "alice"}, {"name": "carol"}], "total": 2}'
+---
+{{ resp: json object }}
+---
+where
+* len(resp.users) == resp.total
+* resp.users[1].name == "bob"

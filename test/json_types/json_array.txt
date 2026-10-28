@@ -9,45 +9,59 @@ All 25 tests passed in {{ t }}s
 ===
 json_array wrong index value fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_index.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_index.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'a[0] == 999' not satisfied
-  where a = [1, 2, 3]
+  Constraint not satisfied: a[0] == 999
+    a[0] = 1
+  where
+    a = [1, 2, 3]
 
 ===
 json_array wrong length fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_length.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_length.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'len(a) == 5' not satisfied
-  where a = [1, 2, 3]
+  Constraint not satisfied: len(a) == 5
+    len(a) = 3
+  where
+    a = [1, 2, 3]
 
 ===
 json_array wrong type fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_type.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_wrong_type.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'type(a) == object' not satisfied
-  where a = [1, 2, 3]
+  Constraint not satisfied: type(a) == object
+    type(a) = array
+  where
+    a = [1, 2, 3]
 
 ===
 json_array forall fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_forall_fails.txt --no-color 2>&1 | grep -A1 "constraint.*not satisfied"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_forall_fails.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'x < 5 forall x in a' not satisfied
-  where a = [1, 2, 10]
+  Constraint not satisfied: x < 5 forall x in a
+    fails for x = 10 (at a[2])
+  where
+    a = [1, 2, 10]
 
 ===
 json_array out of bounds fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_out_of_bounds.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_out_of_bounds.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'a[10] == 1' failed: index out of bounds: 10 (len: 3)
+  Constraint failed: a[10] == 1
+    index 10 out of bounds for a (length 3)
+  where
+    a = [1, 2, 3]
 
 ===
 json_array index on non-array fails
 ===
-cctr $CCTR_FIXTURE_DIR/json_array/json_array_index_on_non_array.txt --no-color 2>&1 | grep "constraint.*failed"
+cctr $CCTR_FIXTURE_DIR/json_array/json_array_index_on_non_array.txt --no-color 2>&1 | sed -n '/^  Constraint /,/^$/p'
 ---
-  Error: constraint 'n[0] == 1' failed: type error: expected array, string, or object, got number
+  Constraint failed: n[0] == 1
+    cannot evaluate n[0]: n is a number, not an array, string, or object
+  where
+    n = 42
