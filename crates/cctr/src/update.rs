@@ -50,7 +50,7 @@ pub fn update_corpus_file(file_path: &Path, results: &[&TestResult]) -> std::io:
         return Ok(0);
     }
 
-    edits.sort_by(|a, b| b.0.cmp(&a.0));
+    edits.sort_by_key(|e| std::cmp::Reverse(e.0));
 
     let updated = edits.len();
     for (start, end, replacement) in edits {
