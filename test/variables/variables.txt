@@ -22,7 +22,7 @@ starting tests/strings: string endswith
 Failures:
 
 ✗ tests/numbers: number constraint fail
-  tests/numbers.txt:{{ line: number }}
+  tests/numbers.txt:22
   Command: echo "Time: 2.0"
 
   Constraint not satisfied: t < 1
@@ -35,7 +35,6 @@ Failures:
 Summary: 5 passed, 1 failed, 0 skipped in {{ total_time }}s
 ---
 where
-* line > 0
 * t1 < 5
 * t2 < 5
 * t3 < 5
